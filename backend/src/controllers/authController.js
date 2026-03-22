@@ -10,14 +10,58 @@ const signToken = (id, role) =>
     { expiresIn: process.env.JWT_EXPIRE || '7d', algorithm: 'HS256' }
   );
 
-// ── Simple inline validators — no external packages needed ────────
+// ── Simple inline validators ──────────────────────────────────────
 const isValidEmail = (e) => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 const isValidPhone = (p) => !p || /^\d{10}$/.test(p.trim());
 const isValidUrl   = (u) => !u || /^https?:\/\/.+/.test(u.trim());
 
-// POST /api/auth/register-student
+// ── Brute-force config ────────────────────────────────────────────
+const MAX_FAILED_ATTEMPTS = 5;           // lock after 5 consecutive failures
+const LOCKOUT_MINUTES     = 15;          // lock for 15 minutes
+
+// ── GET /api/auth/registration-status  (public) ───────────────────
+exports.getRegistrationStatus = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT id, name, event_date, status
+       FROM mega_drive_events
+       WHERE status IN ('REGISTRATION_OPEN','IN_PROGRESS')
+       ORDER BY event_date ASC
+       LIMIT 1`
+    );
+    if (rows.length) {
+      res.json({
+        success:      true,
+        open:         true,
+        event_name:   rows[0].name,
+        event_date:   rows[0].event_date,
+        event_status: rows[0].status
+      });
+    } else {
+      res.json({ success: true, open: false });
+    }
+  } catch (err) {
+    console.error('getRegistrationStatus error:', err.message);
+    res.status(500).json({ success: false, message: 'Could not check registration status.' });
+  }
+};
+
+// ── POST /api/auth/register-student ──────────────────────────────
 exports.registerStudent = async (req, res) => {
   try {
+    // Gate: only allowed when an event is open
+    const statusCheck = await db.query(
+      `SELECT id FROM mega_drive_events
+       WHERE status IN ('REGISTRATION_OPEN','IN_PROGRESS')
+       LIMIT 1`
+    );
+    if (!statusCheck.rows.length) {
+      return res.status(403).json({
+        success: false,
+        message: 'Student registration is currently closed. No placement drive is open at this time.'
+      });
+    }
+
     const {
       name, roll_no, date_of_birth, email, phone,
       institution_name, institution_type,
@@ -43,17 +87,23 @@ exports.registerStudent = async (req, res) => {
     if (resume_url && !isValidUrl(resume_url))
       return res.status(400).json({ success: false, message: 'Invalid resume URL.' });
 
-    const cgpaNum    = parseFloat(cgpa)    || 0;
-    const backlogNum = parseInt(backlogs)  || 0;
+    const cgpaNum    = parseFloat(cgpa)   || 0;
+    const backlogNum = parseInt(backlogs) || 0;
     if (cgpaNum < 0 || cgpaNum > 10)
       return res.status(400).json({ success: false, message: 'CGPA must be between 0 and 10.' });
 
-    const exist = await db.query('SELECT id FROM students WHERE roll_no=$1', [roll_no.trim().toUpperCase()]);
+    const exist = await db.query(
+      'SELECT id FROM students WHERE roll_no=$1',
+      [roll_no.trim().toUpperCase()]
+    );
     if (exist.rows.length)
       return res.status(409).json({ success: false, message: 'This PRN is already registered.' });
 
     if (email) {
-      const emailExist = await db.query('SELECT id FROM students WHERE email=$1', [email.trim().toLowerCase()]);
+      const emailExist = await db.query(
+        'SELECT id FROM students WHERE email=$1',
+        [email.trim().toLowerCase()]
+      );
       if (emailExist.rows.length)
         return res.status(409).json({ success: false, message: 'This email is already registered.' });
     }
@@ -96,7 +146,7 @@ exports.registerStudent = async (req, res) => {
   }
 };
 
-// POST /api/auth/student-login  (PRN + DOB)
+// ── POST /api/auth/student-login  (PRN + DOB) ────────────────────
 exports.studentLogin = async (req, res) => {
   try {
     const { roll_no, date_of_birth } = req.body;
@@ -121,7 +171,11 @@ exports.studentLogin = async (req, res) => {
   }
 };
 
-// POST /api/auth/admin-login
+// ── POST /api/auth/admin-login ────────────────────────────────────
+// Protected by brute-force lockout:
+//   - 5 consecutive wrong passwords → account locked for 15 minutes
+//   - Correct password → counter resets
+//   - Timing-safe: always runs bcrypt even when account not found
 exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -133,13 +187,55 @@ exports.adminLogin = async (req, res) => {
       [email.trim().toLowerCase()]
     );
 
-    // Always run bcrypt even if no user found — prevents timing attack
-    const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    // Always run bcrypt even when no account found — prevents user enumeration via timing
+    const dummyHash = '$2a$12$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ0123';
     const hash      = rows[0] ? rows[0].password_hash : dummyHash;
-    const match     = await bcrypt.compare(password, hash);
 
-    if (!rows[0] || !match)
+    // ── Check lockout before doing anything else ──────────────
+    if (rows[0] && rows[0].locked_until) {
+      const lockedUntil = new Date(rows[0].locked_until);
+      if (lockedUntil > new Date()) {
+        const minutesLeft = Math.ceil((lockedUntil - new Date()) / 60000);
+        return res.status(429).json({
+          success: false,
+          message: `Account locked due to too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`
+        });
+      }
+    }
+
+    const match = await bcrypt.compare(password, hash);
+
+    if (!rows[0] || !match) {
+      // Increment failure counter if account exists
+      if (rows[0]) {
+        const newCount = (rows[0].failed_attempts || 0) + 1;
+        if (newCount >= MAX_FAILED_ATTEMPTS) {
+          // Lock the account
+          const lockUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+          await db.query(
+            'UPDATE admins SET failed_attempts=$1, locked_until=$2 WHERE id=$3',
+            [newCount, lockUntil, rows[0].id]
+          );
+          console.warn(`🔒 Admin account locked: ${email} (${newCount} failed attempts)`);
+          return res.status(429).json({
+            success: false,
+            message: `Too many failed attempts. Account locked for ${LOCKOUT_MINUTES} minutes.`
+          });
+        } else {
+          await db.query(
+            'UPDATE admins SET failed_attempts=$1 WHERE id=$2',
+            [newCount, rows[0].id]
+          );
+        }
+      }
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // ── Success — reset failure counter ───────────────────────
+    await db.query(
+      'UPDATE admins SET failed_attempts=0, locked_until=NULL WHERE id=$1',
+      [rows[0].id]
+    );
 
     const token = signToken(rows[0].id, 'admin');
     res.json({
@@ -153,7 +249,7 @@ exports.adminLogin = async (req, res) => {
   }
 };
 
-// POST /api/auth/recruiter-login
+// ── POST /api/auth/recruiter-login ───────────────────────────────
 exports.recruiterLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -171,7 +267,7 @@ exports.recruiterLogin = async (req, res) => {
       [email.trim().toLowerCase()]
     );
 
-    const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    const dummyHash = '$2a$12$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ0123';
     const hash      = rows[0] ? rows[0].password_hash : dummyHash;
     const match     = await bcrypt.compare(password, hash);
 
@@ -199,31 +295,5 @@ exports.recruiterLogin = async (req, res) => {
   } catch (err) {
     console.error('recruiterLogin error:', err.message);
     res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
-  }
-};
-
-// POST /api/auth/setup-admin  (one-time)
-exports.setupAdmin = async (req, res) => {
-  try {
-    const count = await db.query('SELECT COUNT(*) FROM admins');
-    if (parseInt(count.rows[0].count) > 0)
-      return res.status(403).json({ success: false, message: 'Admin already exists.' });
-
-    const { name, email, password } = req.body;
-    if (!name || !email || !password)
-      return res.status(400).json({ success: false, message: 'All fields required.' });
-    if (password.length < 8)
-      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
-
-    const hash = await bcrypt.hash(password, 10);
-    const { rows } = await db.query(
-      'INSERT INTO admins (name,email,password_hash) VALUES ($1,$2,$3) RETURNING id,name,email',
-      [name.trim(), email.trim().toLowerCase(), hash]
-    );
-    res.status(201).json({ success: true, message: 'Admin created.', admin: rows[0] });
-
-  } catch (err) {
-    console.error('setupAdmin error:', err.message);
-    res.status(500).json({ success: false, message: 'Setup failed.' });
   }
 };

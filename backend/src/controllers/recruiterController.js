@@ -34,6 +34,36 @@ exports.getDashboard = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
+// PUT /api/recruiter/drive-details
+// Recruiter fills in job role, CTC and description for their assigned drive
+exports.updateDriveDetails = async (req, res) => {
+  try {
+    const driveId = req.user.drive_id;
+    if (!driveId)
+      return res.status(400).json({ success: false, message: 'No drive assigned to you.' });
+
+    const { job_role, ctc, description } = req.body;
+
+    if (!job_role || !job_role.trim())
+      return res.status(400).json({ success: false, message: 'Job role is required.' });
+
+    const { rows } = await db.query(
+      `UPDATE drives
+       SET job_role=$1, ctc=$2, description=$3, updated_at=now()
+       WHERE id=$4 RETURNING *`,
+      [
+        job_role.trim(),
+        ctc ? parseFloat(ctc) : null,
+        description ? description.trim() : '',
+        driveId
+      ]
+    );
+
+    if (!rows[0]) return res.status(404).json({ success: false, message: 'Drive not found.' });
+    res.json({ success: true, drive: rows[0] });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
 // GET /api/recruiter/students
 exports.getStudents = async (req, res) => {
   try {
@@ -93,12 +123,9 @@ exports.markBulkAttendance = async (req, res) => {
     const { attendances } = req.body;
     const driveId = req.user.drive_id;
     if (!driveId) return res.status(400).json({ success: false, message: 'No drive assigned.' });
-
-    // BUG FIX: missing validation for attendances array
     if (!Array.isArray(attendances) || attendances.length === 0)
       return res.status(400).json({ success: false, message: 'attendances must be a non-empty array.' });
 
-    // BUG FIX: was using sequential await in loop (N+1 queries). Use Promise.all for parallel execution.
     await Promise.all(attendances.map(a =>
       db.query(
         `INSERT INTO attendance (student_id, drive_id, present, marked_by, checked_in_at)
@@ -138,14 +165,10 @@ exports.bulkUpdateStatus = async (req, res) => {
   try {
     const { updates } = req.body;
     const driveId = req.user.drive_id;
-
-    // BUG FIX: missing validation for updates array
     if (!Array.isArray(updates) || updates.length === 0)
       return res.status(400).json({ success: false, message: 'updates must be a non-empty array.' });
 
     const valid = ['shortlisted','offered','rejected','applied'];
-
-    // BUG FIX: was using sequential await in loop. Use Promise.all.
     await Promise.all(
       updates
         .filter(u => valid.includes(u.status))

@@ -36,7 +36,6 @@ exports.getStudents = async (req, res) => {
     if (branch)   { conds.push(`branch=$${i++}`);  params.push(branch); }
     if (min_cgpa) { conds.push(`cgpa>=$${i++}`);   params.push(parseFloat(min_cgpa)); }
     if (backlogs !== undefined && backlogs !== '') { conds.push(`backlogs<=$${i++}`); params.push(parseInt(backlogs)); }
-    // BUG FIX: search param used index $i twice without incrementing before second use
     if (search) {
       conds.push(`(name ILIKE $${i} OR roll_no ILIKE $${i})`);
       params.push(`%${search}%`);
@@ -160,14 +159,35 @@ exports.getEventDrives = async (req, res) => {
 
 exports.createDrive = async (req, res) => {
   try {
-    const { event_id, company_name, job_role, ctc, description, eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches } = req.body;
-    if (!event_id || !company_name || !job_role)
-      return res.status(400).json({ success: false, message: 'Event, company name and job role are required.' });
-    const branches = Array.isArray(eligibility_branches) ? eligibility_branches.join(',') : (eligibility_branches || '');
+    const {
+      event_id, company_name,
+      job_role, ctc, description,
+      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches
+    } = req.body;
+
+    // job_role is now optional — recruiter fills it in later
+    if (!event_id || !company_name)
+      return res.status(400).json({ success: false, message: 'Event and company name are required.' });
+
+    const branches = Array.isArray(eligibility_branches)
+      ? eligibility_branches.join(',')
+      : (eligibility_branches || '');
+
     const { rows } = await db.query(
-      `INSERT INTO drives (event_id,company_name,job_role,ctc,description,eligibility_min_cgpa,eligibility_backlogs_allowed,eligibility_branches)
+      `INSERT INTO drives
+         (event_id, company_name, job_role, ctc, description,
+          eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [event_id, company_name, job_role, ctc || null, description || '', parseFloat(eligibility_min_cgpa) || 0, parseInt(eligibility_backlogs_allowed) || 0, branches]
+      [
+        event_id,
+        company_name,
+        job_role  ? job_role.trim()  : null,
+        ctc       ? ctc              : null,
+        description || '',
+        parseFloat(eligibility_min_cgpa)        || 0,
+        parseInt(eligibility_backlogs_allowed)  || 0,
+        branches
+      ]
     );
     res.status(201).json({ success: true, drive: rows[0] });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -175,13 +195,29 @@ exports.createDrive = async (req, res) => {
 
 exports.updateDrive = async (req, res) => {
   try {
-    const { company_name, job_role, ctc, description, eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches } = req.body;
-    const branches = Array.isArray(eligibility_branches) ? eligibility_branches.join(',') : (eligibility_branches || '');
+    const {
+      company_name, job_role, ctc, description,
+      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches
+    } = req.body;
+    const branches = Array.isArray(eligibility_branches)
+      ? eligibility_branches.join(',')
+      : (eligibility_branches || '');
     const { rows } = await db.query(
-      `UPDATE drives SET company_name=$1,job_role=$2,ctc=$3,description=$4,
-       eligibility_min_cgpa=$5,eligibility_backlogs_allowed=$6,eligibility_branches=$7,updated_at=now()
+      `UPDATE drives
+       SET company_name=$1, job_role=$2, ctc=$3, description=$4,
+           eligibility_min_cgpa=$5, eligibility_backlogs_allowed=$6,
+           eligibility_branches=$7, updated_at=now()
        WHERE id=$8 RETURNING *`,
-      [company_name, job_role, ctc || null, description || '', parseFloat(eligibility_min_cgpa) || 0, parseInt(eligibility_backlogs_allowed) || 0, branches, req.params.id]
+      [
+        company_name,
+        job_role  ? job_role.trim()  : null,
+        ctc       ? ctc              : null,
+        description || '',
+        parseFloat(eligibility_min_cgpa)       || 0,
+        parseInt(eligibility_backlogs_allowed) || 0,
+        branches,
+        req.params.id
+      ]
     );
     if (!rows[0]) return res.status(404).json({ success: false, message: 'Company drive not found' });
     res.json({ success: true, drive: rows[0] });
@@ -190,7 +226,6 @@ exports.updateDrive = async (req, res) => {
 
 exports.deleteDrive = async (req, res) => {
   try {
-    // BUG FIX: was silently deleting without checking if drive exists
     const { rows: check } = await db.query('SELECT id FROM drives WHERE id=$1', [req.params.id]);
     if (!check[0]) return res.status(404).json({ success: false, message: 'Company drive not found' });
     await db.query('DELETE FROM drives WHERE id=$1', [req.params.id]);
@@ -218,7 +253,6 @@ exports.createRecruiter = async (req, res) => {
     const { name, email, password, company_name, drive_id } = req.body;
     if (!name || !email || !password || !company_name)
       return res.status(400).json({ success: false, message: 'Name, email, password and company name required.' });
-    // BUG FIX: email lookup was not lowercasing before comparison
     const exist = await db.query('SELECT id FROM recruiters WHERE email=$1', [email.trim().toLowerCase()]);
     if (exist.rows.length) return res.status(400).json({ success: false, message: 'Email already registered.' });
     const hash = await bcrypt.hash(password, 10);

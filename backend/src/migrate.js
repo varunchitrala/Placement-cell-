@@ -36,11 +36,19 @@ const migrations = [
   `ALTER TABLE students ADD COLUMN IF NOT EXISTS resume_url       TEXT`,
 
   // ── 005: drop old columns that no longer exist in schema ──────
-  //  (safe — IF EXISTS means no error if already dropped)
   `ALTER TABLE drives DROP COLUMN IF EXISTS status`,
   `ALTER TABLE drives DROP COLUMN IF EXISTS room`,
   `ALTER TABLE drives DROP COLUMN IF EXISTS slot_time`,
   `ALTER TABLE drives DROP COLUMN IF EXISTS drive_date`,
+
+  // ── 006: admin brute-force lockout columns ────────────────────
+  `ALTER TABLE admins ADD COLUMN IF NOT EXISTS failed_attempts INTEGER DEFAULT 0`,
+  `ALTER TABLE admins ADD COLUMN IF NOT EXISTS locked_until    TIMESTAMP DEFAULT NULL`,
+
+  // ── 007: make job_role nullable on drives ─────────────────────
+  // job_role is now filled by the recruiter from their dashboard,
+  // not by admin when adding the company — so it can be NULL initially.
+  `ALTER TABLE drives ALTER COLUMN job_role DROP NOT NULL`,
 
 ];
 
@@ -53,7 +61,6 @@ async function runMigrations() {
       await db.query(migrations[i]);
       applied++;
     } catch (err) {
-      // "already exists" errors are fine — log and continue
       if (
         err.message.includes('already exists') ||
         err.message.includes('does not exist')
