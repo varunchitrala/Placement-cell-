@@ -62,6 +62,7 @@
     .btn-submit.recruiter-btn { background-color:#7C3AED; box-shadow:0 4px 6px -1px rgba(124,58,237,0.3); }
     .btn-submit.recruiter-btn:hover { background-color:#6D28D9; }
     .btn-submit:active { transform:translateY(0); }
+    .btn-submit:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
 
     .footer-links { text-align:left; margin-top:20px; font-size:14px; color:var(--text-muted); }
     .footer-links a { color:var(--primary); font-weight:600; text-decoration:none; }
@@ -109,7 +110,7 @@
       </div>
 
       <!-- Student Form -->
-      <form id="studentForm" onsubmit="handleStudentLogin(event)">
+      <form id="studentForm">
         <div class="form-group">
           <label>University PRN Number</label>
           <div class="input-icon-wrap">
@@ -125,7 +126,7 @@
           </div>
         </div>
         <div id="sLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit">
+        <button type="submit" class="btn-submit" id="sLoginBtn">
           <span id="sLoginText">Sign In Securely</span>
           <span id="sLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Processing...</span>
         </button>
@@ -133,7 +134,7 @@
       </form>
 
       <!-- Recruiter Form -->
-      <form id="recruiterForm" class="hidden" onsubmit="handleRecruiterLogin(event)">
+      <form id="recruiterForm" class="hidden">
         <div class="recruiter-badge"><i class="fas fa-briefcase"></i> Recruiter Portal — Credentials provided by Admin</div>
         <div class="form-group">
           <label>Recruiter Email</label>
@@ -151,14 +152,14 @@
           </div>
         </div>
         <div id="rLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit recruiter-btn">
+        <button type="submit" class="btn-submit recruiter-btn" id="rLoginBtn">
           <span id="rLoginText"><i class="fas fa-briefcase"></i> Access Recruiter Panel</span>
           <span id="rLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
         </button>
       </form>
 
       <!-- Admin Form -->
-      <form id="adminForm" class="hidden" onsubmit="handleAdminLogin(event)">
+      <form id="adminForm" class="hidden">
         <div class="form-group">
           <label>Administrative Email</label>
           <div class="input-icon-wrap">
@@ -175,7 +176,7 @@
           </div>
         </div>
         <div id="aLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit">
+        <button type="submit" class="btn-submit" id="aLoginBtn">
           <span id="aLoginText">Access Admin Panel</span>
           <span id="aLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
         </button>
@@ -186,26 +187,25 @@
 
   <script src="js/api.js"></script>
   <script>
-    // Redirect if already logged in
-    var _u = null;
-    try { _u = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) { localStorage.clear(); }
-    if (_u && _u.role) {
-      if      (_u.role === 'admin')     window.location.href = 'admin/dashboard.html';
-      else if (_u.role === 'recruiter') window.location.href = 'recruiter/dashboard.html';
-      else                              window.location.href = 'student/dashboard.html';
-    }
+    // ── Redirect if already logged in ────────────────────────────
+    (function() {
+      var _u = null;
+      try { _u = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) { localStorage.clear(); }
+      if (_u && _u.role) {
+        if      (_u.role === 'admin')     window.location.href = 'admin/dashboard.html';
+        else if (_u.role === 'recruiter') window.location.href = 'recruiter/dashboard.html';
+        else                              window.location.href = 'student/dashboard.html';
+      }
+    })();
 
     // ── Switch between the 3 login tabs ──────────────────────────
     function switchRole(role) {
-      // Tabs
       document.getElementById('tab-student').classList.toggle('active',   role === 'student');
       document.getElementById('tab-recruiter').classList.toggle('active', role === 'recruiter');
       document.getElementById('tab-admin').classList.toggle('active',     role === 'admin');
-      // Forms
       document.getElementById('studentForm').classList.toggle('hidden',   role !== 'student');
       document.getElementById('recruiterForm').classList.toggle('hidden', role !== 'recruiter');
       document.getElementById('adminForm').classList.toggle('hidden',     role !== 'admin');
-      // Clear errors
       document.getElementById('sLoginError').classList.add('hidden');
       document.getElementById('rLoginError').classList.add('hidden');
       document.getElementById('aLoginError').classList.add('hidden');
@@ -219,92 +219,90 @@
       icon.className = (input.type === 'text') ? 'fas fa-eye-slash' : 'fas fa-eye';
     }
 
+    // ── Helpers ───────────────────────────────────────────────────
+    function setLoading(textId, spinnerId, btnId, loading) {
+      document.getElementById(textId).classList.toggle('hidden', loading);
+      document.getElementById(spinnerId).classList.toggle('hidden', !loading);
+      document.getElementById(btnId).disabled = loading;
+    }
+
+    function showError(errId, message) {
+      var el = document.getElementById(errId);
+      el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
+      el.classList.remove('hidden');
+    }
+
     // ── Student login ─────────────────────────────────────────────
-    async function handleStudentLogin(e) {
+    document.getElementById('studentForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      var err = document.getElementById('sLoginError');
-      err.classList.add('hidden');
-      document.getElementById('sLoginText').classList.add('hidden');
-      document.getElementById('sLoginSpinner').classList.remove('hidden');
+      document.getElementById('sLoginError').classList.add('hidden');
+      setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', true);
       try {
         var data = await api.post('/auth/student-login', {
           roll_no:       document.getElementById('s_prn').value.trim().toUpperCase(),
           date_of_birth: document.getElementById('s_dob').value
         });
-        if (data.success) {
+        if (data && data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           window.location.href = 'student/dashboard.html';
         } else {
-          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
-          err.classList.remove('hidden');
+          showError('sLoginError', (data && data.message) || 'Login failed. Please try again.');
+          setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', false);
         }
       } catch(ex) {
-        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
-        err.classList.remove('hidden');
-      } finally {
-        document.getElementById('sLoginText').classList.remove('hidden');
-        document.getElementById('sLoginSpinner').classList.add('hidden');
+        showError('sLoginError', 'Cannot reach server. Please check your connection.');
+        setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', false);
       }
-    }
+    });
 
     // ── Recruiter login ───────────────────────────────────────────
-    async function handleRecruiterLogin(e) {
+    document.getElementById('recruiterForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      var err = document.getElementById('rLoginError');
-      err.classList.add('hidden');
-      document.getElementById('rLoginText').classList.add('hidden');
-      document.getElementById('rLoginSpinner').classList.remove('hidden');
+      document.getElementById('rLoginError').classList.add('hidden');
+      setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', true);
       try {
         var data = await api.post('/auth/recruiter-login', {
           email:    document.getElementById('r_email').value.trim(),
           password: document.getElementById('r_password').value
         });
-        if (data.success) {
+        if (data && data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           window.location.href = 'recruiter/dashboard.html';
         } else {
-          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
-          err.classList.remove('hidden');
+          showError('rLoginError', (data && data.message) || 'Login failed. Please try again.');
+          setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', false);
         }
       } catch(ex) {
-        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
-        err.classList.remove('hidden');
-      } finally {
-        document.getElementById('rLoginText').classList.remove('hidden');
-        document.getElementById('rLoginSpinner').classList.add('hidden');
+        showError('rLoginError', 'Cannot reach server. Please check your connection.');
+        setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', false);
       }
-    }
+    });
 
     // ── Admin login ───────────────────────────────────────────────
-    async function handleAdminLogin(e) {
+    document.getElementById('adminForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      var err = document.getElementById('aLoginError');
-      err.classList.add('hidden');
-      document.getElementById('aLoginText').classList.add('hidden');
-      document.getElementById('aLoginSpinner').classList.remove('hidden');
+      document.getElementById('aLoginError').classList.add('hidden');
+      setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', true);
       try {
         var data = await api.post('/auth/admin-login', {
           email:    document.getElementById('a_email').value.trim(),
           password: document.getElementById('a_password').value
         });
-        if (data.success) {
+        if (data && data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           window.location.href = 'admin/dashboard.html';
         } else {
-          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
-          err.classList.remove('hidden');
+          showError('aLoginError', (data && data.message) || 'Login failed. Please try again.');
+          setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', false);
         }
       } catch(ex) {
-        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
-        err.classList.remove('hidden');
-      } finally {
-        document.getElementById('aLoginText').classList.remove('hidden');
-        document.getElementById('aLoginSpinner').classList.add('hidden');
+        showError('aLoginError', 'Cannot reach server. Please check your connection.');
+        setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', false);
       }
-    }
+    });
   </script>
 </body>
 </html>

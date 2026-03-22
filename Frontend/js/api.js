@@ -13,8 +13,14 @@ const api = {
 
   async get(endpoint) {
     const res = await fetch(`${API_BASE}${endpoint}`, { headers: api.headers() });
+    // BUG FIX: Only redirect to login on 401 for non-login pages.
+    // On index.html (login page) a 401 is a normal "wrong credentials" response,
+    // NOT a session expiry — redirecting here caused an infinite redirect loop.
     const data = await res.json();
-    if (res.status === 401) { localStorage.clear(); window.location.href = '/index.html'; }
+    if (res.status === 401 && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    }
     return data;
   },
 
@@ -22,8 +28,12 @@ const api = {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       method: 'POST', headers: api.headers(), body: JSON.stringify(body)
     });
+    // BUG FIX: Same redirect loop fix — don't redirect on 401 from the login page itself.
     const data = await res.json();
-    if (res.status === 401) { localStorage.clear(); window.location.href = '/index.html'; }
+    if (res.status === 401 && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    }
     return data;
   },
 
@@ -32,7 +42,10 @@ const api = {
       method: 'PUT', headers: api.headers(), body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (res.status === 401) { localStorage.clear(); window.location.href = '/index.html'; }
+    if (res.status === 401 && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    }
     return data;
   },
 
@@ -51,7 +64,9 @@ function requireAuth(expectedRole) {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (!token || !user) { window.location.href = '/index.html'; return null; }
   if (expectedRole && user.role !== expectedRole) {
-    window.location.href = user.role === 'admin' ? '/admin/dashboard.html' : '/student/dashboard.html';
+    if (user.role === 'admin')     window.location.href = '/admin/dashboard.html';
+    else if (user.role === 'recruiter') window.location.href = '/recruiter/dashboard.html';
+    else                           window.location.href = '/student/dashboard.html';
     return null;
   }
   return user;
@@ -71,7 +86,7 @@ function initSidebar(role) {
   const roleEl = document.getElementById('sidebarUserRole');
   const avatar = document.getElementById('sidebarAvatar');
   if (name) name.textContent = user.name || 'User';
-  if (roleEl) roleEl.textContent = role === 'admin' ? 'Admin / TPO' : (user.roll_no || 'Student');
+  if (roleEl) roleEl.textContent = role === 'admin' ? 'Admin / TPO' : (role === 'recruiter' ? user.company_name || 'Recruiter' : (user.roll_no || 'Student'));
   if (avatar) avatar.textContent = (user.name || 'U')[0].toUpperCase();
 
   // Mark active navitem
@@ -105,7 +120,12 @@ function showToast(message, type = 'success') {
   const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
   toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    toast.style.transition = 'all 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 // Add slideIn animation
