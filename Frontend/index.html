@@ -1,308 +1,721 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sandip University - Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sandip University – Placement Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
     :root {
-      --primary:#2563EB; --primary-hover:#1D4ED8;
-      --bg-white:#FFFFFF; --bg-brand:#EFF6FF;
-      --text-dark:#111827; --text-muted:#6B7280; --text-brand:#1E3A8A;
-      --border-color:#E5E7EB; --input-bg:#FFFFFF;
-      --focus-ring:rgba(37,99,235,0.2);
-      --radius-md:8px; --radius-sm:6px;
-      --transition:all 0.2s ease-in-out;
+      --blue:       #2563EB;
+      --blue-dark:  #1D4ED8;
+      --blue-light: #EFF6FF;
+      --violet:     #7C3AED;
+      --text:       #111827;
+      --sub:        #374151;
+      --muted:      #6B7280;
+      --border:     #E5E7EB;
+      --surface:    #F9FAFB;
+      --white:      #FFFFFF;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; color:var(--text-dark); min-height:100vh; display:flex; overflow:hidden; background-color:var(--bg-white); }
 
-    .brand-side {
-      flex:1.2; background-color:var(--bg-brand);
-      background-image:radial-gradient(#BFDBFE 1px, transparent 1px);
-      background-size:24px 24px;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      padding:60px; border-right:1px solid var(--border-color); position:relative;
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background: var(--white);
+      color: var(--text);
     }
-    .brand-content { max-width:500px; text-align:center; }
-    .uni-logo { height:120px; width:auto; margin-bottom:32px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
-    .brand-content h1 { font-size:36px; font-weight:700; color:var(--text-brand); margin-bottom:16px; letter-spacing:-0.025em; line-height:1.2; }
-    .brand-content p { font-size:16px; color:#4B5563; line-height:1.6; }
 
-    .form-side { flex:1; background-color:var(--bg-white); display:flex; align-items:center; justify-content:center; min-width:500px; padding:40px; overflow-y:auto; }
-    .form-wrapper { width:100%; max-width:440px; }
+    /* ══════════════════════════
+       TWO-COLUMN LAYOUT
+    ══════════════════════════ */
+    .page {
+      display: flex;
+      min-height: 100vh;
+    }
 
-    .form-header { margin-bottom:28px; text-align:left; }
-    .form-header h2 { font-size:28px; font-weight:700; color:var(--text-dark); margin-bottom:8px; letter-spacing:-0.025em; }
-    .form-header p { font-size:15px; color:var(--text-muted); }
+    /* ── LEFT BRAND PANEL ── */
+    .panel-left {
+      flex: 1;
+      background: #F0F5FF;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 64px;
+      position: relative;
+      overflow: hidden;
+    }
 
-    .role-switcher { display:flex; background-color:#F3F4F6; border-radius:var(--radius-md); padding:4px; margin-bottom:28px; border:1px solid var(--border-color); gap:4px; }
-    .switcher-btn { flex:1; border:none; background:transparent; padding:9px 6px; font-size:13px; font-weight:600; color:var(--text-muted); border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit; white-space:nowrap; }
-    .switcher-btn.active { background-color:var(--bg-white); color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-    .switcher-btn:not(.active):hover { color:var(--text-dark); }
+    /* clean grid lines */
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.06) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+    }
 
-    .form-group { margin-bottom:20px; }
-    .form-group label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:8px; }
-    .input-icon-wrap { position:relative; }
-    .input-icon-wrap i.icon-left { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9CA3AF; font-size:15px; transition:var(--transition); pointer-events:none; }
-    .form-control { width:100%; padding:13px 14px 13px 42px; font-family:inherit; font-size:14px; color:var(--text-dark); background-color:var(--input-bg); border:1px solid #D1D5DB; border-radius:var(--radius-md); transition:var(--transition); }
-    .form-control::placeholder { color:#9CA3AF; }
-    .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--focus-ring); }
-    .pwd-toggle { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9CA3AF; cursor:pointer; font-size:15px; }
-    .pwd-toggle:hover { color:#4B5563; }
+    /* soft radial fade over grid */
+    .panel-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 75% 75% at 50% 50%, rgba(240,245,255,0.4) 0%, transparent 100%);
+      pointer-events: none;
+    }
 
-    .error-msg { background-color:#FEF2F2; border:1px solid #FECACA; color:#DC2626; padding:12px; border-radius:var(--radius-md); font-size:13px; font-weight:500; margin-bottom:20px; display:flex; align-items:flex-start; gap:10px; }
-    .error-msg i { margin-top:2px; }
-    .hidden { display:none !important; }
+    .panel-left-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 440px;
+    }
 
-    .btn-submit { width:100%; background-color:var(--primary); color:#FFFFFF; border:none; padding:14px; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:var(--transition); margin-top:24px; box-shadow:0 4px 6px -1px var(--focus-ring); }
-    .btn-submit:hover { background-color:var(--primary-hover); transform:translateY(-1px); }
-    .btn-submit.recruiter-btn { background-color:#7C3AED; box-shadow:0 4px 6px -1px rgba(124,58,237,0.3); }
-    .btn-submit.recruiter-btn:hover { background-color:#6D28D9; }
-    .btn-submit:active { transform:translateY(0); }
-    .btn-submit:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+    /* ── Logo ── */
+    .logo-area {
+      margin-bottom: 36px;
+    }
+    .logo-img {
+      height: 100px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 20px rgba(37,99,235,0.15));
+      animation: logoFloat 5s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%,100% { transform: translateY(0);   }
+      50%      { transform: translateY(-7px); }
+    }
 
-    .footer-links { text-align:left; margin-top:20px; font-size:14px; color:var(--text-muted); }
-    .footer-links a { color:var(--primary); font-weight:600; text-decoration:none; }
-    .footer-links a:hover { text-decoration:underline; }
+    /* ── University name ── */
+    .univ-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .univ-label i { font-size: 10px; }
 
-    .recruiter-badge { display:inline-flex; align-items:center; gap:6px; background:#F5F3FF; color:#7C3AED; border:1px solid #DDD6FE; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; margin-bottom:16px; }
+    /* ── Headline ── */
+    .panel-left-inner h1 {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.6px;
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+    .panel-left-inner h1 .highlight {
+      color: var(--blue);
+    }
+    .panel-left-inner p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-weight: 400;
+      margin-bottom: 36px;
+    }
 
-    @media(max-width:900px){
-      body { flex-direction:column; overflow:auto; }
-      .brand-side { padding:40px 20px; border-right:none; border-bottom:1px solid var(--border-color); flex:none; min-height:300px; }
-      .uni-logo { height:90px; }
-      .brand-content h1 { font-size:28px; }
-      .form-side { min-width:100%; padding:40px 20px; }
-      .form-wrapper { max-width:100%; }
+    /* ── Stats ── */
+    .stat-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .stat-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 18px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      min-width: 88px;
+    }
+    .stat-box:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px rgba(37,99,235,0.12);
+    }
+    .stat-box .sb-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .stat-box .sb-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Trust line ── */
+    .trust-line {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .trust-item i { color: #10B981; font-size: 11px; }
+
+    /* ── RIGHT FORM PANEL ── */
+    .panel-right {
+      width: 460px;
+      min-width: 460px;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 52px;
+      overflow-y: auto;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* ── Form brand mark ── */
+    .form-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-mark-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--blue), #4F46E5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+      flex-shrink: 0;
+    }
+    .form-mark-text { font-size: 13px; }
+    .form-mark-text .fmt-top {
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+      line-height: 1.3;
+    }
+    .form-mark-text .fmt-bot {
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* ── Form heading ── */
+    .form-heading { margin-bottom: 22px; }
+    .form-heading h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.4px;
+      margin-bottom: 5px;
+    }
+    .form-heading p {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── Role tabs ── */
+    .role-tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      margin-bottom: 24px;
+    }
+    .role-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 9px 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .role-tab:hover:not(.active) { color: var(--sub); }
+    .role-tab.active {
+      background: var(--white);
+      color: var(--blue);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 0 0 1px rgba(37,99,235,0.08);
+    }
+    .role-tab.active.v-tab { color: var(--violet); box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 0 0 1px rgba(124,58,237,0.08); }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--sub);
+      margin-bottom: 6px;
+    }
+    .field-wrap { position: relative; }
+    .field-wrap .f-ico {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: #9CA3AF;
+      pointer-events: none;
+      transition: color 0.15s;
+    }
+    .f-input {
+      width: 100%;
+      padding: 11px 14px 11px 38px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      outline: none;
+      transition: all 0.18s;
+    }
+    .f-input::placeholder { color: #C4CAD4; font-weight: 400; }
+    .f-input:focus {
+      border-color: var(--blue);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+    }
+    .f-input:focus ~ .f-ico { color: var(--blue); }
+
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #9CA3AF;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+    .eye-btn:hover { color: var(--muted); }
+
+    /* ── Recruiter note ── */
+    .rec-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: #F5F3FF;
+      border: 1px solid #DDD6FE;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #5B21B6;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .rec-note i { margin-top: 1px; flex-shrink: 0; font-size: 12px; }
+
+    /* ── Error ── */
+    .err-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #DC2626;
+      margin-bottom: 14px;
+    }
+    .err-box i { margin-top: 1px; flex-shrink: 0; }
+
+    /* ── Submit buttons ── */
+    .btn-submit {
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 9px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .btn-blue {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+    }
+    .btn-blue:hover {
+      background: var(--blue-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(37,99,235,0.40);
+    }
+    .btn-violet {
+      background: var(--violet);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.35);
+    }
+    .btn-violet:hover {
+      background: #6D28D9;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(124,58,237,0.40);
+    }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    /* ── Footer link ── */
+    .foot-link {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .foot-link a {
+      color: var(--blue);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .foot-link a:hover { text-decoration: underline; }
+
+    .hidden { display: none !important; }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 940px) {
+      .page { flex-direction: column; }
+      .panel-left { padding: 48px 28px; border-right: none; border-bottom: 1px solid var(--border); }
+      .panel-right { width: 100%; min-width: unset; padding: 40px 28px; }
+      .form-container { max-width: 100%; }
+      .panel-left-inner h1 { font-size: 24px; }
+      .logo-img { height: 76px; }
     }
   </style>
 </head>
 <body>
-  <div class="brand-side">
-    <div class="brand-content">
-      <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="uni-logo"/>
-      <h1>Sandip University Placement Portal</h1>
-      <p>Your gateway to world-class career opportunities. Manage your academic profile, view active placement drives, and connect with top recruiters seamlessly.</p>
+<div class="page">
+
+  <!-- ══ LEFT ══ -->
+  <div class="panel-left">
+    <div class="panel-left-inner">
+
+      <div class="logo-area">
+        <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="logo-img"/>
+      </div>
+
+      <div class="univ-label">
+        <i class="fas fa-university"></i> Sandip University
+      </div>
+
+      <h1>
+        Official <span class="highlight">Placement</span><br/>Management Portal
+      </h1>
+
+      <p>
+        Apply to top companies, track your<br/>
+        applications, and manage your entire<br/>
+        placement journey — all in one place.
+      </p>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <span class="sb-num">1500+</span>
+          <span class="sb-lbl">Students</span>
+        </div>
+        <div class="stat-box">
+          <span class="sb-num">50+</span>
+          <span class="sb-lbl">Companies</span>
+        </div>
+        <div class="stat-box">
+          <span class="sb-num">100%</span>
+          <span class="sb-lbl">Secure</span>
+        </div>
+      </div>
+
+      <div class="trust-line">
+        <div class="trust-item"><i class="fas fa-check-circle"></i> SSL Encrypted</div>
+        <div class="trust-item"><i class="fas fa-check-circle"></i> Data Protected</div>
+        <div class="trust-item"><i class="fas fa-check-circle"></i> Always Online</div>
+      </div>
+
     </div>
   </div>
 
-  <div class="form-side">
-    <div class="form-wrapper">
-      <div class="form-header">
-        <h2>Welcome Back</h2>
-        <p>Log in to access your placement dashboard</p>
+  <!-- ══ RIGHT ══ -->
+  <div class="panel-right">
+    <div class="form-container">
+
+      <div class="form-mark">
+        <div class="form-mark-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="form-mark-text">
+          <span class="fmt-top">Placement Cell</span>
+          <span class="fmt-bot">Sandip University, Nashik</span>
+        </div>
       </div>
 
-      <!-- 3-Role Switcher -->
-      <div class="role-switcher">
-        <button type="button" class="switcher-btn active" id="tab-student" onclick="switchRole('student')">
+      <div class="form-heading">
+        <h2>Sign in to your account</h2>
+        <p>Enter your credentials to continue</p>
+      </div>
+
+      <!-- Role tabs -->
+      <div class="role-tabs">
+        <button type="button" class="role-tab active" id="tab-student" onclick="switchRole('student')">
           <i class="fas fa-user-graduate"></i> Student
         </button>
-        <button type="button" class="switcher-btn" id="tab-recruiter" onclick="switchRole('recruiter')">
+        <button type="button" class="role-tab" id="tab-recruiter" onclick="switchRole('recruiter')">
           <i class="fas fa-briefcase"></i> Recruiter
         </button>
-        <button type="button" class="switcher-btn" id="tab-admin" onclick="switchRole('admin')">
-          <i class="fas fa-user-shield"></i> Admin
+        <button type="button" class="role-tab" id="tab-admin" onclick="switchRole('admin')">
+          <i class="fas fa-shield-alt"></i> Admin
         </button>
       </div>
 
-      <!-- Student Form -->
+      <!-- Student form -->
       <form id="studentForm">
-        <div class="form-group">
-          <label>University PRN Number</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-id-card icon-left"></i>
-            <input type="text" id="s_prn" class="form-control" required placeholder="Enter your PRN"/>
+        <div class="field">
+          <label>PRN / Student ID</label>
+          <div class="field-wrap">
+            <input type="text" id="s_prn" class="f-input" required placeholder="e.g. SU2021001234" autocomplete="off"/>
+            <i class="fas fa-id-card f-ico"></i>
           </div>
         </div>
-        <div class="form-group">
+        <div class="field">
           <label>Date of Birth</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-calendar-alt icon-left"></i>
-            <input type="date" id="s_dob" class="form-control" required/>
+          <div class="field-wrap">
+            <input type="date" id="s_dob" class="f-input" required/>
+            <i class="fas fa-calendar f-ico"></i>
           </div>
         </div>
-        <div id="sLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit" id="sLoginBtn">
-          <span id="sLoginText">Sign In Securely</span>
-          <span id="sLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Processing...</span>
+        <div id="sErr" class="err-box hidden"></div>
+        <button type="submit" class="btn-submit btn-blue" id="sBtn">
+          <span id="sTxt"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+          <span id="sSpin" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Signing in...</span>
         </button>
-        <div class="footer-links">Not registered? <a href="register.html">Apply Here</a></div>
+        <div class="foot-link">New student? <a href="register.html">Register here</a></div>
       </form>
 
-      <!-- Recruiter Form -->
+      <!-- Recruiter form -->
       <form id="recruiterForm" class="hidden">
-        <div class="recruiter-badge"><i class="fas fa-briefcase"></i> Recruiter Portal — Credentials provided by Admin</div>
-        <div class="form-group">
-          <label>Recruiter Email</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-envelope icon-left"></i>
-            <input type="email" id="r_email" class="form-control" required placeholder="recruiter@company.com"/>
+        <div class="rec-note">
+          <i class="fas fa-info-circle"></i>
+          Your login credentials are provided by the Placement Cell admin.
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <div class="field-wrap">
+            <input type="email" id="r_email" class="f-input" required placeholder="you@company.com"/>
+            <i class="fas fa-envelope f-ico"></i>
           </div>
         </div>
-        <div class="form-group">
+        <div class="field">
           <label>Password</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-lock icon-left"></i>
-            <input type="password" id="r_password" class="form-control" required placeholder="Enter your password"/>
-            <button type="button" class="pwd-toggle" onclick="togglePwd('r_password','rEyeIcon')"><i class="fas fa-eye" id="rEyeIcon"></i></button>
+          <div class="field-wrap">
+            <input type="password" id="r_password" class="f-input" required placeholder="Enter your password"/>
+            <i class="fas fa-lock f-ico"></i>
+            <button type="button" class="eye-btn" onclick="togglePwd('r_password','rEye')"><i class="fas fa-eye" id="rEye"></i></button>
           </div>
         </div>
-        <div id="rLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit recruiter-btn" id="rLoginBtn">
-          <span id="rLoginText"><i class="fas fa-briefcase"></i> Access Recruiter Panel</span>
-          <span id="rLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
+        <div id="rErr" class="err-box hidden"></div>
+        <button type="submit" class="btn-submit btn-violet" id="rBtn">
+          <span id="rTxt"><i class="fas fa-sign-in-alt"></i> Access Recruiter Panel</span>
+          <span id="rSpin" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
         </button>
       </form>
 
-      <!-- Admin Form -->
+      <!-- Admin form -->
       <form id="adminForm" class="hidden">
-        <div class="form-group">
-          <label>Administrative Email</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-envelope icon-left"></i>
-            <input type="email" id="a_email" class="form-control" required placeholder="admin@sandipuniversity.edu.in"/>
+        <div class="field">
+          <label>Admin Email</label>
+          <div class="field-wrap">
+            <input type="email" id="a_email" class="f-input" required placeholder="admin@sandipuniversity.edu.in"/>
+            <i class="fas fa-envelope f-ico"></i>
           </div>
         </div>
-        <div class="form-group">
+        <div class="field">
           <label>Password</label>
-          <div class="input-icon-wrap">
-            <i class="fas fa-lock icon-left"></i>
-            <input type="password" id="a_password" class="form-control" required placeholder="Enter your password"/>
-            <button type="button" class="pwd-toggle" onclick="togglePwd('a_password','aEyeIcon')"><i class="fas fa-eye" id="aEyeIcon"></i></button>
+          <div class="field-wrap">
+            <input type="password" id="a_password" class="f-input" required placeholder="Enter your password"/>
+            <i class="fas fa-lock f-ico"></i>
+            <button type="button" class="eye-btn" onclick="togglePwd('a_password','aEye')"><i class="fas fa-eye" id="aEye"></i></button>
           </div>
         </div>
-        <div id="aLoginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-submit" id="aLoginBtn">
-          <span id="aLoginText">Access Admin Panel</span>
-          <span id="aLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
+        <div id="aErr" class="err-box hidden"></div>
+        <button type="submit" class="btn-submit btn-blue" id="aBtn">
+          <span id="aTxt"><i class="fas fa-shield-alt"></i> Access Admin Panel</span>
+          <span id="aSpin" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
         </button>
       </form>
 
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script>
-    // ── Redirect if already logged in ────────────────────────────
-    (function() {
-      var _u = null;
-      try { _u = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) { localStorage.clear(); }
-      if (_u && _u.role) {
-        if      (_u.role === 'admin')     window.location.href = 'admin/dashboard.html';
-        else if (_u.role === 'recruiter') window.location.href = 'recruiter/dashboard.html';
-        else                              window.location.href = 'student/dashboard.html';
-      }
-    })();
-
-    // ── Switch between the 3 login tabs ──────────────────────────
-    function switchRole(role) {
-      document.getElementById('tab-student').classList.toggle('active',   role === 'student');
-      document.getElementById('tab-recruiter').classList.toggle('active', role === 'recruiter');
-      document.getElementById('tab-admin').classList.toggle('active',     role === 'admin');
-      document.getElementById('studentForm').classList.toggle('hidden',   role !== 'student');
-      document.getElementById('recruiterForm').classList.toggle('hidden', role !== 'recruiter');
-      document.getElementById('adminForm').classList.toggle('hidden',     role !== 'admin');
-      document.getElementById('sLoginError').classList.add('hidden');
-      document.getElementById('rLoginError').classList.add('hidden');
-      document.getElementById('aLoginError').classList.add('hidden');
+</div>
+<script src="js/api.js"></script>
+<script>
+  // Already logged in
+  (function(){
+    var u=null;
+    try{u=JSON.parse(localStorage.getItem('user')||'null');}catch(e){localStorage.clear();}
+    if(u&&u.role){
+      if(u.role==='admin')         location.href='admin/dashboard.html';
+      else if(u.role==='recruiter') location.href='recruiter/dashboard.html';
+      else                          location.href='student/dashboard.html';
     }
+  })();
 
-    // ── Password show/hide ────────────────────────────────────────
-    function togglePwd(inputId, iconId) {
-      var input = document.getElementById(inputId);
-      var icon  = document.getElementById(iconId);
-      input.type = (input.type === 'password') ? 'text' : 'password';
-      icon.className = (input.type === 'text') ? 'fas fa-eye-slash' : 'fas fa-eye';
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────
-    function setLoading(textId, spinnerId, btnId, loading) {
-      document.getElementById(textId).classList.toggle('hidden', loading);
-      document.getElementById(spinnerId).classList.toggle('hidden', !loading);
-      document.getElementById(btnId).disabled = loading;
-    }
-
-    function showError(errId, message) {
-      var el = document.getElementById(errId);
-      el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
-      el.classList.remove('hidden');
-    }
-
-    // ── Student login ─────────────────────────────────────────────
-    document.getElementById('studentForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      document.getElementById('sLoginError').classList.add('hidden');
-      setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', true);
-      try {
-        var data = await api.post('/auth/student-login', {
-          roll_no:       document.getElementById('s_prn').value.trim().toUpperCase(),
-          date_of_birth: document.getElementById('s_dob').value
-        });
-        if (data && data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = 'student/dashboard.html';
-        } else {
-          showError('sLoginError', (data && data.message) || 'Login failed. Please try again.');
-          setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', false);
-        }
-      } catch(ex) {
-        showError('sLoginError', 'Cannot reach server. Please check your connection.');
-        setLoading('sLoginText', 'sLoginSpinner', 'sLoginBtn', false);
-      }
+  function switchRole(r){
+    ['student','recruiter','admin'].forEach(function(x){
+      document.getElementById('tab-'+x).classList.toggle('active',x===r);
+      document.getElementById(x+'Form').classList.toggle('hidden',x!==r);
     });
+    document.getElementById('tab-recruiter').classList.toggle('v-tab', r==='recruiter');
+    ['sErr','rErr','aErr'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  }
 
-    // ── Recruiter login ───────────────────────────────────────────
-    document.getElementById('recruiterForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      document.getElementById('rLoginError').classList.add('hidden');
-      setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', true);
-      try {
-        var data = await api.post('/auth/recruiter-login', {
-          email:    document.getElementById('r_email').value.trim(),
-          password: document.getElementById('r_password').value
-        });
-        if (data && data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = 'recruiter/dashboard.html';
-        } else {
-          showError('rLoginError', (data && data.message) || 'Login failed. Please try again.');
-          setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', false);
-        }
-      } catch(ex) {
-        showError('rLoginError', 'Cannot reach server. Please check your connection.');
-        setLoading('rLoginText', 'rLoginSpinner', 'rLoginBtn', false);
-      }
-    });
+  function togglePwd(inp,ico){
+    var el=document.getElementById(inp), ic=document.getElementById(ico);
+    el.type=el.type==='password'?'text':'password';
+    ic.className=el.type==='text'?'fas fa-eye-slash':'fas fa-eye';
+  }
 
-    // ── Admin login ───────────────────────────────────────────────
-    document.getElementById('adminForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      document.getElementById('aLoginError').classList.add('hidden');
-      setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', true);
-      try {
-        var data = await api.post('/auth/admin-login', {
-          email:    document.getElementById('a_email').value.trim(),
-          password: document.getElementById('a_password').value
-        });
-        if (data && data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = 'admin/dashboard.html';
-        } else {
-          showError('aLoginError', (data && data.message) || 'Login failed. Please try again.');
-          setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', false);
-        }
-      } catch(ex) {
-        showError('aLoginError', 'Cannot reach server. Please check your connection.');
-        setLoading('aLoginText', 'aLoginSpinner', 'aLoginBtn', false);
+  function setLoad(txt,spin,btn,on){
+    document.getElementById(txt).classList.toggle('hidden',on);
+    document.getElementById(spin).classList.toggle('hidden',!on);
+    document.getElementById(btn).disabled=on;
+  }
+
+  function showErr(id,msg){
+    var el=document.getElementById(id);
+    el.innerHTML='<i class="fas fa-exclamation-circle"></i> '+msg;
+    el.classList.remove('hidden');
+  }
+
+  document.getElementById('studentForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    document.getElementById('sErr').classList.add('hidden');
+    setLoad('sTxt','sSpin','sBtn',true);
+    try{
+      var d=await api.post('/auth/student-login',{
+        roll_no:document.getElementById('s_prn').value.trim().toUpperCase(),
+        date_of_birth:document.getElementById('s_dob').value
+      });
+      if(d&&d.success){
+        localStorage.setItem('token',d.token);
+        localStorage.setItem('user',JSON.stringify(d.user));
+        location.href='student/dashboard.html';
+      } else {
+        showErr('sErr',(d&&d.message)||'Invalid PRN or date of birth.');
+        setLoad('sTxt','sSpin','sBtn',false);
       }
-    });
-  </script>
+    }catch(ex){
+      showErr('sErr','Cannot reach server. Check your connection.');
+      setLoad('sTxt','sSpin','sBtn',false);
+    }
+  });
+
+  document.getElementById('recruiterForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    document.getElementById('rErr').classList.add('hidden');
+    setLoad('rTxt','rSpin','rBtn',true);
+    try{
+      var d=await api.post('/auth/recruiter-login',{
+        email:document.getElementById('r_email').value.trim(),
+        password:document.getElementById('r_password').value
+      });
+      if(d&&d.success){
+        localStorage.setItem('token',d.token);
+        localStorage.setItem('user',JSON.stringify(d.user));
+        location.href='recruiter/dashboard.html';
+      } else {
+        showErr('rErr',(d&&d.message)||'Invalid email or password.');
+        setLoad('rTxt','rSpin','rBtn',false);
+      }
+    }catch(ex){
+      showErr('rErr','Cannot reach server. Check your connection.');
+      setLoad('rTxt','rSpin','rBtn',false);
+    }
+  });
+
+  document.getElementById('adminForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    document.getElementById('aErr').classList.add('hidden');
+    setLoad('aTxt','aSpin','aBtn',true);
+    try{
+      var d=await api.post('/auth/admin-login',{
+        email:document.getElementById('a_email').value.trim(),
+        password:document.getElementById('a_password').value
+      });
+      if(d&&d.success){
+        localStorage.setItem('token',d.token);
+        localStorage.setItem('user',JSON.stringify(d.user));
+        location.href='admin/dashboard.html';
+      } else {
+        showErr('aErr',(d&&d.message)||'Invalid email or password.');
+        setLoad('aTxt','aSpin','aBtn',false);
+      }
+    }catch(ex){
+      showErr('aErr','Cannot reach server. Check your connection.');
+      setLoad('aTxt','aSpin','aBtn',false);
+    }
+  });
+</script>
 </body>
 </html>

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Student Registration – Sandip University Placement Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     :root {
       --primary:#2563EB; --primary-hover:#1D4ED8;
@@ -23,20 +23,19 @@
       background-image:radial-gradient(#BFDBFE 1px,transparent 1px);
       background-size:24px 24px;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      padding:48px 40px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;
+      padding:48px 40px;border-right:1px solid var(--border);
+      position:sticky;top:0;height:100vh;
     }
     .brand-content{text-align:center;}
     .uni-logo{height:100px;width:auto;margin-bottom:24px;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.06));}
     .brand-content h1{font-size:22px;font-weight:700;color:var(--text-brand);margin-bottom:12px;line-height:1.3;}
     .brand-content p{font-size:13px;color:#4B5563;line-height:1.7;margin-bottom:28px;}
-
     .steps-list{width:100%;display:flex;flex-direction:column;gap:2px;}
     .step-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);transition:all 0.2s;}
     .step-item.done{background:rgba(37,99,235,0.06);}
     .step-item.current{background:rgba(37,99,235,0.12);}
     .step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:2px solid var(--border);color:var(--text-muted);}
-    .step-item.done .step-num{background:var(--primary);color:#fff;border-color:var(--primary);}
-    .step-item.current .step-num{background:var(--primary);color:#fff;border-color:var(--primary);}
+    .step-item.done .step-num,.step-item.current .step-num{background:var(--primary);color:#fff;border-color:var(--primary);}
     .step-label{font-size:12px;font-weight:600;color:var(--text-muted);}
     .step-label span{display:block;font-size:11px;font-weight:400;color:#9CA3AF;margin-top:1px;}
     .step-item.done .step-label,.step-item.current .step-label{color:var(--text-dark);}
@@ -44,52 +43,60 @@
     .form-side{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px;overflow-y:auto;min-height:100vh;}
     .form-wrapper{width:100%;max-width:600px;}
 
+    /* ── Closed / Loading screen ── */
+    .gate-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:20px;}
+    .gate-icon{font-size:64px;margin-bottom:20px;}
+    .gate-screen h2{font-size:24px;font-weight:800;margin-bottom:10px;letter-spacing:-0.02em;}
+    .gate-screen p{font-size:14px;color:var(--text-muted);line-height:1.7;max-width:400px;margin-bottom:8px;}
+    .gate-screen .contact-note{font-size:12px;color:#9CA3AF;margin-top:4px;}
+    .btn-go-login{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:12px 24px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+    .btn-go-login:hover{background:var(--primary-hover);}
+
+    /* ── Open event banner ── */
+    .event-banner{display:flex;align-items:center;gap:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:20px;}
+    .event-banner .pulse-dot{width:9px;height:9px;border-radius:50%;background:#10B981;flex-shrink:0;animation:blink 1.4s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.7)}}
+    .event-banner .eb-text{font-size:12px;font-weight:600;color:#065F46;}
+    .event-banner .eb-text span{font-weight:400;color:#059669;}
+
+    /* ── Form ── */
     .step-header{margin-bottom:28px;}
     .step-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.08);color:var(--primary);border:1px solid rgba(37,99,235,0.2);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
     .step-header h2{font-size:24px;font-weight:800;color:var(--text-dark);margin-bottom:6px;letter-spacing:-0.02em;}
     .step-header p{font-size:14px;color:var(--text-muted);}
-
     .progress-bar-wrap{height:4px;background:var(--border);border-radius:99px;margin-bottom:32px;overflow:hidden;}
     .progress-bar-fill{height:100%;background:var(--primary);border-radius:99px;transition:width 0.4s ease;}
-
     .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin:24px 0 14px;display:flex;align-items:center;gap:8px;}
     .section-title::after{content:'';flex:1;height:1px;background:var(--border);}
-
     .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
     .fg .full{grid-column:span 2;}
     .form-group{display:flex;flex-direction:column;gap:6px;}
     .form-group label{font-size:13px;font-weight:600;color:#374151;}
     .form-group label .req{color:var(--error);margin-left:2px;}
     .form-group label .hint{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:4px;}
-
     .form-control{width:100%;padding:11px 14px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-dark);background:var(--bg-white);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all 0.2s;}
     .form-control::placeholder{color:#9CA3AF;}
     .form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--focus-ring);}
     .form-control:disabled{background:#F3F4F6;color:var(--text-muted);cursor:not-allowed;}
     .form-control.valid{border-color:#10B981;}
     .form-control.invalid{border-color:var(--error);}
-
     .inst-type-group{display:flex;gap:8px;flex-wrap:wrap;}
     .inst-radio{display:none;}
     .inst-radio-label{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;flex:1;min-width:120px;}
     .inst-radio-label i{font-size:16px;color:var(--text-muted);}
-    .inst-radio:checked + .inst-radio-label{border-color:var(--primary);background:rgba(37,99,235,0.04);color:var(--primary);}
-    .inst-radio:checked + .inst-radio-label i{color:var(--primary);}
-
+    .inst-radio:checked+.inst-radio-label{border-color:var(--primary);background:rgba(37,99,235,0.04);color:var(--primary);}
+    .inst-radio:checked+.inst-radio-label i{color:var(--primary);}
     .gdrive-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;}
     .gdrive-box .gd-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#166534;margin-bottom:12px;}
     .gdrive-box ol{padding-left:18px;display:flex;flex-direction:column;gap:7px;}
     .gdrive-box li{font-size:12px;color:#15803D;line-height:1.5;}
     .gdrive-box li strong{color:#166534;}
     .gdrive-box .gd-tip{margin-top:12px;font-size:11px;color:#166534;background:rgba(22,101,52,0.07);border-radius:6px;padding:8px 10px;display:flex;align-items:flex-start;gap:6px;}
-
     .url-wrap{position:relative;}
     .url-wrap .url-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#9CA3AF;pointer-events:none;}
     .url-wrap .form-control{padding-left:38px;padding-right:38px;}
     .url-wrap .url-status{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:14px;}
-
     .opt-tag{display:inline-flex;align-items:center;gap:4px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:middle;}
-
     .form-nav{display:flex;gap:12px;margin-top:32px;align-items:center;}
     .btn-back{flex:0;padding:12px 20px;background:var(--bg-white);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;}
     .btn-back:hover{border-color:#9CA3AF;color:var(--text-dark);}
@@ -97,12 +104,10 @@
     .btn-next:hover{background:var(--primary-hover);transform:translateY(-1px);}
     .btn-next:active{transform:translateY(0);}
     .btn-next.success{background:#059669;}
-
     .alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;}
     .alert-error{background:#FEF2F2;border:1px solid #FECACA;color:var(--error);}
     .alert-success{background:#ECFDF5;border:1px solid #A7F3D0;color:var(--success);}
     .hidden{display:none !important;}
-
     .footer-link{margin-top:20px;font-size:14px;color:var(--text-muted);}
     .footer-link a{color:var(--primary);font-weight:600;text-decoration:none;}
     .footer-link a:hover{text-decoration:underline;}
@@ -123,7 +128,7 @@
 
 <div class="brand-side">
   <div class="brand-content">
-    <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="uni-logo"/>
+    <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="uni-logo" />
     <h1>Placement Portal Registration</h1>
     <p>Fill in your academic details to create your placement profile and apply for drives.</p>
   </div>
@@ -146,241 +151,239 @@
 <div class="form-side">
   <div class="form-wrapper">
 
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progressBar" style="width:33%"></div>
-    </div>
-    <div id="alertBox"></div>
-
-    <!-- ══════════ STEP 1 ══════════ -->
-    <div id="step1">
-      <div class="step-header">
-        <div class="step-badge"><i class="fas fa-user"></i> Step 1 of 3</div>
-        <h2>Personal Information</h2>
-        <p>Your basic personal and contact details</p>
-      </div>
-      <div class="fg">
-        <div class="form-group full">
-          <label>Full Legal Name <span class="req">*</span></label>
-          <input class="form-control" type="text" id="name" placeholder="e.g. Rahul Sharma" required autocomplete="name"/>
-        </div>
-        <div class="form-group">
-          <label>Student ID / PRN Number <span class="req">*</span><span class="hint">(University Roll No.)</span></label>
-          <input class="form-control" type="text" id="roll_no" placeholder="e.g. SU2021001234" required autocomplete="off"/>
-        </div>
-        <div class="form-group">
-          <label>Date of Birth <span class="req">*</span><span class="hint">(used for login)</span></label>
-          <input class="form-control" type="date" id="dob" required/>
-        </div>
-        <div class="form-group">
-          <label>Personal Email <span class="req">*</span></label>
-          <input class="form-control" type="email" id="email" placeholder="yourname@email.com" autocomplete="email" required/>
-        </div>
-        <div class="form-group">
-          <label>Phone Number <span class="req">*</span><span class="hint">(10 digits)</span></label>
-          <input class="form-control" type="tel" id="phone" placeholder="9876543210" autocomplete="tel" maxlength="10" required/>
-        </div>
-      </div>
-      <div class="form-nav">
-        <button class="btn-next" onclick="goStep(2)">Continue <i class="fas fa-arrow-right"></i></button>
-      </div>
-      <div class="footer-link">Already registered? <a href="index.html">Log in here</a></div>
+    <!-- ══ LOADING ══ -->
+    <div id="loadingScreen" class="gate-screen">
+      <div class="gate-icon" style="color:var(--text-muted)"><i class="fas fa-circle-notch fa-spin"></i></div>
+      <h2 style="color:var(--text-muted);font-size:18px">Checking registration status...</h2>
     </div>
 
-    <!-- ══════════ STEP 2 ══════════ -->
-    <div id="step2" class="hidden">
-      <div class="step-header">
-        <div class="step-badge"><i class="fas fa-graduation-cap"></i> Step 2 of 3</div>
-        <h2>Academic Details</h2>
-        <p>Your institution, course and academic performance</p>
+    <!-- ══ CLOSED SCREEN ══ -->
+    <div id="closedScreen" class="gate-screen hidden">
+      <div class="gate-icon">🔒</div>
+      <h2>Registration is currently closed</h2>
+      <p>The Placement Cell has not opened student registration yet. Registration opens when admin sets an event to <strong>Registration Open</strong> or <strong>In Progress</strong>.</p>
+      <p class="contact-note">Contact the Placement Cell office for the upcoming drive schedule.</p>
+      <a href="index.html" class="btn-go-login"><i class="fas fa-arrow-left"></i> Back to Login</a>
+    </div>
+
+    <!-- ══ REGISTRATION FORM ══ -->
+    <div id="registrationForm" class="hidden">
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressBar" style="width:33%"></div>
       </div>
 
-      <div class="section-title"><i class="fas fa-university"></i> Institution</div>
-      <div class="fg">
-        <div class="form-group full">
-          <label>Select Your Institution <span class="req">*</span></label>
-          <div class="inst-type-group">
-            <input type="radio" name="institution" id="inst_sandip" value="sandip" class="inst-radio" checked onchange="onInstitutionChange()"/>
-            <label for="inst_sandip" class="inst-radio-label">
-              <i class="fas fa-university"></i>
-              <div><div style="font-weight:700">Sandip University</div><div style="font-size:11px;font-weight:400;color:var(--text-muted)">Nashik Campus</div></div>
-            </label>
-            <input type="radio" name="institution" id="inst_other" value="other" class="inst-radio" onchange="onInstitutionChange()"/>
-            <label for="inst_other" class="inst-radio-label">
-              <i class="fas fa-school"></i>
-              <div><div style="font-weight:700">Other Institution</div><div style="font-size:11px;font-weight:400;color:var(--text-muted)">External college</div></div>
-            </label>
+      <!-- Live event banner -->
+      <div class="event-banner">
+        <div class="pulse-dot"></div>
+        <div class="eb-text">Registration open — <span id="openEventName">Placement Drive</span></div>
+      </div>
+
+      <div id="alertBox"></div>
+
+      <!-- ══ STEP 1 ══ -->
+      <div id="step1">
+        <div class="step-header">
+          <div class="step-badge"><i class="fas fa-user"></i> Step 1 of 3</div>
+          <h2>Personal Information</h2>
+          <p>Your basic personal and contact details</p>
+        </div>
+        <div class="fg">
+          <div class="form-group full">
+            <label>Full Legal Name <span class="req">*</span></label>
+            <input class="form-control" type="text" id="name" placeholder="e.g. Rahul Sharma" required autocomplete="name"/>
+          </div>
+          <div class="form-group">
+            <label>Student ID / PRN Number <span class="req">*</span><span class="hint">(University Roll No.)</span></label>
+            <input class="form-control" type="text" id="roll_no" placeholder="e.g. SU2021001234" required autocomplete="off"/>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth <span class="req">*</span><span class="hint">(used for login)</span></label>
+            <input class="form-control" type="date" id="dob" required/>
+          </div>
+          <div class="form-group">
+            <label>Personal Email <span class="req">*</span></label>
+            <input class="form-control" type="email" id="email" placeholder="yourname@email.com" autocomplete="email" required/>
+          </div>
+          <div class="form-group">
+            <label>Phone Number <span class="req">*</span><span class="hint">(10 digits)</span></label>
+            <input class="form-control" type="tel" id="phone" placeholder="9876543210" autocomplete="tel" maxlength="10" required/>
           </div>
         </div>
-        <div class="form-group full" id="sandipTypeWrap">
-          <label>Sandip Campus / Programme <span class="req">*</span></label>
-          <select class="form-control" id="sandip_type">
-            <option value="university">Sandip University (Degree — B.Tech / MBA / MCA / M.Tech etc.)</option>
-            <option value="foundation">Sandip Foundation (Diploma / Certificate / Other Programmes)</option>
-          </select>
+        <div class="form-nav">
+          <button class="btn-next" onclick="goStep(2)">Continue <i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="form-group full hidden" id="otherInstWrap">
-          <label>Institution / College Name <span class="req">*</span></label>
-          <input class="form-control" id="other_inst_name" placeholder="e.g. COEP, VJTI, MIT Pune"/>
+        <div class="footer-link">Already registered? <a href="index.html">Log in here</a></div>
+      </div>
+
+      <!-- ══ STEP 2 ══ -->
+      <div id="step2" class="hidden">
+        <div class="step-header">
+          <div class="step-badge"><i class="fas fa-graduation-cap"></i> Step 2 of 3</div>
+          <h2>Academic Details</h2>
+          <p>Your institution, course and academic performance</p>
+        </div>
+
+        <div class="section-title"><i class="fas fa-university"></i> Institution</div>
+        <div class="fg">
+          <div class="form-group full">
+            <label>Select Your Institution <span class="req">*</span></label>
+            <div class="inst-type-group">
+              <input type="radio" name="institution" id="inst_sandip" value="sandip" class="inst-radio" checked onchange="onInstitutionChange()"/>
+              <label for="inst_sandip" class="inst-radio-label">
+                <i class="fas fa-university"></i>
+                <div><div style="font-weight:700">Sandip University</div><div style="font-size:11px;font-weight:400;color:var(--text-muted)">Nashik Campus</div></div>
+              </label>
+              <input type="radio" name="institution" id="inst_other" value="other" class="inst-radio" onchange="onInstitutionChange()"/>
+              <label for="inst_other" class="inst-radio-label">
+                <i class="fas fa-school"></i>
+                <div><div style="font-weight:700">Other Institution</div><div style="font-size:11px;font-weight:400;color:var(--text-muted)">External college</div></div>
+              </label>
+            </div>
+          </div>
+          <div class="form-group full" id="sandipTypeWrap">
+            <label>Sandip Campus / Programme <span class="req">*</span></label>
+            <select class="form-control" id="sandip_type">
+              <option value="university">Sandip University (Degree — B.Tech / MBA / MCA / M.Tech etc.)</option>
+              <option value="foundation">Sandip Foundation (Diploma / Certificate / Other Programmes)</option>
+            </select>
+          </div>
+          <div class="form-group full hidden" id="otherInstWrap">
+            <label>Institution / College Name <span class="req">*</span></label>
+            <input class="form-control" id="other_inst_name" placeholder="e.g. COEP, VJTI, MIT Pune"/>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-book"></i> Course & Branch</div>
+        <div class="fg">
+          <div class="form-group">
+            <label>Course <span class="req">*</span></label>
+            <select class="form-control" id="course" required onchange="onCourseChange()">
+              <option value="">— Select Course —</option>
+              <optgroup label="Undergraduate">
+                <option>B.Tech</option><option>BCA</option><option>BBA</option>
+                <option>B.Sc</option><option>B.Com</option><option>B.Pharma</option><option>B.Arch</option>
+              </optgroup>
+              <optgroup label="Postgraduate">
+                <option>M.Tech</option><option>MBA</option><option>MCA</option>
+                <option>M.Sc</option><option>M.Com</option><option>M.Pharma</option>
+              </optgroup>
+              <optgroup label="Diploma">
+                <option>Diploma (Engineering)</option><option>Diploma (Pharmacy)</option><option>PG Diploma</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Branch / Department <span class="req">*</span></label>
+            <select class="form-control" id="branch" required disabled>
+              <option value="">— Select a course first —</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Specialization <span class="hint">(optional)</span></label>
+            <input class="form-control" id="specialization" placeholder="e.g. Data Science, VLSI, Cybersecurity, Finance"/>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-calendar-alt"></i> Year & Timeline</div>
+        <div class="fg">
+          <div class="form-group">
+            <label>Current Year of Study <span class="req">*</span></label>
+            <select class="form-control" id="year" required>
+              <option value="">— Select Year —</option>
+              <option value="1">1st Year</option><option value="2">2nd Year</option>
+              <option value="3">3rd Year</option><option value="4">4th Year</option><option value="5">5th Year</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Expected Passout Year <span class="req">*</span></label>
+            <select class="form-control" id="passout_year" required>
+              <option value="">— Select Year —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-chart-line"></i> Academic Performance</div>
+        <div class="fg">
+          <div class="form-group">
+            <label>Current CGPA <span class="req">*</span><span class="hint">(out of 10)</span></label>
+            <input class="form-control" type="number" step="0.01" min="0" max="10" id="cgpa" placeholder="e.g. 8.50" required/>
+          </div>
+          <div class="form-group">
+            <label>Active Backlogs / KTs</label>
+            <input class="form-control" type="number" min="0" id="backlogs" placeholder="0" value="0"/>
+          </div>
+        </div>
+
+        <div class="form-nav">
+          <button class="btn-back" onclick="goStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+          <button class="btn-next" onclick="goStep(3)">Continue <i class="fas fa-arrow-right"></i></button>
         </div>
       </div>
 
-      <div class="section-title"><i class="fas fa-book"></i> Course & Branch</div>
-      <div class="fg">
+      <!-- ══ STEP 3 ══ -->
+      <div id="step3" class="hidden">
+        <div class="step-header">
+          <div class="step-badge"><i class="fas fa-file-upload"></i> Step 3 of 3</div>
+          <h2>Documents &amp; Photo</h2>
+          <p>Both fields are optional — you can add them later from your profile</p>
+        </div>
+
+        <div class="gdrive-box">
+          <div class="gd-head">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.5 20.25L8.25 13.5L12 20.25H4.5Z" fill="#0F9D58"/>
+              <path d="M8.25 13.5L12 6.75L15.75 13.5H8.25Z" fill="#4285F4"/>
+              <path d="M12 6.75L15.75 13.5L19.5 6.75H12Z" fill="#FBBC04"/>
+              <path d="M15.75 13.5L19.5 20.25H12L15.75 13.5Z" fill="#EA4335"/>
+            </svg>
+            How to share files from Google Drive
+          </div>
+          <ol>
+            <li>Go to <a href="https://drive.google.com" target="_blank" rel="noopener" style="color:#15803D;font-weight:600">drive.google.com</a> and <strong>upload your file</strong> (photo as JPG/PNG, resume as PDF)</li>
+            <li>Right-click the file → click <strong>"Get link"</strong></li>
+            <li>Under <em>General access</em>, change <strong>"Restricted"</strong> to <strong>"Anyone with the link"</strong></li>
+            <li>Set permission to <strong>"Viewer"</strong></li>
+            <li>Click <strong>"Copy link"</strong> and paste it below</li>
+          </ol>
+          <div class="gd-tip">
+            <i class="fas fa-lightbulb" style="margin-top:1px;flex-shrink:0"></i>
+            <span>Links look like: <code style="background:rgba(22,101,52,0.1);padding:1px 5px;border-radius:4px;font-size:11px">https://drive.google.com/file/d/XXXX/view?usp=sharing</code></span>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-camera"></i> Passport Photo <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span></div>
         <div class="form-group">
-          <label>Course <span class="req">*</span></label>
-          <select class="form-control" id="course" required onchange="onCourseChange()">
-            <option value="">— Select Course —</option>
-            <optgroup label="Undergraduate">
-              <option>B.Tech</option><option>BCA</option><option>BBA</option>
-              <option>B.Sc</option><option>B.Com</option><option>B.Pharma</option><option>B.Arch</option>
-            </optgroup>
-            <optgroup label="Postgraduate">
-              <option>M.Tech</option><option>MBA</option><option>MCA</option>
-              <option>M.Sc</option><option>M.Com</option><option>M.Pharma</option>
-            </optgroup>
-            <optgroup label="Diploma">
-              <option>Diploma (Engineering)</option><option>Diploma (Pharmacy)</option><option>PG Diploma</option>
-            </optgroup>
-          </select>
+          <label>Google Drive Photo Link <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span><span class="hint">(clear face, plain background · JPG or PNG)</span></label>
+          <div class="url-wrap">
+            <i class="fas fa-image url-ico"></i>
+            <input class="form-control" type="url" id="photo_url" placeholder="https://drive.google.com/file/d/..." oninput="validateUrl(this,'photoStatus','photoMsg')"/>
+            <span class="url-status" id="photoStatus"></span>
+          </div>
+          <div id="photoMsg" style="font-size:11px;margin-top:5px;"></div>
         </div>
+
+        <div class="section-title" style="margin-top:24px"><i class="fas fa-file-alt"></i> Resume / CV <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span></div>
         <div class="form-group">
-          <label>Branch / Department <span class="req">*</span></label>
-          <select class="form-control" id="branch" required disabled>
-            <option value="">— Select a course first —</option>
-          </select>
+          <label>Google Drive Resume Link <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span></label>
+          <div class="url-wrap">
+            <i class="fas fa-link url-ico"></i>
+            <input class="form-control" type="url" id="resume_url" placeholder="https://drive.google.com/file/d/..." oninput="validateUrl(this,'resumeStatus','resumeMsg')"/>
+            <span class="url-status" id="resumeStatus"></span>
+          </div>
+          <div id="resumeMsg" style="font-size:11px;margin-top:5px;"></div>
         </div>
-        <div class="form-group full">
-          <label>Specialization <span class="hint">(optional)</span></label>
-          <input class="form-control" id="specialization" placeholder="e.g. Data Science, VLSI, Cybersecurity, Finance"/>
+
+        <div class="form-nav">
+          <button class="btn-back" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+          <button class="btn-next" id="submitBtn" onclick="submitRegistration()">
+            <span id="submitText"><i class="fas fa-user-plus"></i> Create My Account</span>
+            <span id="submitSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Registering...</span>
+          </button>
         </div>
       </div>
 
-      <div class="section-title"><i class="fas fa-calendar-alt"></i> Year & Timeline</div>
-      <div class="fg">
-        <div class="form-group">
-          <label>Current Year of Study <span class="req">*</span></label>
-          <select class="form-control" id="year" required>
-            <option value="">— Select Year —</option>
-            <option value="1">1st Year</option><option value="2">2nd Year</option>
-            <option value="3">3rd Year</option><option value="4">4th Year</option><option value="5">5th Year</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Expected Passout Year <span class="req">*</span></label>
-          <select class="form-control" id="passout_year" required>
-            <option value="">— Select Year —</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="section-title"><i class="fas fa-chart-line"></i> Academic Performance</div>
-      <div class="fg">
-        <div class="form-group">
-          <label>Current CGPA <span class="req">*</span><span class="hint">(out of 10)</span></label>
-          <input class="form-control" type="number" step="0.01" min="0" max="10" id="cgpa" placeholder="e.g. 8.50" required/>
-        </div>
-        <div class="form-group">
-          <label>Active Backlogs / KTs</label>
-          <input class="form-control" type="number" min="0" id="backlogs" placeholder="0" value="0"/>
-        </div>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back" onclick="goStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-        <button class="btn-next" onclick="goStep(3)">Continue <i class="fas fa-arrow-right"></i></button>
-      </div>
-    </div>
-
-    <!-- ══════════ STEP 3 ══════════ -->
-    <div id="step3" class="hidden">
-      <div class="step-header">
-        <div class="step-badge"><i class="fas fa-file-upload"></i> Step 3 of 3</div>
-        <h2>Documents &amp; Photo</h2>
-        <p>Both fields are optional — you can add them later from your profile</p>
-      </div>
-
-      <!-- How-to box -->
-      <div class="gdrive-box">
-        <div class="gd-head">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4.5 20.25L8.25 13.5L12 20.25H4.5Z" fill="#0F9D58"/>
-            <path d="M8.25 13.5L12 6.75L15.75 13.5H8.25Z" fill="#4285F4"/>
-            <path d="M12 6.75L15.75 13.5L19.5 6.75H12Z" fill="#FBBC04"/>
-            <path d="M15.75 13.5L19.5 20.25H12L15.75 13.5Z" fill="#EA4335"/>
-          </svg>
-          How to share files from Google Drive
-        </div>
-        <ol>
-          <li>Go to <a href="https://drive.google.com" target="_blank" rel="noopener" style="color:#15803D;font-weight:600">drive.google.com</a> and <strong>upload your file</strong> (photo as JPG/PNG, resume as PDF)</li>
-          <li>Right-click the file → click <strong>"Get link"</strong></li>
-          <li>Under <em>General access</em>, change <strong>"Restricted"</strong> to <strong>"Anyone with the link"</strong></li>
-          <li>Set permission to <strong>"Viewer"</strong></li>
-          <li>Click <strong>"Copy link"</strong> and paste it below</li>
-        </ol>
-        <div class="gd-tip">
-          <i class="fas fa-lightbulb" style="margin-top:1px;flex-shrink:0"></i>
-          <span>Links look like: <code style="background:rgba(22,101,52,0.1);padding:1px 5px;border-radius:4px;font-size:11px">https://drive.google.com/file/d/XXXX/view?usp=sharing</code></span>
-        </div>
-      </div>
-
-      <!-- ── Passport Photo link — NOW OPTIONAL ── -->
-      <div class="section-title">
-        <i class="fas fa-camera"></i> Passport Photo
-        <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span>
-      </div>
-      <div class="form-group">
-        <label>
-          Google Drive Photo Link
-          <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span>
-          <span class="hint">(clear face, plain background · JPG or PNG)</span>
-        </label>
-        <div class="url-wrap">
-          <i class="fas fa-image url-ico"></i>
-          <input
-            class="form-control"
-            type="url"
-            id="photo_url"
-            placeholder="https://drive.google.com/file/d/..."
-            oninput="validateUrl(this, 'photoStatus', 'photoMsg')"
-          />
-          <span class="url-status" id="photoStatus"></span>
-        </div>
-        <div id="photoMsg" style="font-size:11px;margin-top:5px;"></div>
-      </div>
-
-      <!-- ── Resume link — optional ── -->
-      <div class="section-title" style="margin-top:24px">
-        <i class="fas fa-file-alt"></i> Resume / CV
-        <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span>
-      </div>
-      <div class="form-group">
-        <label>
-          Google Drive Resume Link
-          <span class="opt-tag"><i class="fas fa-info-circle"></i> Optional</span>
-        </label>
-        <div class="url-wrap">
-          <i class="fas fa-link url-ico"></i>
-          <input
-            class="form-control"
-            type="url"
-            id="resume_url"
-            placeholder="https://drive.google.com/file/d/..."
-            oninput="validateUrl(this, 'resumeStatus', 'resumeMsg')"
-          />
-          <span class="url-status" id="resumeStatus"></span>
-        </div>
-        <div id="resumeMsg" style="font-size:11px;margin-top:5px;"></div>
-      </div>
-
-      <div class="form-nav">
-        <button class="btn-back" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-        <button class="btn-next" id="submitBtn" onclick="submitRegistration()">
-          <span id="submitText"><i class="fas fa-user-plus"></i> Create My Account</span>
-          <span id="submitSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Registering...</span>
-        </button>
-      </div>
-    </div>
-
+    </div><!-- /registrationForm -->
   </div>
 </div>
 
@@ -388,91 +391,105 @@
 <script>
 let currentStep = 1;
 
-// ── Init ─────────────────────────────────────────────
-(function() {
+// ── On page load: check if registration is open ──────
+(async function init() {
+  // Populate passout year dropdown
   const sel = document.getElementById('passout_year');
   const now = new Date().getFullYear();
   for (let y = now; y <= now + 6; y++) {
     const o = document.createElement('option'); o.value = y; o.textContent = y; sel.appendChild(o);
   }
   document.getElementById('branch').disabled = true;
+
+  // Check registration status from backend
+  try {
+    const res = await fetch('/api/auth/registration-status');
+    const data = await res.json();
+
+    document.getElementById('loadingScreen').classList.add('hidden');
+
+    if (data.open) {
+      // Show the form and display the active event name
+      document.getElementById('openEventName').textContent = data.event_name || 'Placement Drive';
+      document.getElementById('registrationForm').classList.remove('hidden');
+    } else {
+      // Registration closed — show locked screen
+      document.getElementById('closedScreen').classList.remove('hidden');
+    }
+  } catch (err) {
+    // If server unreachable, show closed screen (safe default)
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('closedScreen').innerHTML = `
+      <div class="gate-icon">⚠️</div>
+      <h2>Cannot connect to server</h2>
+      <p>Please check your connection and try again.</p>
+      <a href="register.html" class="btn-go-login"><i class="fas fa-redo"></i> Retry</a>
+    `;
+    document.getElementById('closedScreen').classList.remove('hidden');
+  }
 })();
 
-// ── Step navigation ──────────────────────────────────
+// ── Step navigation ───────────────────────────────────
 function goStep(n) {
   document.getElementById('alertBox').innerHTML = '';
   if (n > currentStep && !validateStep(currentStep)) return;
-  document.getElementById(`step${currentStep}`).classList.add('hidden');
-  document.getElementById(`step${n}`).classList.remove('hidden');
+  document.getElementById('step' + currentStep).classList.add('hidden');
+  document.getElementById('step' + n).classList.remove('hidden');
   for (let i = 1; i <= 3; i++) {
-    const sl = document.getElementById(`sl-${i}`);
-    const sn = document.getElementById(`sn-${i}`);
-    sl.classList.remove('done','current');
-    if (i < n)       { sl.classList.add('done');    sn.innerHTML = '<i class="fas fa-check"></i>'; }
+    const sl = document.getElementById('sl-' + i);
+    const sn = document.getElementById('sn-' + i);
+    sl.classList.remove('done', 'current');
+    if (i < n)      { sl.classList.add('done');    sn.innerHTML = '<i class="fas fa-check"></i>'; }
     else if (i === n){ sl.classList.add('current'); sn.textContent = i; }
     else             { sn.textContent = i; }
   }
-  document.getElementById('progressBar').style.width = `${Math.round((n/3)*100)}%`;
+  document.getElementById('progressBar').style.width = Math.round((n / 3) * 100) + '%';
   currentStep = n;
-  window.scrollTo({ top:0, behavior:'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Validation ───────────────────────────────────────
+// ── Validation ────────────────────────────────────────
 function showError(msg) {
   const ab = document.getElementById('alertBox');
-  ab.innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
-  ab.scrollIntoView({ behavior:'smooth', block:'start' });
+  ab.innerHTML = '<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ' + msg + '</div>';
+  ab.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function validateStep(step) {
   if (step === 1) {
-    if (!document.getElementById('name').value.trim())
-      { showError('Please enter your full name.'); return false; }
-    if (!document.getElementById('roll_no').value.trim())
-      { showError('Please enter your Student ID / PRN.'); return false; }
-    if (!document.getElementById('dob').value)
-      { showError('Please enter your date of birth.'); return false; }
+    if (!document.getElementById('name').value.trim())         { showError('Please enter your full name.'); return false; }
+    if (!document.getElementById('roll_no').value.trim())      { showError('Please enter your Student ID / PRN.'); return false; }
+    if (!document.getElementById('dob').value)                  { showError('Please enter your date of birth.'); return false; }
     const em = document.getElementById('email').value.trim();
-    if (!em)
-      { showError('Please enter your email address.'); return false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))
-      { showError('Please enter a valid email address.'); return false; }
+    if (!em)                                                    { showError('Please enter your email address.'); return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))               { showError('Please enter a valid email address.'); return false; }
     const ph = document.getElementById('phone').value.trim();
-    if (!ph)
-      { showError('Please enter your phone number.'); return false; }
-    if (!/^\d{10}$/.test(ph))
-      { showError('Phone number must be exactly 10 digits.'); return false; }
+    if (!ph)                                                    { showError('Please enter your phone number.'); return false; }
+    if (!/^\d{10}$/.test(ph))                                  { showError('Phone number must be exactly 10 digits.'); return false; }
   }
   if (step === 2) {
     if (!document.getElementById('inst_sandip').checked) {
-      if (!document.getElementById('other_inst_name').value.trim())
-        { showError('Please enter your institution name.'); return false; }
+      if (!document.getElementById('other_inst_name').value.trim()) { showError('Please enter your institution name.'); return false; }
     }
-    if (!document.getElementById('course').value)
-      { showError('Please select your course.'); return false; }
-    if (!document.getElementById('branch').value)
-      { showError('Please select your branch / department.'); return false; }
-    if (!document.getElementById('year').value)
-      { showError('Please select your current year of study.'); return false; }
-    if (!document.getElementById('passout_year').value)
-      { showError('Please select your expected passout year.'); return false; }
+    if (!document.getElementById('course').value)              { showError('Please select your course.'); return false; }
+    if (!document.getElementById('branch').value)              { showError('Please select your branch / department.'); return false; }
+    if (!document.getElementById('year').value)                { showError('Please select your current year of study.'); return false; }
+    if (!document.getElementById('passout_year').value)        { showError('Please select your expected passout year.'); return false; }
     const cgpa = document.getElementById('cgpa').value;
-    if (!cgpa || isNaN(parseFloat(cgpa)))
-      { showError('Please enter your current CGPA.'); return false; }
-    if (parseFloat(cgpa) < 0 || parseFloat(cgpa) > 10)
-      { showError('CGPA must be between 0 and 10.'); return false; }
+    if (!cgpa || isNaN(parseFloat(cgpa)))                      { showError('Please enter your current CGPA.'); return false; }
+    if (parseFloat(cgpa) < 0 || parseFloat(cgpa) > 10)        { showError('CGPA must be between 0 and 10.'); return false; }
   }
   return true;
 }
 
-// ── Institution toggle ───────────────────────────────
+// ── Institution toggle ────────────────────────────────
 function onInstitutionChange() {
   const isSandip = document.getElementById('inst_sandip').checked;
   document.getElementById('sandipTypeWrap').classList.toggle('hidden', !isSandip);
   document.getElementById('otherInstWrap').classList.toggle('hidden', isSandip);
 }
 
-// ── Course → Branch mapping ──────────────────────────
+// ── Course → Branch mapping ───────────────────────────
 const BRANCHES = {
   engineering: ['CSE','ECE','EEE','ME','CE','IT','AIDS','AIML','Mechanical','Civil','Electrical','Chemical','Biotechnology'],
   management:  ['Finance','Marketing','HR','Operations','Business Analytics','International Business'],
@@ -486,17 +503,13 @@ function onCourseChange() {
   const c = document.getElementById('course').value;
   const s = document.getElementById('branch');
   const prev = s.value;
-  if (!c) {
-    s.innerHTML = '<option value="">— Select a course first —</option>';
-    s.disabled = true;
-    return;
-  }
+  if (!c) { s.innerHTML = '<option value="">— Select a course first —</option>'; s.disabled = true; return; }
   s.disabled = false;
   s.innerHTML = '<option value="">— Select Branch / Department —</option>';
   let list = BRANCHES.default;
   if      (['B.Tech','M.Tech','Diploma (Engineering)'].includes(c)) list = BRANCHES.engineering;
   else if (['MBA','BBA','PG Diploma'].includes(c))                   list = BRANCHES.management;
-  else if (['B.Pharma','M.Pharma','Diploma (Pharmacy)'].includes(c))list = BRANCHES.pharmacy;
+  else if (['B.Pharma','M.Pharma','Diploma (Pharmacy)'].includes(c)) list = BRANCHES.pharmacy;
   else if (['B.Sc','M.Sc'].includes(c))                              list = BRANCHES.science;
   else if (['BCA','MCA'].includes(c))                                list = BRANCHES.computer;
   else if (['B.Com','M.Com'].includes(c))                            list = BRANCHES.commerce;
@@ -508,16 +521,12 @@ function onCourseChange() {
   });
 }
 
-// ── URL validation (shared for photo + resume) ────────
+// ── URL validation ────────────────────────────────────
 function validateUrl(input, statusId, msgId) {
-  const val      = input.value.trim();
+  const val = input.value.trim();
   const statusEl = document.getElementById(statusId);
   const msgEl    = document.getElementById(msgId);
-  if (!val) {
-    input.classList.remove('valid','invalid');
-    statusEl.textContent = ''; msgEl.textContent = '';
-    return true;
-  }
+  if (!val) { input.classList.remove('valid','invalid'); statusEl.textContent = ''; msgEl.textContent = ''; return true; }
   const isDrive = val.includes('drive.google.com');
   const isHttps = /^https?:\/\/.+/.test(val);
   if (isDrive) {
@@ -538,21 +547,14 @@ function validateUrl(input, statusId, msgId) {
   }
 }
 
-// ── Final Submit ─────────────────────────────────────
+// ── Final submit ──────────────────────────────────────
 async function submitRegistration() {
   const ab = document.getElementById('alertBox');
   ab.innerHTML = '';
-
-  // Both photo and resume are now optional — only validate format if a value was entered
   const photoUrlRaw  = document.getElementById('photo_url').value.trim();
   const resumeUrlRaw = document.getElementById('resume_url').value.trim();
-
-  if (photoUrlRaw && !validateUrl(document.getElementById('photo_url'), 'photoStatus', 'photoMsg')) {
-    showError('Please enter a valid URL for your passport photo or leave it blank.'); return;
-  }
-  if (resumeUrlRaw && !validateUrl(document.getElementById('resume_url'), 'resumeStatus', 'resumeMsg')) {
-    showError('Please enter a valid URL for your resume or leave it blank.'); return;
-  }
+  if (photoUrlRaw  && !validateUrl(document.getElementById('photo_url'),  'photoStatus',  'photoMsg'))  { showError('Please enter a valid URL for your photo or leave it blank.');  return; }
+  if (resumeUrlRaw && !validateUrl(document.getElementById('resume_url'), 'resumeStatus', 'resumeMsg')) { showError('Please enter a valid URL for your resume or leave it blank.'); return; }
 
   const isSandip = document.getElementById('inst_sandip').checked;
   const payload = {
@@ -583,21 +585,27 @@ async function submitRegistration() {
     if (data.success) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      ab.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> Account created! Redirecting to your dashboard...</div>`;
+      ab.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Account created! Redirecting to your dashboard...</div>';
       document.getElementById('submitBtn').classList.add('success');
       document.getElementById('submitText').innerHTML = '<i class="fas fa-check"></i> Registered!';
       document.getElementById('submitText').classList.remove('hidden');
       document.getElementById('submitSpinner').classList.add('hidden');
       setTimeout(() => { window.location.href = 'student/dashboard.html'; }, 1500);
     } else {
-      ab.innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
-      ab.scrollIntoView({ behavior:'smooth', block:'start' });
+      // If admin closed registration while student was filling the form
+      if (data.message && data.message.toLowerCase().includes('closed')) {
+        document.getElementById('registrationForm').classList.add('hidden');
+        document.getElementById('closedScreen').classList.remove('hidden');
+        return;
+      }
+      ab.innerHTML = '<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ' + data.message + '</div>';
+      ab.scrollIntoView({ behavior: 'smooth', block: 'start' });
       document.getElementById('submitText').classList.remove('hidden');
       document.getElementById('submitSpinner').classList.add('hidden');
       document.getElementById('submitBtn').disabled = false;
     }
   } catch (err) {
-    ab.innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${err.message}</div>`;
+    ab.innerHTML = '<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ' + err.message + '</div>';
     document.getElementById('submitText').classList.remove('hidden');
     document.getElementById('submitSpinner').classList.add('hidden');
     document.getElementById('submitBtn').disabled = false;

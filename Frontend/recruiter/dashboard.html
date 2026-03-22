@@ -6,15 +6,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    .event-status {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 14px; border-radius: 20px;
-      font-size: 12px; font-weight: 700;
+    .event-status { display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700; }
+    .es-created    { background:#F3F4F620;color:#6B7280;border:1px solid #6B728030; }
+    .es-open       { background:#2563EB15;color:#2563EB;border:1px solid #2563EB30; }
+    .es-inprogress { background:#10B98115;color:#10B981;border:1px solid #10B98130; }
+    .es-completed  { background:#7C3AED15;color:#7C3AED;border:1px solid #7C3AED30; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)} }
+
+    /* Drive details form */
+    .details-form {
+      margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
     }
-    .es-created       { background:#F3F4F620; color:#6B7280; border:1px solid #6B728030; }
-    .es-open          { background:#2563EB15; color:#2563EB; border:1px solid #2563EB30; }
-    .es-inprogress    { background:#10B98115; color:#10B981; border:1px solid #10B98130; }
-    .es-completed     { background:#7C3AED15; color:#7C3AED; border:1px solid #7C3AED30; }
+    .details-form .df-label {
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+      color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+    }
+    .details-form .df-label::after { content:'';flex:1;height:1px;background:var(--border); }
+    .df-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .df-grid .df-full { grid-column:1/-1; }
+    .df-pending-note {
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);
+      color:#D97706;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;
+      margin-bottom:12px;
+    }
+    .btn-save-details {
+      margin-top:12px;padding:10px 20px;
+      background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;
+      border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;
+      font-size:13px;font-weight:700;cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;
+    }
+    .btn-save-details:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-save-details:disabled { opacity:0.6;cursor:not-allowed;transform:none; }
   </style>
 </head>
 <body>
@@ -73,18 +97,14 @@
         <div class="card-title"><i class="fas fa-list-check"></i> Student Overview</div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Name</th><th>PRN</th><th>Branch</th><th>Attendance</th><th>Result</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>PRN</th><th>Branch</th><th>Attendance</th><th>Result</th></tr></thead>
             <tbody id="summaryTable">
               <tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
             </tbody>
           </table>
         </div>
         <div style="margin-top:16px">
-          <a href="students.html" class="btn-secondary">
-            <i class="fas fa-edit"></i> Mark Attendance &amp; Update Results
-          </a>
+          <a href="students.html" class="btn-secondary"><i class="fas fa-edit"></i> Mark Attendance &amp; Update Results</a>
         </div>
       </div>
 
@@ -104,18 +124,8 @@
     loadDashboard();
   }
 
-  const EVENT_STATUS_LABELS = {
-    CREATED:           'Draft',
-    REGISTRATION_OPEN: 'Registration Open',
-    IN_PROGRESS:       'Drive In Progress',
-    COMPLETED:         'Completed'
-  };
-  const EVENT_STATUS_CLASS = {
-    CREATED:           'es-created',
-    REGISTRATION_OPEN: 'es-open',
-    IN_PROGRESS:       'es-inprogress',
-    COMPLETED:         'es-completed'
-  };
+  const EVENT_STATUS_LABELS = { CREATED:'Draft', REGISTRATION_OPEN:'Registration Open', IN_PROGRESS:'Drive In Progress', COMPLETED:'Completed' };
+  const EVENT_STATUS_CLASS  = { CREATED:'es-created', REGISTRATION_OPEN:'es-open', IN_PROGRESS:'es-inprogress', COMPLETED:'es-completed' };
 
   async function loadDashboard() {
     const [dashData, stuData] = await Promise.all([
@@ -123,17 +133,17 @@
       api.get('/recruiter/students')
     ]);
 
-    const drive = dashData.drive;   // has: company_name, job_role, ctc, event_name, event_date, event_status
+    const drive = dashData.drive;
     const stats = dashData.stats || {};
-
-    // ── Drive Info Card ──────────────────────────────
     const driveCard = document.getElementById('driveCard');
+
     if (drive) {
       document.getElementById('driveSubtitle').textContent =
-        `${drive.company_name} – ${drive.job_role}`;
+        drive.job_role ? `${drive.company_name} — ${drive.job_role}` : drive.company_name;
 
       const statusClass = EVENT_STATUS_CLASS[drive.event_status] || 'es-created';
       const statusLabel = EVENT_STATUS_LABELS[drive.event_status] || drive.event_status;
+      const jobFilled   = !!drive.job_role;
 
       driveCard.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
@@ -144,7 +154,11 @@
               </div>
               <div>
                 <div style="font-size:18px;font-weight:800">${drive.company_name}</div>
-                <div style="font-size:13px;color:var(--text-secondary)">${drive.job_role}${drive.ctc ? ' &nbsp;·&nbsp; ₹' + drive.ctc + ' LPA' : ''}</div>
+                <div style="font-size:13px;color:var(--text-secondary)">
+                  ${jobFilled
+                    ? `${drive.job_role}${drive.ctc ? ' &nbsp;·&nbsp; ₹' + drive.ctc + ' LPA' : ''}`
+                    : '<span style="color:#D97706;font-size:12px"><i class="fas fa-clock"></i> Job role not filled yet</span>'}
+                </div>
               </div>
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
@@ -152,48 +166,74 @@
               ${drive.event_name || 'Mega Drive'} &nbsp;·&nbsp; ${formatDate(drive.event_date)}
             </div>
           </div>
-          <div>
-            <span class="event-status ${statusClass}">
-              ${drive.event_status === 'IN_PROGRESS'
-                ? '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px;animation:pulse 1.4s infinite"></span>'
-                : ''}
-              ${statusLabel}
-            </span>
-          </div>
+          <span class="event-status ${statusClass}">
+            ${drive.event_status === 'IN_PROGRESS' ? '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px;animation:pulse 1.4s infinite"></span>' : ''}
+            ${statusLabel}
+          </span>
         </div>
 
-        <!-- Eligibility info -->
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+        <!-- Eligibility -->
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
           <span><i class="fas fa-star" style="color:var(--warning)"></i> Min CGPA: <strong>${drive.eligibility_min_cgpa}</strong></span>
           <span><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i> Backlogs ≤ <strong>${drive.eligibility_backlogs_allowed}</strong></span>
           <span><i class="fas fa-code-branch" style="color:var(--primary)"></i> ${drive.eligibility_branches || 'All Branches'}</span>
+        </div>
+
+        <!-- Job Role / CTC form — recruiter fills this in -->
+        <div class="details-form">
+          <div class="df-label"><i class="fas fa-briefcase"></i> Your Job Details</div>
+
+          ${!jobFilled ? `
+          <div class="df-pending-note">
+            <i class="fas fa-exclamation-circle"></i>
+            Please fill in the job role and CTC — students will see this when applying.
+          </div>` : ''}
+
+          <div id="detailsAlert"></div>
+
+          <div class="df-grid">
+            <div class="form-group form-group-sm">
+              <label style="font-size:12px;font-weight:600">Job Role *</label>
+              <input class="form-control" id="d_role" value="${drive.job_role || ''}" placeholder="e.g. Software Engineer, Data Analyst"/>
+            </div>
+            <div class="form-group form-group-sm">
+              <label style="font-size:12px;font-weight:600">CTC (LPA) <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <input class="form-control" type="number" step="0.01" id="d_ctc" value="${drive.ctc || ''}" placeholder="e.g. 12.00"/>
+            </div>
+            <div class="form-group form-group-sm df-full">
+              <label style="font-size:12px;font-weight:600">Description <span style="font-weight:400;color:var(--text-muted)">(optional — bond, work location, etc.)</span></label>
+              <textarea class="form-control" id="d_desc" rows="2" placeholder="e.g. 2 year bond, Pune location, work from office...">${drive.description || ''}</textarea>
+            </div>
+          </div>
+
+          <button class="btn-save-details" id="saveDetailsBtn" onclick="saveDriveDetails()">
+            <span id="saveDetailsText"><i class="fas fa-save"></i> ${jobFilled ? 'Update Details' : 'Save Job Details'}</span>
+            <span id="saveDetailsSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Saving...</span>
+          </button>
         </div>`;
+
     } else {
       driveCard.innerHTML = `
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i>
-          No company drive assigned to you yet. Please contact the admin.
+        <div style="text-align:center;padding:20px;color:var(--text-muted)">
+          <i class="fas fa-info-circle" style="font-size:24px;margin-bottom:8px;display:block"></i>
+          No company drive assigned to you yet. Please contact the Placement Cell admin.
         </div>`;
       document.getElementById('driveSubtitle').textContent = 'No drive assigned';
     }
 
-    // ── Stats ────────────────────────────────────────
+    // ── Stats ──────────────────────────────────────
     document.getElementById('statEnrolled').textContent    = stats.enrolled    || 0;
     document.getElementById('statPresent').textContent     = stats.present     || 0;
     document.getElementById('statShortlisted').textContent = stats.shortlisted || 0;
     document.getElementById('statOffered').textContent     = stats.offered     || 0;
 
-    // ── Quick Table ──────────────────────────────────
-    const tbody   = document.getElementById('summaryTable');
+    // ── Quick Table ────────────────────────────────
+    const tbody    = document.getElementById('summaryTable');
     const students = (stuData.students || []).slice(0, 10);
-
     if (!students.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
-        <i class="fas fa-users"></i><p>No students enrolled yet</p>
-      </div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users"></i><p>No students enrolled yet</p></div></td></tr>`;
       return;
     }
-
     tbody.innerHTML = students.map(s => `
       <tr>
         <td><strong>${s.name}</strong></td>
@@ -206,6 +246,44 @@
             : '<span class="badge badge-applied">Pending</span>'}</td>
         <td><span class="badge badge-${s.status}">${s.status}</span></td>
       </tr>`).join('');
+  }
+
+  // ── Save Job Role / CTC / Description ───────────
+  async function saveDriveDetails() {
+    const alertEl = document.getElementById('detailsAlert');
+    alertEl.innerHTML = '';
+
+    const job_role    = document.getElementById('d_role').value.trim();
+    const ctc         = document.getElementById('d_ctc').value;
+    const description = document.getElementById('d_desc').value.trim();
+
+    if (!job_role) {
+      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:10px"><i class="fas fa-exclamation-circle"></i> Job role is required.</div>';
+      return;
+    }
+
+    document.getElementById('saveDetailsText').classList.add('hidden');
+    document.getElementById('saveDetailsSpinner').classList.remove('hidden');
+    document.getElementById('saveDetailsBtn').disabled = true;
+
+    const data = await api.put('/recruiter/drive-details', { job_role, ctc: ctc || null, description });
+
+    document.getElementById('saveDetailsText').classList.remove('hidden');
+    document.getElementById('saveDetailsSpinner').classList.add('hidden');
+    document.getElementById('saveDetailsBtn').disabled = false;
+
+    if (data.success) {
+      showToast('Job details saved!', 'success');
+      document.getElementById('saveDetailsText').innerHTML = '<i class="fas fa-save"></i> Update Details';
+      // Remove the pending note if it was there
+      const note = document.querySelector('.df-pending-note');
+      if (note) note.remove();
+      // Update subtitle
+      document.getElementById('driveSubtitle').textContent =
+        data.drive.company_name + (data.drive.job_role ? ' — ' + data.drive.job_role : '');
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:10px"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+    }
   }
 </script>
 </body></html>

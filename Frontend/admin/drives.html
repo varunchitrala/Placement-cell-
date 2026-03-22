@@ -6,76 +6,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    /* ── Event Card ── */
     .event-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 20px 24px;
-      margin-bottom: 12px; transition: border-color 0.2s;
-      cursor: pointer;
+      margin-bottom: 12px; transition: border-color 0.2s; cursor: pointer;
     }
-    .event-card.selected {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-    }
+    .event-card.selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
     .event-card:hover { border-color: var(--border-hover); }
-
-    .event-header {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    }
+    .event-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .event-title  { font-size: 16px; font-weight: 700; }
     .event-meta   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .event-right  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 
-    /* ── Status pills (clickable) ── */
-    .status-flow {
-      display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
-    }
-    .sf-btn {
-      padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
-      font-family: 'Inter', sans-serif; border: none; background: var(--bg-card);
-      color: var(--text-muted); transition: all 0.15s; border-right: 1px solid var(--border);
-    }
+    .status-flow { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .sf-btn { padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; border: none; background: var(--bg-card); color: var(--text-muted); transition: all 0.15s; border-right: 1px solid var(--border); }
     .sf-btn:last-child { border-right: none; }
     .sf-btn:hover { background: var(--bg); }
-    .sf-btn.s-created       { background:#F3F4F6; color:#6B7280; }
-    .sf-btn.s-registration  { background:rgba(37,99,235,0.12); color:#2563EB; }
-    .sf-btn.s-inprogress    { background:rgba(16,185,129,0.12); color:#10B981; }
-    .sf-btn.s-completed     { background:rgba(124,58,237,0.12); color:#7C3AED; }
+    .sf-btn.s-created      { background:#F3F4F6; color:#6B7280; }
+    .sf-btn.s-registration { background:rgba(37,99,235,0.12); color:#2563EB; }
+    .sf-btn.s-inprogress   { background:rgba(16,185,129,0.12); color:#10B981; }
+    .sf-btn.s-completed    { background:rgba(124,58,237,0.12); color:#7C3AED; }
 
-    /* ── Event stats mini ── */
-    .event-stats { display: flex; gap: 16px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-    .es { text-align: center; }
-    .es .v { font-size: 18px; font-weight: 800; }
-    .es .l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
-
-    /* ── Company table ── */
     .co-table { width: 100%; border-collapse: collapse; }
-    .co-table thead th {
-      padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-      color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border);
-      text-align: left; background: var(--bg-card); position: sticky; top: 0; z-index: 3;
-    }
+    .co-table thead th { padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); text-align: left; background: var(--bg-card); position: sticky; top: 0; z-index: 3; }
     .co-table tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     .co-table tbody tr:last-child td { border-bottom: none; }
     .co-table tbody tr:hover { background: rgba(0,0,0,0.015); }
 
-    /* ── Add btn ── */
-    .add-co-btn {
-      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
-      background: rgba(37,99,235,0.07); border: 1px dashed rgba(37,99,235,0.3);
-      border-radius: var(--radius-sm); color: var(--primary); font-family: 'Inter', sans-serif;
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
-    }
+    .add-co-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(37,99,235,0.07); border: 1px dashed rgba(37,99,235,0.3); border-radius: var(--radius-sm); color: var(--primary); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
     .add-co-btn:hover { background: rgba(37,99,235,0.12); }
 
-    /* ── Section labels ── */
-    .section-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
-      color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
-    }
-    .section-label::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* pending badge — shown when recruiter hasn't filled job role yet */
+    .pending-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:rgba(245,158,11,0.1); color:#D97706; border:1px solid rgba(245,158,11,0.25); }
   </style>
 </head>
 <body>
@@ -101,23 +66,18 @@
     <div class="page-header">
       <div>
         <h1>Placement Drives</h1>
-        <p>Manage mega drive events and the companies participating in each event</p>
+        <p>Manage mega drive events and companies. Job role &amp; CTC are filled in by the recruiter.</p>
       </div>
       <div class="header-actions">
-        <button class="btn-primary" onclick="openEventModal()">
-          <i class="fas fa-calendar-plus"></i> New Event
-        </button>
+        <button class="btn-primary" onclick="openEventModal()"><i class="fas fa-calendar-plus"></i> New Event</button>
       </div>
     </div>
 
     <div class="page-body">
-
-      <!-- Events Section -->
       <div class="section-label"><i class="fas fa-calendar-alt"></i> Mega Drive Events</div>
       <div id="eventsContainer">
         <div class="empty-state" style="padding:30px"><i class="fas fa-spinner fa-spin"></i><p>Loading events...</p></div>
       </div>
-
     </div>
   </div>
 </div>
@@ -132,7 +92,7 @@
     <div class="modal-body">
       <div id="evModalAlert"></div>
       <p class="text-muted text-sm" style="margin-bottom:16px">
-        An event is the overall campus placement day. The status you set here controls whether students can apply, attend, etc.
+        An event is the overall campus placement day. The status controls whether students can register and apply.
       </p>
       <div class="form-grid single">
         <div class="form-group form-group-sm">
@@ -147,14 +107,14 @@
           <label>Status</label>
           <select class="form-control" id="ev_status">
             <option value="CREATED">CREATED — Setting up, not visible to students</option>
-            <option value="REGISTRATION_OPEN">REGISTRATION_OPEN — Students can apply to companies</option>
+            <option value="REGISTRATION_OPEN">REGISTRATION_OPEN — Students can register &amp; apply</option>
             <option value="IN_PROGRESS">IN_PROGRESS — Drive day is happening</option>
             <option value="COMPLETED">COMPLETED — Drive finished</option>
           </select>
         </div>
         <div class="form-group form-group-sm">
           <label>Description</label>
-          <textarea class="form-control" id="ev_desc" rows="2" placeholder="Optional notes about this drive event..."></textarea>
+          <textarea class="form-control" id="ev_desc" rows="2" placeholder="Optional notes..."></textarea>
         </div>
       </div>
     </div>
@@ -174,19 +134,22 @@
     </div>
     <div class="modal-body">
       <div id="coModalAlert"></div>
+
+      <!-- Info note explaining the split -->
+      <div class="alert" style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.2);color:var(--primary);margin-bottom:16px;font-size:12px">
+        <i class="fas fa-info-circle"></i>
+        <span>
+          Admin adds the company and sets eligibility criteria.<br>
+          <strong>Job Role, CTC and Description</strong> are filled in by the recruiter from their dashboard.
+        </span>
+      </div>
+
       <div class="form-grid">
-        <div class="form-group form-group-sm">
+        <div class="form-group form-group-sm full" style="grid-column:1/-1">
           <label>Company Name *</label>
           <input class="form-control" id="co_company" placeholder="e.g. TCS, Google, Infosys"/>
         </div>
-        <div class="form-group form-group-sm">
-          <label>Job Role *</label>
-          <input class="form-control" id="co_role" placeholder="e.g. Software Engineer"/>
-        </div>
-        <div class="form-group form-group-sm">
-          <label>CTC (LPA)</label>
-          <input class="form-control" type="number" step="0.01" id="co_ctc" placeholder="e.g. 12.00"/>
-        </div>
+
         <div class="form-group form-group-sm">
           <label>Minimum CGPA</label>
           <input class="form-control" type="number" step="0.01" min="0" max="10" id="co_cgpa" value="0"/>
@@ -195,13 +158,9 @@
           <label>Backlogs Allowed</label>
           <input class="form-control" type="number" min="0" id="co_backlogs" value="0"/>
         </div>
-        <div class="form-group form-group-sm">
-          <label>Eligible Branches <span class="text-muted text-sm">(blank = all)</span></label>
-          <input class="form-control" id="co_branches" placeholder="e.g. CSE,ECE,IT"/>
-        </div>
         <div class="form-group form-group-sm" style="grid-column:1/-1">
-          <label>Description</label>
-          <textarea class="form-control" id="co_desc" rows="2" placeholder="Bond, work location, package breakdown..."></textarea>
+          <label>Eligible Branches <span class="text-muted text-sm">(leave blank for all branches)</span></label>
+          <input class="form-control" id="co_branches" placeholder="e.g. CSE,ECE,IT  — or leave blank for all"/>
         </div>
       </div>
     </div>
@@ -219,16 +178,14 @@ requireAuth('admin'); initSidebar('admin');
 let events     = [];
 let editEvId   = null;
 let editCoId   = null;
-let activeEvId = null; // which event's companies we're editing
+let activeEvId = null;
 
-// ── Load ─────────────────────────────────────────────
 async function load() {
   const data = await api.get('/admin/events');
   events = data.events || [];
   renderEvents();
 }
 
-// ── Render Events ────────────────────────────────────
 function renderEvents() {
   const container = document.getElementById('eventsContainer');
   if (!events.length) {
@@ -241,12 +198,7 @@ function renderEvents() {
     return;
   }
 
-  const statusLabel = {
-    CREATED:'Draft', REGISTRATION_OPEN:'Registration Open', IN_PROGRESS:'In Progress', COMPLETED:'Completed'
-  };
-  const statusColor = {
-    CREATED:'#6B7280', REGISTRATION_OPEN:'#2563EB', IN_PROGRESS:'#10B981', COMPLETED:'#7C3AED'
-  };
+  const statusLabel = { CREATED:'Draft', REGISTRATION_OPEN:'Registration Open', IN_PROGRESS:'In Progress', COMPLETED:'Completed' };
 
   container.innerHTML = events.map(ev => `
     <div class="event-card" id="evcard-${ev.id}" onclick="selectEvent(${ev.id})">
@@ -260,28 +212,17 @@ function renderEvents() {
           </div>
         </div>
         <div class="event-right">
-          <!-- Status switcher — clicking changes status immediately -->
           <div class="status-flow" onclick="event.stopPropagation()">
-            <button class="sf-btn ${ev.status==='CREATED'?'s-created':''}"
-                    onclick="quickStatus(${ev.id},'CREATED')"
-                    title="Set to Draft">Draft</button>
-            <button class="sf-btn ${ev.status==='REGISTRATION_OPEN'?'s-registration':''}"
-                    onclick="quickStatus(${ev.id},'REGISTRATION_OPEN')"
-                    title="Open Registration">Open</button>
-            <button class="sf-btn ${ev.status==='IN_PROGRESS'?'s-inprogress':''}"
-                    onclick="quickStatus(${ev.id},'IN_PROGRESS')"
-                    title="Drive In Progress">In Progress</button>
-            <button class="sf-btn ${ev.status==='COMPLETED'?'s-completed':''}"
-                    onclick="quickStatus(${ev.id},'COMPLETED')"
-                    title="Mark Completed">Completed</button>
+            <button class="sf-btn ${ev.status==='CREATED'?'s-created':''}"           onclick="quickStatus(${ev.id},'CREATED')">Draft</button>
+            <button class="sf-btn ${ev.status==='REGISTRATION_OPEN'?'s-registration':''}" onclick="quickStatus(${ev.id},'REGISTRATION_OPEN')">Open</button>
+            <button class="sf-btn ${ev.status==='IN_PROGRESS'?'s-inprogress':''}"    onclick="quickStatus(${ev.id},'IN_PROGRESS')">In Progress</button>
+            <button class="sf-btn ${ev.status==='COMPLETED'?'s-completed':''}"       onclick="quickStatus(${ev.id},'COMPLETED')">Completed</button>
           </div>
-          <!-- Edit / Delete event -->
           <button class="btn-secondary btn-sm" onclick="event.stopPropagation();editEvent(${ev.id})" title="Edit event"><i class="fas fa-edit"></i></button>
-          <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteEvent(${ev.id})" title="Delete event"><i class="fas fa-trash"></i></button>
+          <button class="btn-danger btn-sm"    onclick="event.stopPropagation();deleteEvent(${ev.id})" title="Delete event"><i class="fas fa-trash"></i></button>
         </div>
       </div>
 
-      <!-- Companies table (shown when selected) -->
       <div id="companies-${ev.id}" style="display:none;margin-top:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div class="section-label" style="flex:1;margin-bottom:0"><i class="fas fa-building"></i> Companies in this Event</div>
@@ -296,24 +237,17 @@ function renderEvents() {
     </div>`).join('');
 }
 
-// ── Select / Expand Event ────────────────────────────
 async function selectEvent(evId) {
   const wasSelected = activeEvId === evId;
-
-  // Deselect all
   document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
   document.querySelectorAll('[id^="companies-"]').forEach(c => c.style.display = 'none');
-
   if (wasSelected) { activeEvId = null; return; }
-
   activeEvId = evId;
   document.getElementById(`evcard-${evId}`).classList.add('selected');
-  const panel = document.getElementById(`companies-${evId}`);
-  panel.style.display = '';
+  document.getElementById(`companies-${evId}`).style.display = '';
   await loadCompanies(evId);
 }
 
-// ── Load Companies ───────────────────────────────────
 async function loadCompanies(evId) {
   const data = await api.get(`/admin/events/${evId}/drives`);
   const drives = data.drives || [];
@@ -333,30 +267,38 @@ async function loadCompanies(evId) {
       <table class="co-table">
         <thead>
           <tr>
-            <th>Company</th><th>Role</th><th>CTC</th><th>Eligibility</th>
-            <th style="text-align:center">Applied</th><th style="text-align:center">Present</th>
-            <th style="text-align:center">Offered</th><th>Actions</th>
+            <th>Company</th>
+            <th>Job Role / CTC</th>
+            <th>Eligibility</th>
+            <th style="text-align:center">Applied</th>
+            <th style="text-align:center">Present</th>
+            <th style="text-align:center">Offered</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           ${drives.map(d => `
           <tr>
             <td><strong>${d.company_name}</strong></td>
-            <td>${d.job_role}</td>
-            <td>${d.ctc ? '₹' + d.ctc + ' LPA' : '<span class="text-muted">—</span>'}</td>
+            <td>
+              ${d.job_role
+                ? `<div style="font-weight:600">${d.job_role}</div>
+                   <div style="font-size:11px;color:var(--text-muted)">${d.ctc ? '₹' + d.ctc + ' LPA' : 'CTC not set'}</div>`
+                : `<span class="pending-badge"><i class="fas fa-clock"></i> Recruiter to fill</span>`}
+            </td>
             <td style="font-size:12px">
-              CGPA≥<strong>${d.eligibility_min_cgpa}</strong> · Backlogs≤<strong>${d.eligibility_backlogs_allowed}</strong><br>
+              CGPA ≥ <strong>${d.eligibility_min_cgpa}</strong> &nbsp;·&nbsp; Backlogs ≤ <strong>${d.eligibility_backlogs_allowed}</strong><br>
               <span style="color:var(--text-muted)">${d.eligibility_branches || 'All Branches'}</span>
             </td>
             <td style="text-align:center;font-weight:700;color:var(--primary)">${d.enrolled || 0}</td>
-            <td style="text-align:center;font-weight:700;color:#10B981">${d.present || 0}</td>
-            <td style="text-align:center;font-weight:700;color:#F59E0B">${d.offered || 0}</td>
+            <td style="text-align:center;font-weight:700;color:#10B981">${d.present  || 0}</td>
+            <td style="text-align:center;font-weight:700;color:#F59E0B">${d.offered  || 0}</td>
             <td>
               <div style="display:flex;gap:6px">
                 <button class="btn-secondary btn-sm" onclick="editCompany(${d.id})" title="Edit"><i class="fas fa-edit"></i></button>
                 <a href="enrollments.html?drive=${d.id}" class="btn-secondary btn-sm" title="Enrollments"><i class="fas fa-users"></i></a>
-                <a href="pipeline.html?drive=${d.id}" class="btn-secondary btn-sm" style="color:#7C3AED;border-color:rgba(124,58,237,0.3)" title="Pipeline"><i class="fas fa-chart-line"></i></a>
-                <button class="btn-danger btn-sm" onclick="deleteCompany(${d.id},'${d.company_name}',${evId})" title="Delete"><i class="fas fa-trash"></i></button>
+                <a href="pipeline.html?drive=${d.id}"   class="btn-secondary btn-sm" style="color:#7C3AED;border-color:rgba(124,58,237,0.3)" title="Pipeline"><i class="fas fa-chart-line"></i></a>
+                <button class="btn-danger btn-sm" onclick="deleteCompany(${d.id},'${d.company_name.replace(/'/g,"\\'")}',${evId})" title="Delete"><i class="fas fa-trash"></i></button>
               </div>
             </td>
           </tr>`).join('')}
@@ -365,7 +307,6 @@ async function loadCompanies(evId) {
     </div>`;
 }
 
-// ── Quick Status Change ──────────────────────────────
 async function quickStatus(evId, status) {
   const data = await api.put(`/admin/events/${evId}/status`, { status });
   if (data.success) {
@@ -373,14 +314,8 @@ async function quickStatus(evId, status) {
     const ev = events.find(e => e.id === evId);
     if (ev) ev.status = status;
     renderEvents();
-    // Re-open if was selected
-    if (activeEvId === evId) {
-      activeEvId = null;
-      selectEvent(evId);
-    }
-  } else {
-    showToast(data.message, 'error');
-  }
+    if (activeEvId === evId) { activeEvId = null; selectEvent(evId); }
+  } else { showToast(data.message, 'error'); }
 }
 
 // ── Event Modal ──────────────────────────────────────
@@ -402,7 +337,6 @@ function openEventModal(id = null) {
   document.getElementById('eventModal').classList.remove('hidden');
 }
 function closeEventModal() { document.getElementById('eventModal').classList.add('hidden'); editEvId = null; }
-
 function editEvent(id) { openEventModal(id); }
 
 async function saveEvent() {
@@ -421,9 +355,7 @@ async function saveEvent() {
     : await api.post('/admin/events', payload);
   if (data.success) {
     showToast(editEvId ? 'Event updated!' : 'Event created!');
-    closeEventModal();
-    activeEvId = null;
-    load();
+    closeEventModal(); activeEvId = null; load();
   } else {
     document.getElementById('evModalAlert').innerHTML = `<div class="alert alert-error">${data.message}</div>`;
   }
@@ -431,7 +363,7 @@ async function saveEvent() {
 
 async function deleteEvent(id) {
   const ev = events.find(e => e.id === id);
-  if (!confirm(`Delete event "${ev?.name}"?\n\nAll companies, enrollments and attendance under this event will also be deleted.`)) return;
+  if (!confirm(`Delete event "${ev?.name}"?\n\nAll companies, enrollments and attendance will also be deleted.`)) return;
   const data = await api.del(`/admin/events/${id}`);
   if (data.success) { showToast('Event deleted', 'info'); activeEvId = null; load(); }
   else showToast(data.message, 'error');
@@ -439,38 +371,30 @@ async function deleteEvent(id) {
 
 // ── Company Modal ────────────────────────────────────
 function openCompanyModal(evId, coId = null) {
-  activeEvId = evId;
-  editCoId   = coId;
+  activeEvId = evId; editCoId = coId;
   document.getElementById('coModalAlert').innerHTML = '';
-  if (coId) {
-    // Would need to fetch company data — for now just open blank for edit via table button
-    document.getElementById('coModalTitle').textContent = 'Edit Company';
-  } else {
+  if (!coId) {
     document.getElementById('coModalTitle').textContent = 'Add Company to Event';
-    ['co_company','co_role','co_ctc','co_branches','co_desc'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('co_cgpa').value    = 0;
-    document.getElementById('co_backlogs').value= 0;
+    document.getElementById('co_company').value  = '';
+    document.getElementById('co_cgpa').value     = 0;
+    document.getElementById('co_backlogs').value = 0;
+    document.getElementById('co_branches').value = '';
   }
   document.getElementById('companyModal').classList.remove('hidden');
 }
 function closeCompanyModal() { document.getElementById('companyModal').classList.add('hidden'); editCoId = null; }
 
 async function editCompany(coId) {
-  // Fetch company data from the drives list we already have
-  const data = await api.get('/admin/drives');
+  const data  = await api.get('/admin/drives');
   const drive = (data.drives || []).find(d => d.id === coId);
   if (!drive) return;
-  activeEvId = drive.event_id;
-  editCoId   = coId;
-  document.getElementById('coModalTitle').textContent = `Edit — ${drive.company_name}`;
-  document.getElementById('co_company').value  = drive.company_name;
-  document.getElementById('co_role').value     = drive.job_role;
-  document.getElementById('co_ctc').value      = drive.ctc || '';
-  document.getElementById('co_cgpa').value     = drive.eligibility_min_cgpa || 0;
-  document.getElementById('co_backlogs').value = drive.eligibility_backlogs_allowed || 0;
-  document.getElementById('co_branches').value = drive.eligibility_branches || '';
-  document.getElementById('co_desc').value     = drive.description || '';
-  document.getElementById('coModalAlert').innerHTML = '';
+  activeEvId = drive.event_id; editCoId = coId;
+  document.getElementById('coModalTitle').textContent  = `Edit — ${drive.company_name}`;
+  document.getElementById('co_company').value          = drive.company_name;
+  document.getElementById('co_cgpa').value             = drive.eligibility_min_cgpa || 0;
+  document.getElementById('co_backlogs').value         = drive.eligibility_backlogs_allowed || 0;
+  document.getElementById('co_branches').value         = drive.eligibility_branches || '';
+  document.getElementById('coModalAlert').innerHTML    = '';
   document.getElementById('companyModal').classList.remove('hidden');
 }
 
@@ -478,15 +402,12 @@ async function saveCompany() {
   const payload = {
     event_id:                     activeEvId,
     company_name:                 document.getElementById('co_company').value.trim(),
-    job_role:                     document.getElementById('co_role').value.trim(),
-    ctc:                          document.getElementById('co_ctc').value || null,
-    description:                  document.getElementById('co_desc').value.trim(),
-    eligibility_min_cgpa:         parseFloat(document.getElementById('co_cgpa').value)     || 0,
-    eligibility_backlogs_allowed: parseInt(document.getElementById('co_backlogs').value)   || 0,
+    eligibility_min_cgpa:         parseFloat(document.getElementById('co_cgpa').value)    || 0,
+    eligibility_backlogs_allowed: parseInt(document.getElementById('co_backlogs').value)  || 0,
     eligibility_branches:         document.getElementById('co_branches').value.trim()
   };
-  if (!payload.company_name || !payload.job_role) {
-    document.getElementById('coModalAlert').innerHTML = '<div class="alert alert-error">Company name and job role are required.</div>';
+  if (!payload.company_name) {
+    document.getElementById('coModalAlert').innerHTML = '<div class="alert alert-error">Company name is required.</div>';
     return;
   }
   const data = editCoId
@@ -494,8 +415,7 @@ async function saveCompany() {
     : await api.post('/admin/drives', payload);
   if (data.success) {
     showToast(editCoId ? `${payload.company_name} updated!` : `${payload.company_name} added!`);
-    closeCompanyModal();
-    loadCompanies(activeEvId);
+    closeCompanyModal(); loadCompanies(activeEvId);
   } else {
     document.getElementById('coModalAlert').innerHTML = `<div class="alert alert-error">${data.message}</div>`;
   }
