@@ -1,0 +1,8 @@
+        <div class="form-group">
+          <label>Personal Email <span class="req">*</span></label>
+          <input class="form-control" type="email" id="email" placeholder="yourname@email.com" autocomplete="email" required/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number <span class="req">*</span></label>
+          <input class="form-control" type="tel" id="phone" placeholder="9876543210" autocomplete="tel" maxlength="10" required/>
+        </div>

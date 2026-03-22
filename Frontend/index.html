@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sandip University - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary:#2563EB; --primary-hover:#1D4ED8;
+      --bg-white:#FFFFFF; --bg-brand:#EFF6FF;
+      --text-dark:#111827; --text-muted:#6B7280; --text-brand:#1E3A8A;
+      --border-color:#E5E7EB; --input-bg:#FFFFFF;
+      --focus-ring:rgba(37,99,235,0.2);
+      --radius-md:8px; --radius-sm:6px;
+      --transition:all 0.2s ease-in-out;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; color:var(--text-dark); min-height:100vh; display:flex; overflow:hidden; background-color:var(--bg-white); }
+
+    .brand-side {
+      flex:1.2; background-color:var(--bg-brand);
+      background-image:radial-gradient(#BFDBFE 1px, transparent 1px);
+      background-size:24px 24px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:60px; border-right:1px solid var(--border-color); position:relative;
+    }
+    .brand-content { max-width:500px; text-align:center; }
+    .uni-logo { height:120px; width:auto; margin-bottom:32px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+    .brand-content h1 { font-size:36px; font-weight:700; color:var(--text-brand); margin-bottom:16px; letter-spacing:-0.025em; line-height:1.2; }
+    .brand-content p { font-size:16px; color:#4B5563; line-height:1.6; }
+
+    .form-side { flex:1; background-color:var(--bg-white); display:flex; align-items:center; justify-content:center; min-width:500px; padding:40px; overflow-y:auto; }
+    .form-wrapper { width:100%; max-width:440px; }
+
+    .form-header { margin-bottom:28px; text-align:left; }
+    .form-header h2 { font-size:28px; font-weight:700; color:var(--text-dark); margin-bottom:8px; letter-spacing:-0.025em; }
+    .form-header p { font-size:15px; color:var(--text-muted); }
+
+    .role-switcher { display:flex; background-color:#F3F4F6; border-radius:var(--radius-md); padding:4px; margin-bottom:28px; border:1px solid var(--border-color); gap:4px; }
+    .switcher-btn { flex:1; border:none; background:transparent; padding:9px 6px; font-size:13px; font-weight:600; color:var(--text-muted); border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit; white-space:nowrap; }
+    .switcher-btn.active { background-color:var(--bg-white); color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    .switcher-btn:not(.active):hover { color:var(--text-dark); }
+
+    .form-group { margin-bottom:20px; }
+    .form-group label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:8px; }
+    .input-icon-wrap { position:relative; }
+    .input-icon-wrap i.icon-left { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9CA3AF; font-size:15px; transition:var(--transition); pointer-events:none; }
+    .form-control { width:100%; padding:13px 14px 13px 42px; font-family:inherit; font-size:14px; color:var(--text-dark); background-color:var(--input-bg); border:1px solid #D1D5DB; border-radius:var(--radius-md); transition:var(--transition); }
+    .form-control::placeholder { color:#9CA3AF; }
+    .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--focus-ring); }
+    .pwd-toggle { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9CA3AF; cursor:pointer; font-size:15px; }
+    .pwd-toggle:hover { color:#4B5563; }
+
+    .error-msg { background-color:#FEF2F2; border:1px solid #FECACA; color:#DC2626; padding:12px; border-radius:var(--radius-md); font-size:13px; font-weight:500; margin-bottom:20px; display:flex; align-items:flex-start; gap:10px; }
+    .error-msg i { margin-top:2px; }
+    .hidden { display:none !important; }
+
+    .btn-submit { width:100%; background-color:var(--primary); color:#FFFFFF; border:none; padding:14px; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:var(--transition); margin-top:24px; box-shadow:0 4px 6px -1px var(--focus-ring); }
+    .btn-submit:hover { background-color:var(--primary-hover); transform:translateY(-1px); }
+    .btn-submit.recruiter-btn { background-color:#7C3AED; box-shadow:0 4px 6px -1px rgba(124,58,237,0.3); }
+    .btn-submit.recruiter-btn:hover { background-color:#6D28D9; }
+    .btn-submit:active { transform:translateY(0); }
+
+    .footer-links { text-align:left; margin-top:20px; font-size:14px; color:var(--text-muted); }
+    .footer-links a { color:var(--primary); font-weight:600; text-decoration:none; }
+    .footer-links a:hover { text-decoration:underline; }
+
+    .recruiter-badge { display:inline-flex; align-items:center; gap:6px; background:#F5F3FF; color:#7C3AED; border:1px solid #DDD6FE; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; margin-bottom:16px; }
+
+    @media(max-width:900px){
+      body { flex-direction:column; overflow:auto; }
+      .brand-side { padding:40px 20px; border-right:none; border-bottom:1px solid var(--border-color); flex:none; min-height:300px; }
+      .uni-logo { height:90px; }
+      .brand-content h1 { font-size:28px; }
+      .form-side { min-width:100%; padding:40px 20px; }
+      .form-wrapper { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brand-side">
+    <div class="brand-content">
+      <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="uni-logo"/>
+      <h1>Sandip University Placement Portal</h1>
+      <p>Your gateway to world-class career opportunities. Manage your academic profile, view active placement drives, and connect with top recruiters seamlessly.</p>
+    </div>
+  </div>
+
+  <div class="form-side">
+    <div class="form-wrapper">
+      <div class="form-header">
+        <h2>Welcome Back</h2>
+        <p>Log in to access your placement dashboard</p>
+      </div>
+
+      <!-- 3-Role Switcher -->
+      <div class="role-switcher">
+        <button type="button" class="switcher-btn active" id="tab-student" onclick="switchRole('student')">
+          <i class="fas fa-user-graduate"></i> Student
+        </button>
+        <button type="button" class="switcher-btn" id="tab-recruiter" onclick="switchRole('recruiter')">
+          <i class="fas fa-briefcase"></i> Recruiter
+        </button>
+        <button type="button" class="switcher-btn" id="tab-admin" onclick="switchRole('admin')">
+          <i class="fas fa-user-shield"></i> Admin
+        </button>
+      </div>
+
+      <!-- Student Form -->
+      <form id="studentForm" onsubmit="handleStudentLogin(event)">
+        <div class="form-group">
+          <label>University PRN Number</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-id-card icon-left"></i>
+            <input type="text" id="s_prn" class="form-control" required placeholder="Enter your PRN"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-calendar-alt icon-left"></i>
+            <input type="date" id="s_dob" class="form-control" required/>
+          </div>
+        </div>
+        <div id="sLoginError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit">
+          <span id="sLoginText">Sign In Securely</span>
+          <span id="sLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Processing...</span>
+        </button>
+        <div class="footer-links">Not registered? <a href="register.html">Apply Here</a></div>
+      </form>
+
+      <!-- Recruiter Form -->
+      <form id="recruiterForm" class="hidden" onsubmit="handleRecruiterLogin(event)">
+        <div class="recruiter-badge"><i class="fas fa-briefcase"></i> Recruiter Portal — Credentials provided by Admin</div>
+        <div class="form-group">
+          <label>Recruiter Email</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-envelope icon-left"></i>
+            <input type="email" id="r_email" class="form-control" required placeholder="recruiter@company.com"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-lock icon-left"></i>
+            <input type="password" id="r_password" class="form-control" required placeholder="Enter your password"/>
+            <button type="button" class="pwd-toggle" onclick="togglePwd('r_password','rEyeIcon')"><i class="fas fa-eye" id="rEyeIcon"></i></button>
+          </div>
+        </div>
+        <div id="rLoginError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit recruiter-btn">
+          <span id="rLoginText"><i class="fas fa-briefcase"></i> Access Recruiter Panel</span>
+          <span id="rLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
+        </button>
+      </form>
+
+      <!-- Admin Form -->
+      <form id="adminForm" class="hidden" onsubmit="handleAdminLogin(event)">
+        <div class="form-group">
+          <label>Administrative Email</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-envelope icon-left"></i>
+            <input type="email" id="a_email" class="form-control" required placeholder="admin@sandipuniversity.edu.in"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-icon-wrap">
+            <i class="fas fa-lock icon-left"></i>
+            <input type="password" id="a_password" class="form-control" required placeholder="Enter your password"/>
+            <button type="button" class="pwd-toggle" onclick="togglePwd('a_password','aEyeIcon')"><i class="fas fa-eye" id="aEyeIcon"></i></button>
+          </div>
+        </div>
+        <div id="aLoginError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit">
+          <span id="aLoginText">Access Admin Panel</span>
+          <span id="aLoginSpinner" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    var _u = null;
+    try { _u = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) { localStorage.clear(); }
+    if (_u && _u.role) {
+      if      (_u.role === 'admin')     window.location.href = 'admin/dashboard.html';
+      else if (_u.role === 'recruiter') window.location.href = 'recruiter/dashboard.html';
+      else                              window.location.href = 'student/dashboard.html';
+    }
+
+    // ── Switch between the 3 login tabs ──────────────────────────
+    function switchRole(role) {
+      // Tabs
+      document.getElementById('tab-student').classList.toggle('active',   role === 'student');
+      document.getElementById('tab-recruiter').classList.toggle('active', role === 'recruiter');
+      document.getElementById('tab-admin').classList.toggle('active',     role === 'admin');
+      // Forms
+      document.getElementById('studentForm').classList.toggle('hidden',   role !== 'student');
+      document.getElementById('recruiterForm').classList.toggle('hidden', role !== 'recruiter');
+      document.getElementById('adminForm').classList.toggle('hidden',     role !== 'admin');
+      // Clear errors
+      document.getElementById('sLoginError').classList.add('hidden');
+      document.getElementById('rLoginError').classList.add('hidden');
+      document.getElementById('aLoginError').classList.add('hidden');
+    }
+
+    // ── Password show/hide ────────────────────────────────────────
+    function togglePwd(inputId, iconId) {
+      var input = document.getElementById(inputId);
+      var icon  = document.getElementById(iconId);
+      input.type = (input.type === 'password') ? 'text' : 'password';
+      icon.className = (input.type === 'text') ? 'fas fa-eye-slash' : 'fas fa-eye';
+    }
+
+    // ── Student login ─────────────────────────────────────────────
+    async function handleStudentLogin(e) {
+      e.preventDefault();
+      var err = document.getElementById('sLoginError');
+      err.classList.add('hidden');
+      document.getElementById('sLoginText').classList.add('hidden');
+      document.getElementById('sLoginSpinner').classList.remove('hidden');
+      try {
+        var data = await api.post('/auth/student-login', {
+          roll_no:       document.getElementById('s_prn').value.trim().toUpperCase(),
+          date_of_birth: document.getElementById('s_dob').value
+        });
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = 'student/dashboard.html';
+        } else {
+          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+          err.classList.remove('hidden');
+        }
+      } catch(ex) {
+        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
+        err.classList.remove('hidden');
+      } finally {
+        document.getElementById('sLoginText').classList.remove('hidden');
+        document.getElementById('sLoginSpinner').classList.add('hidden');
+      }
+    }
+
+    // ── Recruiter login ───────────────────────────────────────────
+    async function handleRecruiterLogin(e) {
+      e.preventDefault();
+      var err = document.getElementById('rLoginError');
+      err.classList.add('hidden');
+      document.getElementById('rLoginText').classList.add('hidden');
+      document.getElementById('rLoginSpinner').classList.remove('hidden');
+      try {
+        var data = await api.post('/auth/recruiter-login', {
+          email:    document.getElementById('r_email').value.trim(),
+          password: document.getElementById('r_password').value
+        });
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = 'recruiter/dashboard.html';
+        } else {
+          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+          err.classList.remove('hidden');
+        }
+      } catch(ex) {
+        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
+        err.classList.remove('hidden');
+      } finally {
+        document.getElementById('rLoginText').classList.remove('hidden');
+        document.getElementById('rLoginSpinner').classList.add('hidden');
+      }
+    }
+
+    // ── Admin login ───────────────────────────────────────────────
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      var err = document.getElementById('aLoginError');
+      err.classList.add('hidden');
+      document.getElementById('aLoginText').classList.add('hidden');
+      document.getElementById('aLoginSpinner').classList.remove('hidden');
+      try {
+        var data = await api.post('/auth/admin-login', {
+          email:    document.getElementById('a_email').value.trim(),
+          password: document.getElementById('a_password').value
+        });
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = 'admin/dashboard.html';
+        } else {
+          err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+          err.classList.remove('hidden');
+        }
+      } catch(ex) {
+        err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Cannot reach server. Please try again.';
+        err.classList.remove('hidden');
+      } finally {
+        document.getElementById('aLoginText').classList.remove('hidden');
+        document.getElementById('aLoginSpinner').classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>

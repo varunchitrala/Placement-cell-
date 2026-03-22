@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Drives – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Event Card ── */
+    .event-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      margin-bottom: 12px; transition: border-color 0.2s;
+      cursor: pointer;
+    }
+    .event-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .event-card:hover { border-color: var(--border-hover); }
+
+    .event-header {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .event-title  { font-size: 16px; font-weight: 700; }
+    .event-meta   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .event-right  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+
+    /* ── Status pills (clickable) ── */
+    .status-flow {
+      display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .sf-btn {
+      padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+      font-family: 'Inter', sans-serif; border: none; background: var(--bg-card);
+      color: var(--text-muted); transition: all 0.15s; border-right: 1px solid var(--border);
+    }
+    .sf-btn:last-child { border-right: none; }
+    .sf-btn:hover { background: var(--bg); }
+    .sf-btn.s-created       { background:#F3F4F6; color:#6B7280; }
+    .sf-btn.s-registration  { background:rgba(37,99,235,0.12); color:#2563EB; }
+    .sf-btn.s-inprogress    { background:rgba(16,185,129,0.12); color:#10B981; }
+    .sf-btn.s-completed     { background:rgba(124,58,237,0.12); color:#7C3AED; }
+
+    /* ── Event stats mini ── */
+    .event-stats { display: flex; gap: 16px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .es { text-align: center; }
+    .es .v { font-size: 18px; font-weight: 800; }
+    .es .l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+
+    /* ── Company table ── */
+    .co-table { width: 100%; border-collapse: collapse; }
+    .co-table thead th {
+      padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border);
+      text-align: left; background: var(--bg-card); position: sticky; top: 0; z-index: 3;
+    }
+    .co-table tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .co-table tbody tr:last-child td { border-bottom: none; }
+    .co-table tbody tr:hover { background: rgba(0,0,0,0.015); }
+
+    /* ── Add btn ── */
+    .add-co-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+      background: rgba(37,99,235,0.07); border: 1px dashed rgba(37,99,235,0.3);
+      border-radius: var(--radius-sm); color: var(--primary); font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .add-co-btn:hover { background: rgba(37,99,235,0.12); }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item active"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Placement Drives</h1>
+        <p>Manage mega drive events and the companies participating in each event</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" onclick="openEventModal()">
+          <i class="fas fa-calendar-plus"></i> New Event
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Events Section -->
+      <div class="section-label"><i class="fas fa-calendar-alt"></i> Mega Drive Events</div>
+      <div id="eventsContainer">
+        <div class="empty-state" style="padding:30px"><i class="fas fa-spinner fa-spin"></i><p>Loading events...</p></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Event Modal ── -->
+<div id="eventModal" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 id="evModalTitle">New Mega Drive Event</h3>
+      <button class="modal-close" onclick="closeEventModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="evModalAlert"></div>
+      <p class="text-muted text-sm" style="margin-bottom:16px">
+        An event is the overall campus placement day. The status you set here controls whether students can apply, attend, etc.
+      </p>
+      <div class="form-grid single">
+        <div class="form-group form-group-sm">
+          <label>Event Name *</label>
+          <input class="form-control" id="ev_name" placeholder="e.g. Sandip University Mega Drive 2025"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Event Date *</label>
+          <input class="form-control" type="date" id="ev_date"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Status</label>
+          <select class="form-control" id="ev_status">
+            <option value="CREATED">CREATED — Setting up, not visible to students</option>
+            <option value="REGISTRATION_OPEN">REGISTRATION_OPEN — Students can apply to companies</option>
+            <option value="IN_PROGRESS">IN_PROGRESS — Drive day is happening</option>
+            <option value="COMPLETED">COMPLETED — Drive finished</option>
+          </select>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Description</label>
+          <textarea class="form-control" id="ev_desc" rows="2" placeholder="Optional notes about this drive event..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEventModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEvent()"><i class="fas fa-save"></i> Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Company Modal ── -->
+<div id="companyModal" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h3 id="coModalTitle">Add Company</h3>
+      <button class="modal-close" onclick="closeCompanyModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="coModalAlert"></div>
+      <div class="form-grid">
+        <div class="form-group form-group-sm">
+          <label>Company Name *</label>
+          <input class="form-control" id="co_company" placeholder="e.g. TCS, Google, Infosys"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Job Role *</label>
+          <input class="form-control" id="co_role" placeholder="e.g. Software Engineer"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>CTC (LPA)</label>
+          <input class="form-control" type="number" step="0.01" id="co_ctc" placeholder="e.g. 12.00"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Minimum CGPA</label>
+          <input class="form-control" type="number" step="0.01" min="0" max="10" id="co_cgpa" value="0"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Backlogs Allowed</label>
+          <input class="form-control" type="number" min="0" id="co_backlogs" value="0"/>
+        </div>
+        <div class="form-group form-group-sm">
+          <label>Eligible Branches <span class="text-muted text-sm">(blank = all)</span></label>
+          <input class="form-control" id="co_branches" placeholder="e.g. CSE,ECE,IT"/>
+        </div>
+        <div class="form-group form-group-sm" style="grid-column:1/-1">
+          <label>Description</label>
+          <textarea class="form-control" id="co_desc" rows="2" placeholder="Bond, work location, package breakdown..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeCompanyModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveCompany()"><i class="fas fa-save"></i> Save Company</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+requireAuth('admin'); initSidebar('admin');
+
+let events     = [];
+let editEvId   = null;
+let editCoId   = null;
+let activeEvId = null; // which event's companies we're editing
+
+// ── Load ─────────────────────────────────────────────
+async function load() {
+  const data = await api.get('/admin/events');
+  events = data.events || [];
+  renderEvents();
+}
+
+// ── Render Events ────────────────────────────────────
+function renderEvents() {
+  const container = document.getElementById('eventsContainer');
+  if (!events.length) {
+    container.innerHTML = `
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="font-size:40px;color:var(--text-muted);margin-bottom:12px;opacity:0.4">📅</div>
+        <p style="color:var(--text-muted);margin-bottom:16px">No mega drive events yet. Create your first one.</p>
+        <button class="btn-primary" onclick="openEventModal()"><i class="fas fa-plus"></i> Create Event</button>
+      </div>`;
+    return;
+  }
+
+  const statusLabel = {
+    CREATED:'Draft', REGISTRATION_OPEN:'Registration Open', IN_PROGRESS:'In Progress', COMPLETED:'Completed'
+  };
+  const statusColor = {
+    CREATED:'#6B7280', REGISTRATION_OPEN:'#2563EB', IN_PROGRESS:'#10B981', COMPLETED:'#7C3AED'
+  };
+
+  container.innerHTML = events.map(ev => `
+    <div class="event-card" id="evcard-${ev.id}" onclick="selectEvent(${ev.id})">
+      <div class="event-header">
+        <div>
+          <div class="event-title">${ev.name}</div>
+          <div class="event-meta">
+            <i class="fas fa-calendar"></i> ${formatDate(ev.event_date)}
+            &nbsp;·&nbsp; ${ev.company_count || 0} companies
+            &nbsp;·&nbsp; ${ev.student_count || 0} student applications
+          </div>
+        </div>
+        <div class="event-right">
+          <!-- Status switcher — clicking changes status immediately -->
+          <div class="status-flow" onclick="event.stopPropagation()">
+            <button class="sf-btn ${ev.status==='CREATED'?'s-created':''}"
+                    onclick="quickStatus(${ev.id},'CREATED')"
+                    title="Set to Draft">Draft</button>
+            <button class="sf-btn ${ev.status==='REGISTRATION_OPEN'?'s-registration':''}"
+                    onclick="quickStatus(${ev.id},'REGISTRATION_OPEN')"
+                    title="Open Registration">Open</button>
+            <button class="sf-btn ${ev.status==='IN_PROGRESS'?'s-inprogress':''}"
+                    onclick="quickStatus(${ev.id},'IN_PROGRESS')"
+                    title="Drive In Progress">In Progress</button>
+            <button class="sf-btn ${ev.status==='COMPLETED'?'s-completed':''}"
+                    onclick="quickStatus(${ev.id},'COMPLETED')"
+                    title="Mark Completed">Completed</button>
+          </div>
+          <!-- Edit / Delete event -->
+          <button class="btn-secondary btn-sm" onclick="event.stopPropagation();editEvent(${ev.id})" title="Edit event"><i class="fas fa-edit"></i></button>
+          <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteEvent(${ev.id})" title="Delete event"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+
+      <!-- Companies table (shown when selected) -->
+      <div id="companies-${ev.id}" style="display:none;margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="section-label" style="flex:1;margin-bottom:0"><i class="fas fa-building"></i> Companies in this Event</div>
+          <button class="add-co-btn" onclick="event.stopPropagation();openCompanyModal(${ev.id})">
+            <i class="fas fa-plus"></i> Add Company
+          </button>
+        </div>
+        <div id="co-table-${ev.id}">
+          <div style="text-align:center;padding:20px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Select / Expand Event ────────────────────────────
+async function selectEvent(evId) {
+  const wasSelected = activeEvId === evId;
+
+  // Deselect all
+  document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('[id^="companies-"]').forEach(c => c.style.display = 'none');
+
+  if (wasSelected) { activeEvId = null; return; }
+
+  activeEvId = evId;
+  document.getElementById(`evcard-${evId}`).classList.add('selected');
+  const panel = document.getElementById(`companies-${evId}`);
+  panel.style.display = '';
+  await loadCompanies(evId);
+}
+
+// ── Load Companies ───────────────────────────────────
+async function loadCompanies(evId) {
+  const data = await api.get(`/admin/events/${evId}/drives`);
+  const drives = data.drives || [];
+  const container = document.getElementById(`co-table-${evId}`);
+
+  if (!drives.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:24px;color:var(--text-muted);border:1px dashed var(--border);border-radius:var(--radius-sm)">
+        <i class="fas fa-building" style="font-size:24px;opacity:0.3;margin-bottom:8px;display:block"></i>
+        No companies added yet. Click <strong>Add Company</strong> to add one.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <table class="co-table">
+        <thead>
+          <tr>
+            <th>Company</th><th>Role</th><th>CTC</th><th>Eligibility</th>
+            <th style="text-align:center">Applied</th><th style="text-align:center">Present</th>
+            <th style="text-align:center">Offered</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${drives.map(d => `
+          <tr>
+            <td><strong>${d.company_name}</strong></td>
+            <td>${d.job_role}</td>
+            <td>${d.ctc ? '₹' + d.ctc + ' LPA' : '<span class="text-muted">—</span>'}</td>
+            <td style="font-size:12px">
+              CGPA≥<strong>${d.eligibility_min_cgpa}</strong> · Backlogs≤<strong>${d.eligibility_backlogs_allowed}</strong><br>
+              <span style="color:var(--text-muted)">${d.eligibility_branches || 'All Branches'}</span>
+            </td>
+            <td style="text-align:center;font-weight:700;color:var(--primary)">${d.enrolled || 0}</td>
+            <td style="text-align:center;font-weight:700;color:#10B981">${d.present || 0}</td>
+            <td style="text-align:center;font-weight:700;color:#F59E0B">${d.offered || 0}</td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn-secondary btn-sm" onclick="editCompany(${d.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                <a href="enrollments.html?drive=${d.id}" class="btn-secondary btn-sm" title="Enrollments"><i class="fas fa-users"></i></a>
+                <a href="pipeline.html?drive=${d.id}" class="btn-secondary btn-sm" style="color:#7C3AED;border-color:rgba(124,58,237,0.3)" title="Pipeline"><i class="fas fa-chart-line"></i></a>
+                <button class="btn-danger btn-sm" onclick="deleteCompany(${d.id},'${d.company_name}',${evId})" title="Delete"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Quick Status Change ──────────────────────────────
+async function quickStatus(evId, status) {
+  const data = await api.put(`/admin/events/${evId}/status`, { status });
+  if (data.success) {
+    showToast(`Status → ${status}`, 'success');
+    const ev = events.find(e => e.id === evId);
+    if (ev) ev.status = status;
+    renderEvents();
+    // Re-open if was selected
+    if (activeEvId === evId) {
+      activeEvId = null;
+      selectEvent(evId);
+    }
+  } else {
+    showToast(data.message, 'error');
+  }
+}
+
+// ── Event Modal ──────────────────────────────────────
+function openEventModal(id = null) {
+  editEvId = id;
+  document.getElementById('evModalAlert').innerHTML = '';
+  if (id) {
+    const ev = events.find(e => e.id === id);
+    document.getElementById('evModalTitle').textContent = 'Edit Event';
+    document.getElementById('ev_name').value   = ev.name;
+    document.getElementById('ev_date').value   = ev.event_date?.split('T')[0] || '';
+    document.getElementById('ev_status').value = ev.status;
+    document.getElementById('ev_desc').value   = ev.description || '';
+  } else {
+    document.getElementById('evModalTitle').textContent = 'New Mega Drive Event';
+    ['ev_name','ev_date','ev_desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ev_status').value = 'CREATED';
+  }
+  document.getElementById('eventModal').classList.remove('hidden');
+}
+function closeEventModal() { document.getElementById('eventModal').classList.add('hidden'); editEvId = null; }
+
+function editEvent(id) { openEventModal(id); }
+
+async function saveEvent() {
+  const payload = {
+    name:        document.getElementById('ev_name').value.trim(),
+    event_date:  document.getElementById('ev_date').value,
+    status:      document.getElementById('ev_status').value,
+    description: document.getElementById('ev_desc').value.trim()
+  };
+  if (!payload.name || !payload.event_date) {
+    document.getElementById('evModalAlert').innerHTML = '<div class="alert alert-error">Name and date are required.</div>';
+    return;
+  }
+  const data = editEvId
+    ? await api.put(`/admin/events/${editEvId}`, payload)
+    : await api.post('/admin/events', payload);
+  if (data.success) {
+    showToast(editEvId ? 'Event updated!' : 'Event created!');
+    closeEventModal();
+    activeEvId = null;
+    load();
+  } else {
+    document.getElementById('evModalAlert').innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+  }
+}
+
+async function deleteEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (!confirm(`Delete event "${ev?.name}"?\n\nAll companies, enrollments and attendance under this event will also be deleted.`)) return;
+  const data = await api.del(`/admin/events/${id}`);
+  if (data.success) { showToast('Event deleted', 'info'); activeEvId = null; load(); }
+  else showToast(data.message, 'error');
+}
+
+// ── Company Modal ────────────────────────────────────
+function openCompanyModal(evId, coId = null) {
+  activeEvId = evId;
+  editCoId   = coId;
+  document.getElementById('coModalAlert').innerHTML = '';
+  if (coId) {
+    // Would need to fetch company data — for now just open blank for edit via table button
+    document.getElementById('coModalTitle').textContent = 'Edit Company';
+  } else {
+    document.getElementById('coModalTitle').textContent = 'Add Company to Event';
+    ['co_company','co_role','co_ctc','co_branches','co_desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('co_cgpa').value    = 0;
+    document.getElementById('co_backlogs').value= 0;
+  }
+  document.getElementById('companyModal').classList.remove('hidden');
+}
+function closeCompanyModal() { document.getElementById('companyModal').classList.add('hidden'); editCoId = null; }
+
+async function editCompany(coId) {
+  // Fetch company data from the drives list we already have
+  const data = await api.get('/admin/drives');
+  const drive = (data.drives || []).find(d => d.id === coId);
+  if (!drive) return;
+  activeEvId = drive.event_id;
+  editCoId   = coId;
+  document.getElementById('coModalTitle').textContent = `Edit — ${drive.company_name}`;
+  document.getElementById('co_company').value  = drive.company_name;
+  document.getElementById('co_role').value     = drive.job_role;
+  document.getElementById('co_ctc').value      = drive.ctc || '';
+  document.getElementById('co_cgpa').value     = drive.eligibility_min_cgpa || 0;
+  document.getElementById('co_backlogs').value = drive.eligibility_backlogs_allowed || 0;
+  document.getElementById('co_branches').value = drive.eligibility_branches || '';
+  document.getElementById('co_desc').value     = drive.description || '';
+  document.getElementById('coModalAlert').innerHTML = '';
+  document.getElementById('companyModal').classList.remove('hidden');
+}
+
+async function saveCompany() {
+  const payload = {
+    event_id:                     activeEvId,
+    company_name:                 document.getElementById('co_company').value.trim(),
+    job_role:                     document.getElementById('co_role').value.trim(),
+    ctc:                          document.getElementById('co_ctc').value || null,
+    description:                  document.getElementById('co_desc').value.trim(),
+    eligibility_min_cgpa:         parseFloat(document.getElementById('co_cgpa').value)     || 0,
+    eligibility_backlogs_allowed: parseInt(document.getElementById('co_backlogs').value)   || 0,
+    eligibility_branches:         document.getElementById('co_branches').value.trim()
+  };
+  if (!payload.company_name || !payload.job_role) {
+    document.getElementById('coModalAlert').innerHTML = '<div class="alert alert-error">Company name and job role are required.</div>';
+    return;
+  }
+  const data = editCoId
+    ? await api.put(`/admin/drives/${editCoId}`, payload)
+    : await api.post('/admin/drives', payload);
+  if (data.success) {
+    showToast(editCoId ? `${payload.company_name} updated!` : `${payload.company_name} added!`);
+    closeCompanyModal();
+    loadCompanies(activeEvId);
+  } else {
+    document.getElementById('coModalAlert').innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+  }
+}
+
+async function deleteCompany(coId, name, evId) {
+  if (!confirm(`Remove "${name}" from this event? All enrollments and attendance for this company will be deleted.`)) return;
+  const data = await api.del(`/admin/drives/${coId}`);
+  if (data.success) { showToast(`${name} removed`, 'info'); loadCompanies(evId); }
+  else showToast(data.message, 'error');
+}
+
+load();
+</script>
+</body></html>

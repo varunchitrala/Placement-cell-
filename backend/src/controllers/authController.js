@@ -1,0 +1,229 @@
+const jwt    = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const db     = require('../config/db');
+
+// ── Token signing ─────────────────────────────────────────────────
+const signToken = (id, role) =>
+  jwt.sign(
+    { id, role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '7d', algorithm: 'HS256' }
+  );
+
+// ── Simple inline validators — no external packages needed ────────
+const isValidEmail = (e) => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+const isValidPhone = (p) => !p || /^\d{10}$/.test(p.trim());
+const isValidUrl   = (u) => !u || /^https?:\/\/.+/.test(u.trim());
+
+// POST /api/auth/register-student
+exports.registerStudent = async (req, res) => {
+  try {
+    const {
+      name, roll_no, date_of_birth, email, phone,
+      institution_name, institution_type,
+      course, branch, specialization,
+      year, passout_year, cgpa, backlogs,
+      photo_url, resume_url
+    } = req.body;
+
+    if (!name || !name.trim())
+      return res.status(400).json({ success: false, message: 'Full name is required.' });
+    if (!roll_no || !roll_no.trim())
+      return res.status(400).json({ success: false, message: 'Student ID / PRN is required.' });
+    if (!date_of_birth)
+      return res.status(400).json({ success: false, message: 'Date of birth is required.' });
+    if (!branch || !year || !course)
+      return res.status(400).json({ success: false, message: 'Course, branch and year are required.' });
+    if (email && !isValidEmail(email))
+      return res.status(400).json({ success: false, message: 'Invalid email address.' });
+    if (!isValidPhone(phone))
+      return res.status(400).json({ success: false, message: 'Phone must be exactly 10 digits.' });
+    if (photo_url  && !isValidUrl(photo_url))
+      return res.status(400).json({ success: false, message: 'Invalid photo URL.' });
+    if (resume_url && !isValidUrl(resume_url))
+      return res.status(400).json({ success: false, message: 'Invalid resume URL.' });
+
+    const cgpaNum    = parseFloat(cgpa)    || 0;
+    const backlogNum = parseInt(backlogs)  || 0;
+    if (cgpaNum < 0 || cgpaNum > 10)
+      return res.status(400).json({ success: false, message: 'CGPA must be between 0 and 10.' });
+
+    const exist = await db.query('SELECT id FROM students WHERE roll_no=$1', [roll_no.trim().toUpperCase()]);
+    if (exist.rows.length)
+      return res.status(409).json({ success: false, message: 'This PRN is already registered.' });
+
+    if (email) {
+      const emailExist = await db.query('SELECT id FROM students WHERE email=$1', [email.trim().toLowerCase()]);
+      if (emailExist.rows.length)
+        return res.status(409).json({ success: false, message: 'This email is already registered.' });
+    }
+
+    const { rows } = await db.query(
+      `INSERT INTO students
+         (name, roll_no, date_of_birth, email, phone,
+          institution_name, institution_type,
+          course, branch, specialization,
+          year, passout_year, cgpa, backlogs,
+          photo_url, resume_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+       RETURNING id, name, roll_no, email, branch, year, role`,
+      [
+        name.trim(),
+        roll_no.trim().toUpperCase(),
+        date_of_birth,
+        email  ? email.trim().toLowerCase() : null,
+        phone  ? phone.trim()               : null,
+        institution_name || 'Sandip University',
+        institution_type || 'university',
+        course.trim(),
+        branch.trim(),
+        specialization ? specialization.trim() : null,
+        parseInt(year),
+        passout_year ? parseInt(passout_year) : null,
+        cgpaNum,
+        backlogNum,
+        photo_url  || null,
+        resume_url || null,
+      ]
+    );
+
+    const token = signToken(rows[0].id, 'student');
+    res.status(201).json({ success: true, token, user: { ...rows[0], role: 'student' } });
+
+  } catch (err) {
+    console.error('registerStudent error:', err.message);
+    res.status(500).json({ success: false, message: 'Registration failed. Please try again.' });
+  }
+};
+
+// POST /api/auth/student-login  (PRN + DOB)
+exports.studentLogin = async (req, res) => {
+  try {
+    const { roll_no, date_of_birth } = req.body;
+    if (!roll_no || !date_of_birth)
+      return res.status(400).json({ success: false, message: 'PRN and Date of Birth are required.' });
+
+    const { rows } = await db.query(
+      `SELECT id, name, roll_no, email, branch, year, role
+       FROM students WHERE roll_no=$1 AND date_of_birth=$2`,
+      [roll_no.trim().toUpperCase(), date_of_birth]
+    );
+
+    if (!rows[0])
+      return res.status(401).json({ success: false, message: 'Invalid PRN or Date of Birth.' });
+
+    const token = signToken(rows[0].id, 'student');
+    res.json({ success: true, token, user: { ...rows[0], role: 'student' } });
+
+  } catch (err) {
+    console.error('studentLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+};
+
+// POST /api/auth/admin-login
+exports.adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+
+    const { rows } = await db.query(
+      'SELECT * FROM admins WHERE email=$1',
+      [email.trim().toLowerCase()]
+    );
+
+    // Always run bcrypt even if no user found — prevents timing attack
+    const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    const hash      = rows[0] ? rows[0].password_hash : dummyHash;
+    const match     = await bcrypt.compare(password, hash);
+
+    if (!rows[0] || !match)
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+
+    const token = signToken(rows[0].id, 'admin');
+    res.json({
+      success: true, token,
+      user: { id: rows[0].id, name: rows[0].name, email: rows[0].email, role: 'admin' }
+    });
+
+  } catch (err) {
+    console.error('adminLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+};
+
+// POST /api/auth/recruiter-login
+exports.recruiterLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+
+    const { rows } = await db.query(
+      `SELECT r.*,
+              d.company_name as drive_company, d.job_role,
+              e.name as event_name, e.event_date, e.status as event_status
+       FROM recruiters r
+       LEFT JOIN drives d ON r.drive_id = d.id
+       LEFT JOIN mega_drive_events e ON d.event_id = e.id
+       WHERE r.email = $1`,
+      [email.trim().toLowerCase()]
+    );
+
+    const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    const hash      = rows[0] ? rows[0].password_hash : dummyHash;
+    const match     = await bcrypt.compare(password, hash);
+
+    if (!rows[0] || !match)
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+
+    const token = signToken(rows[0].id, 'recruiter');
+    res.json({
+      success: true, token,
+      user: {
+        id:            rows[0].id,
+        name:          rows[0].name,
+        email:         rows[0].email,
+        company_name:  rows[0].company_name,
+        drive_id:      rows[0].drive_id,
+        drive_company: rows[0].drive_company,
+        job_role:      rows[0].job_role,
+        event_name:    rows[0].event_name,
+        event_date:    rows[0].event_date,
+        event_status:  rows[0].event_status,
+        role:          'recruiter'
+      }
+    });
+
+  } catch (err) {
+    console.error('recruiterLogin error:', err.message);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+};
+
+// POST /api/auth/setup-admin  (one-time)
+exports.setupAdmin = async (req, res) => {
+  try {
+    const count = await db.query('SELECT COUNT(*) FROM admins');
+    if (parseInt(count.rows[0].count) > 0)
+      return res.status(403).json({ success: false, message: 'Admin already exists.' });
+
+    const { name, email, password } = req.body;
+    if (!name || !email || !password)
+      return res.status(400).json({ success: false, message: 'All fields required.' });
+    if (password.length < 8)
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+
+    const hash = await bcrypt.hash(password, 10);
+    const { rows } = await db.query(
+      'INSERT INTO admins (name,email,password_hash) VALUES ($1,$2,$3) RETURNING id,name,email',
+      [name.trim(), email.trim().toLowerCase(), hash]
+    );
+    res.status(201).json({ success: true, message: 'Admin created.', admin: rows[0] });
+
+  } catch (err) {
+    console.error('setupAdmin error:', err.message);
+    res.status(500).json({ success: false, message: 'Setup failed.' });
+  }
+};

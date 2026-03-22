@@ -1,0 +1,38 @@
+    /* ── Google Drive instruction box ── */
+    .gdrive-steps{
+      background:#F0FDF4; border:1px solid #BBF7D0;
+      border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;
+    }
+    .gdrive-steps .gd-title{
+      display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+      color:#166534;margin-bottom:12px;
+    }
+    .gdrive-steps ol{padding-left:18px;display:flex;flex-direction:column;gap:8px;}
+    .gdrive-steps li{font-size:12px;color:#15803D;line-height:1.5;}
+    .gdrive-steps li strong{color:#166534;}
+    .gdrive-steps .gd-note{
+      margin-top:12px;font-size:11px;color:#166534;
+      background:rgba(22,101,52,0.06);border-radius:6px;padding:8px 10px;
+      display:flex;align-items:flex-start;gap:6px;
+    }
+
+    /* URL input with icon */
+    .url-input-wrap{position:relative;}
+    .url-input-wrap .url-icon{
+      position:absolute;left:13px;top:50%;transform:translateY(-50%);
+      font-size:16px;color:#9CA3AF;pointer-events:none;
+    }
+    .url-input-wrap .form-control{padding-left:40px;}
+    .url-input-wrap .url-valid{
+      position:absolute;right:13px;top:50%;transform:translateY(-50%);
+      font-size:14px;display:none;
+    }
+    .url-input-wrap .url-valid.show{display:block;}
+
+    /* Skip badge */
+    .optional-badge{
+      display:inline-flex;align-items:center;gap:4px;
+      background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;
+      border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;
+      margin-left:6px;
+    }

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Students – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Student card in modal ── */
+    .stu-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .stu-card-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+    .stu-photo {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--primary); flex-shrink: 0;
+    }
+    .stu-photo-placeholder {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: #fff;
+    }
+    .stu-card-body { padding: 16px 20px; }
+    .info-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px; margin-bottom: 16px;
+    }
+    .info-item .il { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 3px; }
+    .info-item .iv { font-size: 13px; font-weight: 600; }
+
+    .inst-badge {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: rgba(37,99,235,0.08); color: var(--primary);
+      border: 1px solid rgba(37,99,235,0.2);
+    }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal { background: var(--bg-card); border-radius: var(--radius); max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .modal-header h3 { font-size: 16px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); padding: 4px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .view-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--primary); transition: all 0.15s; font-family: 'Inter', sans-serif; }
+    .view-btn:hover { background: rgba(37,99,235,0.06); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item active"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>Students</h1><p>View and manage all registered students</p></div>
+      <div class="header-actions"><span id="countBadge" class="badge badge-applied"></span></div>
+    </div>
+    <div class="page-body">
+
+      <!-- Filters -->
+      <div class="card mb-16">
+        <div class="filters">
+          <div class="search-wrap"><i class="fas fa-search"></i><input class="search-input" id="searchInput" placeholder="Search name, PRN or course..." oninput="filterTable()"/></div>
+          <select class="form-control" style="width:130px" id="branchFilter" onchange="loadStudents()">
+            <option value="">All Branches</option>
+            <option>CSE</option><option>ECE</option><option>EEE</option><option>ME</option><option>CE</option><option>IT</option><option>AIDS</option><option>AIML</option>
+          </select>
+          <select class="form-control" style="width:150px" id="instFilter" onchange="filterTable()">
+            <option value="">All Institutions</option>
+            <option value="university">Sandip University</option>
+            <option value="foundation">Sandip Foundation</option>
+            <option value="other">External</option>
+          </select>
+          <input class="form-control" style="width:100px" type="number" step="0.01" id="minCgpa" placeholder="Min CGPA" onchange="loadStudents()"/>
+          <input class="form-control" style="width:110px" type="number" min="0" id="maxBacklogs" placeholder="Max Backlogs" onchange="loadStudents()"/>
+          <button class="btn-secondary" onclick="resetFilters()"><i class="fas fa-undo"></i> Reset</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Institution</th>
+                <th>Course / Branch</th>
+                <th>Year / Passout</th>
+                <th>CGPA</th>
+                <th>Backlogs</th>
+                <th>Contact</th>
+                <th>Docs</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTable">
+              <tr><td colspan="9" style="text-align:center;padding:20px" class="text-muted"><i class="fas fa-spinner fa-spin"></i></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div id="studentModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalStudentName">Student Details</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modalBody" style="padding:0"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-danger" id="modalDeleteBtn"><i class="fas fa-trash"></i> Delete Student</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  requireAuth('admin'); initSidebar('admin');
+
+  let allStudents = [];
+  const AV_COLORS = ['#7C3AED','#2563EB','#0EA5E9','#10B981','#F59E0B','#EF4444'];
+  const avColor = n => AV_COLORS[n.charCodeAt(0) % AV_COLORS.length];
+
+  const INST_LABELS = { university: 'Sandip University', foundation: 'Sandip Foundation', other: 'External' };
+
+  loadStudents();
+
+  async function loadStudents() {
+    const branch   = document.getElementById('branchFilter').value;
+    const min_cgpa = document.getElementById('minCgpa').value;
+    const backlogs = document.getElementById('maxBacklogs').value;
+    let qs = new URLSearchParams();
+    if (branch)   qs.set('branch', branch);
+    if (min_cgpa) qs.set('min_cgpa', min_cgpa);
+    if (backlogs !== '') qs.set('backlogs', backlogs);
+    const data = await api.get('/admin/students?' + qs.toString());
+    allStudents = data.students || [];
+    document.getElementById('countBadge').textContent = `${allStudents.length} students`;
+    renderTable(allStudents);
+  }
+
+  function filterTable() {
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const inst = document.getElementById('instFilter').value;
+    renderTable(allStudents.filter(s => {
+      const matchQ    = s.name.toLowerCase().includes(q) || s.roll_no.toLowerCase().includes(q) || (s.course||'').toLowerCase().includes(q);
+      const matchInst = !inst || s.institution_type === inst;
+      return matchQ && matchInst;
+    }));
+  }
+
+  function renderTable(students) {
+    const tbody = document.getElementById('studentsTable');
+    if (!students.length) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-users"></i><p>No students found</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = students.map(s => {
+      const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+      const cgpaColor = s.cgpa >= 7 ? '#10B981' : s.cgpa >= 5 ? '#F59E0B' : '#EF4444';
+
+      // Avatar: photo or coloured initial
+      const avatarHtml = s.photo_url
+        ? `<img src="${s.photo_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);flex-shrink:0" onerror="this.style.display='none'" alt=""/>`
+        : `<div style="width:34px;height:34px;border-radius:50%;background:${avColor(s.name)};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${s.name.charAt(0).toUpperCase()}</div>`;
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              ${avatarHtml}
+              <div>
+                <div style="font-weight:700">${s.name}</div>
+                <div style="font-size:11px;color:var(--text-muted);font-family:monospace">${s.roll_no}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span>
+          </td>
+          <td>
+            <div style="font-weight:600;font-size:13px">${s.course || '—'}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${s.branch}${s.specialization ? ' · ' + s.specialization : ''}</div>
+          </td>
+          <td style="font-size:13px">
+            <div>Yr <strong>${s.year}</strong></div>
+            ${s.passout_year ? `<div style="font-size:11px;color:var(--text-muted)">Passout ${s.passout_year}</div>` : ''}
+          </td>
+          <td><strong style="color:${cgpaColor}">${parseFloat(s.cgpa).toFixed(2)}</strong></td>
+          <td>${s.backlogs > 0 ? `<span style="color:#EF4444;font-weight:700">${s.backlogs} KT</span>` : '<span style="color:var(--text-muted)">0</span>'}</td>
+          <td style="font-size:12px">
+            <div>${s.email || '—'}</div>
+            <div style="color:var(--text-muted)">${s.phone || ''}</div>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              ${s.photo_url  ? `<a href="${s.photo_url}"  target="_blank" class="view-btn" title="View Photo"><i class="fas fa-camera"></i></a>`   : '<span style="color:var(--text-muted);font-size:11px">—</span>'}
+              ${s.resume_url ? `<a href="${s.resume_url}" target="_blank" class="view-btn" title="View Resume"><i class="fas fa-file-pdf"></i></a>` : ''}
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn-secondary btn-sm" onclick="viewStudent(${s.id})" title="Full profile"><i class="fas fa-eye"></i></button>
+              <button class="btn-danger btn-sm" onclick="deleteStudent(${s.id},'${s.name.replace(/'/g,'\\\'')}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── View full student profile in modal ──
+  function viewStudent(id) {
+    const s = allStudents.find(x => x.id === id);
+    if (!s) return;
+
+    document.getElementById('modalStudentName').textContent = s.name;
+    document.getElementById('modalDeleteBtn').onclick = () => deleteStudent(s.id, s.name);
+
+    const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+    const cgpaColor = s.cgpa >= 7 ? '#10B981' : s.cgpa >= 5 ? '#F59E0B' : '#EF4444';
+
+    document.getElementById('modalBody').innerHTML = `
+      <div class="stu-card" style="margin:16px 20px">
+
+        <!-- Header with photo -->
+        <div class="stu-card-header">
+          ${s.photo_url
+            ? `<img src="${s.photo_url}" class="stu-photo" alt="${s.name}" onerror="this.style.display='none'"/>`
+            : `<div class="stu-photo-placeholder" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`}
+          <div>
+            <div style="font-size:18px;font-weight:800">${s.name}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;font-family:monospace">${s.roll_no}</div>
+            <div style="margin-top:6px"><span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span></div>
+          </div>
+        </div>
+
+        <div class="stu-card-body">
+
+          <!-- Academic -->
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:10px">Academic</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="il">Course</div><div class="iv">${s.course || '—'}</div></div>
+            <div class="info-item"><div class="il">Branch</div><div class="iv">${s.branch || '—'}</div></div>
+            <div class="info-item"><div class="il">Specialization</div><div class="iv">${s.specialization || '—'}</div></div>
+            <div class="info-item"><div class="il">Current Year</div><div class="iv">Year ${s.year}</div></div>
+            <div class="info-item"><div class="il">Passout Year</div><div class="iv">${s.passout_year || '—'}</div></div>
+            <div class="info-item"><div class="il">CGPA</div><div class="iv" style="color:${cgpaColor}">${parseFloat(s.cgpa).toFixed(2)}</div></div>
+            <div class="info-item"><div class="il">Backlogs / KT</div><div class="iv" style="color:${s.backlogs > 0 ? '#EF4444' : 'inherit'}">${s.backlogs}</div></div>
+          </div>
+
+          <!-- Contact -->
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-top:16px;margin-bottom:10px">Contact</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="il">Email</div><div class="iv">${s.email || '—'}</div></div>
+            <div class="info-item"><div class="il">Phone</div><div class="iv">${s.phone || '—'}</div></div>
+          </div>
+
+          <!-- Skills -->
+          ${s.skills ? `
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-top:16px;margin-bottom:8px">Skills</div>
+          <div>${s.skills.split(',').filter(Boolean).map(sk => `<span class="chip">${sk.trim()}</span>`).join('')}</div>
+          ` : ''}
+
+          <!-- Documents -->
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-top:16px;margin-bottom:10px">Documents</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            ${s.photo_url
+              ? `<a href="${s.photo_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-camera"></i> View Photo</a>`
+              : `<span style="font-size:12px;color:var(--text-muted)"><i class="fas fa-camera"></i> No photo uploaded</span>`}
+            ${s.resume_url
+              ? `<a href="${s.resume_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> View Resume</a>`
+              : `<span style="font-size:12px;color:var(--text-muted);margin-left:8px"><i class="fas fa-file-pdf"></i> No resume uploaded</span>`}
+          </div>
+
+        </div>
+      </div>`;
+
+    document.getElementById('studentModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('studentModal').classList.add('hidden');
+  }
+
+  async function deleteStudent(id, name) {
+    if (!confirm(`⚠️ Delete student "${name}"?\n\nThis will also delete all their enrollments and attendance records. This cannot be undone.`)) return;
+    const data = await api.del(`/admin/students/${id}`);
+    if (data.success) {
+      showToast(`${name} deleted`, 'info');
+      closeModal();
+      loadStudents();
+    } else {
+      showToast(data.message, 'error');
+    }
+  }
+
+  function resetFilters() {
+    ['branchFilter','minCgpa','maxBacklogs','searchInput','instFilter'].forEach(id => document.getElementById(id).value = '');
+    loadStudents();
+  }
+</script>
+</body></html>

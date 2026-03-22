@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Enrollments – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .drive-select-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    .drive-select-bar label { font-size:13px; font-weight:600; color:var(--text-secondary); white-space:nowrap; }
+    .drive-select-bar select { flex:1; max-width:500px; }
+    .stat-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
+    .mini-stat { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; }
+    .mini-stat:hover { border-color:var(--border-hover); transform:translateY(-2px); }
+    .mini-stat.active-filter { border-color:#2563EB; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+    .mini-stat .ms-count { font-size:28px; font-weight:800; margin-bottom:4px; }
+    .mini-stat .ms-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); }
+    .mini-stat.total .ms-count { color:#2563EB; }
+    .tool-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .tool-bar .search-wrap { position:relative; flex:1; min-width:250px; }
+    .tool-bar .search-wrap i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px; }
+    .tool-bar .search-wrap input { width:100%; padding:10px 14px 10px 40px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:13px; }
+    .tool-bar .search-wrap input:focus { outline:none; border-color:#2563EB; }
+    .tool-bar select { padding:10px 14px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:13px; }
+    .showing-text { font-size:13px; color:var(--text-muted); margin-bottom:14px; }
+    .showing-text strong { color:var(--text-primary); }
+    .track-table { width:100%; border-collapse:collapse; }
+    .track-table thead th { padding:14px 16px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); border-bottom:2px solid var(--border); background:var(--bg-card); position:sticky; top:0; z-index:5; }
+    .track-table tbody td { padding:14px 16px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+    .track-table tbody tr:hover { background:rgba(37,99,235,0.03); }
+    .student-cell { display:flex; align-items:center; gap:12px; }
+    .stu-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; background:#2563EB; flex-shrink:0; }
+    .stu-name { font-weight:600; font-size:14px; }
+    .stu-prn { font-size:11px; color:var(--text-muted); font-family:monospace; margin-top:2px; }
+    .cgpa-pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .cgpa-high { background:rgba(16,185,129,0.1); color:#10B981; }
+    .cgpa-mid { background:rgba(245,158,11,0.1); color:#D97706; }
+    .cgpa-low { background:rgba(239,68,68,0.1); color:#EF4444; }
+    .status-tag { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform:capitalize; }
+    .status-tag.applied { background:rgba(59,130,246,0.1); color:#3B82F6; }
+    .status-tag.shortlisted { background:rgba(16,185,129,0.1); color:#10B981; }
+    .status-tag.offered { background:rgba(245,158,11,0.1); color:#D97706; }
+    .status-tag.rejected { background:rgba(239,68,68,0.1); color:#EF4444; }
+    .backlog-warn { color:#EF4444; font-weight:700; }
+    .detail-toggle { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:4px 8px; border-radius:4px; transition:all 0.2s; }
+    .detail-toggle:hover { color:#2563EB; background:rgba(37,99,235,0.05); }
+    .detail-row td { padding:0 16px !important; border-bottom:1px solid var(--border) !important; background:rgba(37,99,235,0.015); }
+    .detail-inner { max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; }
+    .detail-inner.open { max-height:240px; padding:16px 0; }
+    .detail-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; margin-bottom:14px; }
+    .dg-label { font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; margin-bottom:4px; }
+    .dg-value { font-size:13px; font-weight:600; }
+    .sa-btn { border:none; padding:6px 12px; border-radius:6px; font-family:'Inter',sans-serif; font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .sa-btn:hover { transform:translateY(-1px); }
+    .sa-btn.shortlist { background:rgba(16,185,129,0.12); color:#10B981; border:1px solid rgba(16,185,129,0.3); }
+    .sa-btn.offer { background:rgba(245,158,11,0.12); color:#D97706; border:1px solid rgba(245,158,11,0.3); }
+    .sa-btn.reject { background:rgba(239,68,68,0.12); color:#EF4444; border:1px solid rgba(239,68,68,0.3); }
+    .sa-btn.reset { background:rgba(59,130,246,0.1); color:#3B82F6; border:1px solid rgba(59,130,246,0.2); }
+    .updated-by-tag { font-size:10px; color:var(--text-muted); font-style:italic; margin-left:6px; }
+    .export-btn { padding:9px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:13px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s; }
+    .export-btn:hover { border-color:#2563EB; color:#2563EB; }
+    .empty-table { text-align:center; padding:60px 20px; color:var(--text-muted); }
+    .empty-table i { font-size:40px; margin-bottom:12px; opacity:0.3; display:block; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item active"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>Student Enrollment Tracker</h1><p>Monitor and manage student applications per company</p></div>
+      <div class="header-actions">
+        <button class="export-btn" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="drive-select-bar">
+        <label><i class="fas fa-building"></i> Select Company:</label>
+        <select class="form-control" id="driveSelect" onchange="loadEnrollments()">
+          <option value="">— Choose a company drive —</option>
+        </select>
+      </div>
+
+      <div class="stat-strip hidden" id="summaryBar">
+        <div class="mini-stat total" onclick="filterByStatus('')" id="statTotal"><div class="ms-count" id="cntTotal">0</div><div class="ms-label"><i class="fas fa-users"></i> Total</div></div>
+        <div class="mini-stat" onclick="filterByStatus('applied')" id="statApplied"><div class="ms-count" id="cntApplied" style="color:#3B82F6">0</div><div class="ms-label"><i class="fas fa-clock"></i> Pending</div></div>
+        <div class="mini-stat" onclick="filterByStatus('shortlisted')" id="statShortlisted"><div class="ms-count" id="cntShortlisted" style="color:#10B981">0</div><div class="ms-label"><i class="fas fa-check-circle"></i> Shortlisted</div></div>
+        <div class="mini-stat" onclick="filterByStatus('offered')" id="statOffered"><div class="ms-count" id="cntOffered" style="color:#F59E0B">0</div><div class="ms-label"><i class="fas fa-trophy"></i> Offered</div></div>
+        <div class="mini-stat" onclick="filterByStatus('rejected')" id="statRejected"><div class="ms-count" id="cntRejected" style="color:#EF4444">0</div><div class="ms-label"><i class="fas fa-times-circle"></i> Rejected</div></div>
+      </div>
+
+      <div class="tool-bar hidden" id="toolBar">
+        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Search by name or PRN..." oninput="renderTable()"/></div>
+        <select id="branchFilter" onchange="renderTable()"><option value="">All Branches</option></select>
+        <select id="yearFilter" onchange="renderTable()"><option value="">All Years</option><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select>
+      </div>
+      <div class="showing-text hidden" id="showingText"></div>
+
+      <div class="card">
+        <div class="table-wrap" style="max-height:65vh;overflow-y:auto">
+          <table class="track-table">
+            <thead>
+              <tr><th>#</th><th>Student</th><th>Branch</th><th>Yr</th><th>CGPA</th><th>Backlogs</th><th>Applied</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="9"><div class="empty-table"><i class="fas fa-clipboard-list"></i><p>Select a company to view enrolled students</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  requireAuth('admin'); initSidebar('admin');
+  let enrollments = [], activeFilter = '';
+
+  async function init() {
+    // Load all companies across all events
+    const data = await api.get('/admin/drives');
+    const sel = document.getElementById('driveSelect');
+
+    // Group by event for better UX
+    const drives = data.drives || [];
+    const eventGroups = {};
+    drives.forEach(d => {
+      const key = d.event_name || 'Unknown Event';
+      if (!eventGroups[key]) eventGroups[key] = [];
+      eventGroups[key].push(d);
+    });
+
+    Object.entries(eventGroups).forEach(([eventName, companies]) => {
+      const group = document.createElement('optgroup');
+      group.label = `📅 ${eventName}`;
+      companies.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.id;
+        // event_date comes from the JOIN in getDrives
+        o.textContent = `${d.company_name} – ${d.job_role}${d.event_date ? ' (' + formatDate(d.event_date) + ')' : ''}`;
+        group.appendChild(o);
+      });
+      sel.appendChild(group);
+    });
+
+    const driveId = new URL(window.location.href).searchParams.get('drive');
+    if (driveId) { sel.value = driveId; loadEnrollments(); }
+  }
+
+  async function loadEnrollments() {
+    const driveId = document.getElementById('driveSelect').value;
+    if (!driveId) return;
+    const data = await api.get(`/admin/enrollments/${driveId}`);
+    enrollments = data.enrollments || [];
+    activeFilter = '';
+    const branches = [...new Set(enrollments.map(e => e.branch).filter(Boolean))].sort();
+    const branchSel = document.getElementById('branchFilter');
+    branchSel.innerHTML = '<option value="">All Branches</option>';
+    branches.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; branchSel.appendChild(o); });
+    document.getElementById('summaryBar').classList.remove('hidden');
+    document.getElementById('toolBar').classList.remove('hidden');
+    document.getElementById('showingText').classList.remove('hidden');
+    document.getElementById('searchInput').value = '';
+    document.querySelectorAll('.mini-stat').forEach(el => el.classList.remove('active-filter'));
+    document.getElementById('statTotal').classList.add('active-filter');
+    updateSummary(); renderTable();
+  }
+
+  function updateSummary() {
+    document.getElementById('cntTotal').textContent = enrollments.length;
+    ['applied','shortlisted','offered','rejected'].forEach(s => {
+      const el = document.getElementById('cnt' + s.charAt(0).toUpperCase() + s.slice(1));
+      if (el) el.textContent = enrollments.filter(e => e.status === s).length;
+    });
+  }
+
+  function filterByStatus(status) {
+    activeFilter = status;
+    document.querySelectorAll('.mini-stat').forEach(el => el.classList.remove('active-filter'));
+    document.getElementById(status ? 'stat' + status.charAt(0).toUpperCase() + status.slice(1) : 'statTotal').classList.add('active-filter');
+    renderTable();
+  }
+
+  function getFiltered() {
+    const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+    const branch = document.getElementById('branchFilter').value;
+    const year   = document.getElementById('yearFilter').value;
+    let list = enrollments;
+    if (activeFilter) list = list.filter(e => e.status === activeFilter);
+    if (branch) list = list.filter(e => e.branch === branch);
+    if (year)   list = list.filter(e => String(e.year) === year);
+    if (search) list = list.filter(e => e.name.toLowerCase().includes(search) || e.roll_no.toLowerCase().includes(search));
+    return list;
+  }
+
+  function renderTable() {
+    const filtered = getFiltered();
+    const filterLabel = activeFilter ? ` · <strong style="text-transform:capitalize">${activeFilter}</strong>` : '';
+    document.getElementById('showingText').innerHTML =
+      `Showing <strong>${filtered.length}</strong> of <strong>${enrollments.length}</strong> students${filterLabel}`;
+
+    const tbody = document.getElementById('tableBody');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-table"><i class="fas fa-search"></i><p>No students match your filters</p></div></td></tr>';
+      return;
+    }
+
+    const statusIcons = { applied:'fas fa-clock', shortlisted:'fas fa-check-circle', offered:'fas fa-trophy', rejected:'fas fa-times-circle' };
+
+    tbody.innerHTML = filtered.map((e, idx) => {
+      const cgpa = parseFloat(e.cgpa) || 0;
+      const cgpaClass = cgpa >= 7 ? 'cgpa-high' : cgpa >= 5 ? 'cgpa-mid' : 'cgpa-low';
+      const updatedByTag = (e.updated_by && e.updated_by !== 'system')
+        ? `<span class="updated-by-tag">via ${e.updated_by}</span>` : '';
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><div class="student-cell"><div class="stu-avatar">${e.name.charAt(0).toUpperCase()}</div><div><div class="stu-name">${e.name}</div><div class="stu-prn">${e.roll_no}</div></div></div></td>
+          <td>${e.branch}</td>
+          <td>${e.year || '—'}</td>
+          <td><span class="cgpa-pill ${cgpaClass}">${cgpa.toFixed(2)}</span></td>
+          <td>${e.backlogs > 0 ? '<span class="backlog-warn">' + e.backlogs + '</span>' : '0'}</td>
+          <td>${formatDate(e.applied_at)}</td>
+          <td><span class="status-tag ${e.status}"><i class="${statusIcons[e.status]||'fas fa-circle'}"></i> ${e.status}</span>${updatedByTag}</td>
+          <td><button class="detail-toggle" onclick="toggleDetail('det-${e.id}')"><i class="fas fa-chevron-down"></i></button></td>
+        </tr>
+        <tr class="detail-row">
+          <td colspan="9">
+            <div class="detail-inner" id="det-${e.id}">
+              <div class="detail-grid">
+                <div><div class="dg-label">Email</div><div class="dg-value">${e.email || 'Not provided'}</div></div>
+                <div><div class="dg-label">Student ID</div><div class="dg-value">#${e.student_id}</div></div>
+                <div><div class="dg-label">Enrollment ID</div><div class="dg-value">#${e.id}</div></div>
+                <div><div class="dg-label">Last Updated</div><div class="dg-value">${formatDateTime(e.updated_at) || '—'}</div></div>
+              </div>
+              <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Change Status:</span>
+                <button class="sa-btn shortlist" onclick="updateStatus(${e.id},'shortlisted')"><i class="fas fa-star"></i> Shortlist</button>
+                <button class="sa-btn offer"     onclick="updateStatus(${e.id},'offered')"><i class="fas fa-trophy"></i> Offer</button>
+                <button class="sa-btn reject"    onclick="updateStatus(${e.id},'rejected')"><i class="fas fa-times"></i> Reject</button>
+                <button class="sa-btn reset"     onclick="updateStatus(${e.id},'applied')"><i class="fas fa-undo"></i> Reset</button>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  async function updateStatus(enrollmentId, status) {
+    const data = await api.put(`/admin/enrollments/${enrollmentId}/status`, { status });
+    if (data.success) {
+      showToast(`Status set to "${status}"`, 'success');
+      const idx = enrollments.findIndex(e => e.id === enrollmentId);
+      if (idx !== -1) { enrollments[idx].status = status; enrollments[idx].updated_by = 'admin'; }
+      updateSummary(); renderTable();
+    } else { showToast(data.message, 'error'); }
+  }
+
+  function toggleDetail(id) { const el = document.getElementById(id); if (el) el.classList.toggle('open'); }
+
+  function exportCSV() {
+    const filtered = getFiltered();
+    if (!filtered.length) { showToast('No data to export', 'error'); return; }
+    const name = document.getElementById('driveSelect').selectedOptions[0]?.textContent || 'enrollments';
+    const headers = ['#','Name','PRN','Branch','Year','CGPA','Backlogs','Email','Status','Applied On'];
+    let csv = headers.join(',') + '\n';
+    filtered.forEach((e, i) => {
+      csv += [i+1, e.name, e.roll_no, e.branch, e.year||'', parseFloat(e.cgpa).toFixed(2), e.backlogs, e.email||'', e.status, formatDate(e.applied_at)]
+        .map(v => `"${v}"`).join(',') + '\n';
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+    a.download = `${name.replace(/[^a-zA-Z0-9]/g,'_')}.csv`;
+    a.click();
+    showToast('CSV downloaded!', 'success');
+  }
+
+  init();
+</script>
+</body></html>

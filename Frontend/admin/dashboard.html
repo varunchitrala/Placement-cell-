@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Dashboard – Placement Cell</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item active"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>Dashboard</h1><p>Overview of placement activities</p></div>
+      <div class="header-actions">
+        <a href="drives.html" class="btn-primary"><i class="fas fa-plus"></i> New Event</a>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="statStudents">—</div><div class="stat-label">Total Students</div></div>
+        <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-value" id="statEvents">—</div><div class="stat-label">Drive Events</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-building"></i></div><div class="stat-value" id="statCompanies">—</div><div class="stat-label">Companies</div></div>
+        <div class="stat-card green"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-value" id="statOffered">—</div><div class="stat-label">Offers Made</div></div>
+      </div>
+
+      <!-- Recent Events -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-history"></i> Recent Drive Events</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Event Name</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="recentEventsTable">
+              <tr><td colspan="4" class="text-muted" style="padding:20px;text-align:center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script>
+  const user = requireAuth('admin');
+  if (user) { initSidebar('admin'); loadDashboard(); }
+
+  async function loadDashboard() {
+    const data = await api.get('/admin/dashboard');
+    if (!data.success) return;
+
+    document.getElementById('statStudents').textContent  = data.stats.total_students;
+    document.getElementById('statEvents').textContent    = data.stats.total_events;
+    document.getElementById('statCompanies').textContent = data.stats.total_companies;
+    document.getElementById('statOffered').textContent   = data.stats.total_offered;
+
+    const tbody = document.getElementById('recentEventsTable');
+    const events = data.recent_events || [];
+
+    if (!events.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-calendar-alt"></i>
+        <p>No events yet. <a href="drives.html">Create your first drive event</a></p>
+      </div></td></tr>`;
+      return;
+    }
+
+    const statusColors = {
+      CREATED:           '#6B7280',
+      REGISTRATION_OPEN: '#2563EB',
+      IN_PROGRESS:       '#10B981',
+      COMPLETED:         '#7C3AED'
+    };
+    const statusLabels = {
+      CREATED:'Draft', REGISTRATION_OPEN:'Registration Open',
+      IN_PROGRESS:'In Progress', COMPLETED:'Completed'
+    };
+
+    tbody.innerHTML = events.map(e => `
+      <tr>
+        <td><strong>${e.name}</strong></td>
+        <td>${formatDate(e.event_date)}</td>
+        <td>
+          <span class="badge" style="background:${statusColors[e.status]}20;color:${statusColors[e.status]}">
+            ${statusLabels[e.status] || e.status}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <a href="drives.html" class="btn-secondary btn-sm"><i class="fas fa-building"></i> Companies</a>
+            <a href="attendance.html" class="btn-secondary btn-sm"><i class="fas fa-fingerprint"></i> Attendance</a>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+</script>
+</body></html>

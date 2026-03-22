@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Students – Recruiter</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 14px 20px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px;
+    }
+    .toolbar .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .toolbar .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+    .toolbar .search-wrap input { width: 100%; padding: 9px 12px 9px 36px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); }
+    .toolbar .search-wrap input:focus { outline: none; border-color: var(--primary); }
+
+    .summary-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .chip-item { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--bg-card); font-size: 12px; font-weight: 600; transition: all 0.15s; user-select: none; }
+    .chip-item:hover { border-color: var(--border-hover); }
+    .chip-item.active { border-color: var(--primary); background: rgba(37,99,235,0.07); color: var(--primary); }
+    .chip-item .chip-count { font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 10px; background: rgba(0,0,0,0.07); }
+
+    .stu-table { width: 100%; border-collapse: collapse; }
+    .stu-table thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 2px solid var(--border); background: var(--bg-card); position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+    .stu-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 13px; }
+    .stu-table tbody tr:last-child td { border-bottom: none; }
+    .stu-table tbody tr:hover { background: rgba(0,0,0,0.015); }
+    .stu-table tbody tr.saved-flash { animation: savedFlash 0.6s ease; }
+    @keyframes savedFlash { 0% { background: rgba(16,185,129,0.15); } 100% { background: transparent; } }
+
+    /* Photo avatar */
+    .stu-photo { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); flex-shrink: 0; }
+    .stu-av { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; }
+    .name-cell { display: flex; align-items: center; gap: 10px; }
+    .stu-n { font-weight: 600; font-size: 13px; }
+    .stu-m { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Institution badge */
+    .inst-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: rgba(37,99,235,0.08); color: var(--primary); border: 1px solid rgba(37,99,235,0.2); }
+
+    .tog-group { display: inline-flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .tog-btn { border: none; padding: 7px 13px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--bg-card); color: var(--text-secondary); transition: all 0.15s; display: flex; align-items: center; gap: 5px; border-right: 1px solid var(--border); }
+    .tog-btn:last-child { border-right: none; }
+    .tog-btn:hover { background: var(--bg); }
+    .tog-btn.att-p.on { background: #10B981; color: #fff; }
+    .tog-btn.att-a.on { background: #EF4444; color: #fff; }
+    .tog-btn.st-sl.on { background: #0EA5E9; color: #fff; }
+    .tog-btn.st-of.on { background: #10B981; color: #fff; }
+    .tog-btn.st-rj.on { background: #EF4444; color: #fff; }
+
+    .row-spinner { display: none; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .row-spinner.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .export-btn { padding: 9px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .export-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .bulk-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15); border-radius: var(--radius-sm); margin-bottom: 12px; }
+    .bulk-bar span { font-size: 12px; color: var(--text-muted); font-weight: 600; flex: 1; }
+    .bulk-btn { border: 1px solid transparent; padding: 6px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .bulk-btn.present  { background: rgba(16,185,129,0.1); color: #10B981; border-color: rgba(16,185,129,0.3); }
+    .bulk-btn.present:hover  { background: #10B981; color: #fff; }
+    .bulk-btn.shortlist { background: rgba(14,165,233,0.1); color: #0EA5E9; border-color: rgba(14,165,233,0.3); }
+    .bulk-btn.shortlist:hover { background: #0EA5E9; color: #fff; }
+
+    /* View-profile button */
+    .view-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; font-family: 'Inter', sans-serif; }
+    .view-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal { background: var(--bg-card); border-radius: var(--radius); max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .modal-header h3 { font-size: 16px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); padding: 4px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+    /* Profile card inside modal */
+    .profile-head { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .profile-photo-lg { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); flex-shrink: 0; }
+    .profile-av-lg { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #fff; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; padding: 16px 20px; }
+    .info-item .il { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 3px; }
+    .info-item .iv { font-size: 13px; font-weight: 600; }
+    .doc-row { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .hidden { display: none !important; }
+
+    @media(max-width: 900px) {
+      .stu-table thead { display: none; }
+      .stu-table tbody td { display: block; padding: 6px 12px; border: none; }
+      .stu-table tbody tr { display: block; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; padding: 8px 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon" style="background:linear-gradient(135deg,#7C3AED,#A855F7)"><i class="fas fa-briefcase"></i></div>
+      <div class="sidebar-brand-text"><h2>Recruiter</h2><p id="sidebarCompany">Portal</p></div>
+    </div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item active"><a href="students.html"><i class="fas fa-users"></i> Students &amp; Results</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,#7C3AED,#A855F7)">R</div>
+        <div class="user-info"><div class="user-name" id="sidebarUserName">Recruiter</div><div class="user-role" id="sidebarUserRole">Company</div></div>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Students &amp; Results</h1>
+        <p>Changes save <strong>automatically</strong> as you click — no save button needed</p>
+      </div>
+      <div class="header-actions">
+        <button class="export-btn" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Summary Chips -->
+      <div class="summary-chips">
+        <div class="chip-item active" onclick="setFilter('all')" id="chip-all"><i class="fas fa-users" style="color:var(--primary)"></i> All <span class="chip-count" id="cnt-all">0</span></div>
+        <div class="chip-item" onclick="setFilter('present')" id="chip-present"><i class="fas fa-check-circle" style="color:#10B981"></i> Present <span class="chip-count" id="cnt-present">0</span></div>
+        <div class="chip-item" onclick="setFilter('absent')" id="chip-absent"><i class="fas fa-times-circle" style="color:#EF4444"></i> Absent <span class="chip-count" id="cnt-absent">0</span></div>
+        <div class="chip-item" onclick="setFilter('att-pending')" id="chip-att-pending"><i class="fas fa-clock" style="color:var(--text-muted)"></i> Unmarked <span class="chip-count" id="cnt-att-pending">0</span></div>
+        <div style="width:1px;background:var(--border);margin:0 4px;align-self:stretch"></div>
+        <div class="chip-item" onclick="setFilter('shortlisted')" id="chip-shortlisted"><i class="fas fa-star" style="color:#0EA5E9"></i> Shortlisted <span class="chip-count" id="cnt-shortlisted">0</span></div>
+        <div class="chip-item" onclick="setFilter('offered')" id="chip-offered"><i class="fas fa-trophy" style="color:#10B981"></i> Offered <span class="chip-count" id="cnt-offered">0</span></div>
+        <div class="chip-item" onclick="setFilter('rejected')" id="chip-rejected"><i class="fas fa-times" style="color:#EF4444"></i> Rejected <span class="chip-count" id="cnt-rejected">0</span></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search by name, PRN or course..." oninput="renderTable()"/>
+        </div>
+        <select class="form-control" style="width:150px" id="branchFilter" onchange="renderTable()">
+          <option value="">All Branches</option>
+        </select>
+      </div>
+
+      <!-- Bulk Actions -->
+      <div class="bulk-bar">
+        <span><i class="fas fa-bolt"></i> Bulk Actions (applies to current filter)</span>
+        <button class="bulk-btn present"   onclick="bulkMarkPresent()"><i class="fas fa-check-double"></i> Mark All Present</button>
+        <button class="bulk-btn shortlist" onclick="bulkShortlist()"><i class="fas fa-star"></i> Shortlist All Present</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap" style="max-height:calc(100vh - 340px);overflow-y:auto">
+          <table class="stu-table">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Student</th>
+                <th>Course / Institution</th>
+                <th>CGPA</th>
+                <th style="min-width:180px">Attendance</th>
+                <th style="min-width:260px">Selection Result</th>
+                <th style="width:40px"></th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px">
+                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading students...</p></div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Student Profile Modal -->
+<div id="profileModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Student Profile</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+const user = requireAuth('recruiter');
+if (user) {
+  document.getElementById('sidebarAvatar').textContent   = (user.name||'R')[0].toUpperCase();
+  document.getElementById('sidebarUserName').textContent  = user.name || 'Recruiter';
+  document.getElementById('sidebarUserRole').textContent  = user.company_name || 'Company';
+  document.getElementById('sidebarCompany').textContent   = user.company_name || 'Portal';
+  load();
+}
+
+let students     = [];
+let localAtt     = {};
+let localSt      = {};
+let activeFilter = 'all';
+
+const AV_COLORS  = ['#7C3AED','#2563EB','#0EA5E9','#10B981','#F59E0B','#EF4444'];
+const avColor    = n => AV_COLORS[n.charCodeAt(0) % AV_COLORS.length];
+const INST_LABELS = { university:'Sandip University', foundation:'Sandip Foundation', other:'External' };
+
+// ── Load ─────────────────────────────────────────────
+async function load() {
+  const data = await api.get('/recruiter/students');
+  students = data.students || [];
+
+  students.forEach(s => {
+    localAtt[s.student_id]   = s.present === true ? true : s.present === false ? false : null;
+    localSt[s.enrollment_id] = s.status || 'applied';
+  });
+
+  const branches = [...new Set(students.map(s => s.branch).filter(Boolean))].sort();
+  const sel = document.getElementById('branchFilter');
+  branches.forEach(b => {
+    const o = document.createElement('option'); o.value = b; o.textContent = b; sel.appendChild(o);
+  });
+
+  updateChips();
+  renderTable();
+}
+
+// ── Chips ─────────────────────────────────────────────
+function updateChips() {
+  const total      = students.length;
+  const present    = students.filter(s => localAtt[s.student_id] === true).length;
+  const absent     = students.filter(s => localAtt[s.student_id] === false).length;
+  const shortlisted= students.filter(s => localSt[s.enrollment_id] === 'shortlisted').length;
+  const offered    = students.filter(s => localSt[s.enrollment_id] === 'offered').length;
+  const rejected   = students.filter(s => localSt[s.enrollment_id] === 'rejected').length;
+
+  document.getElementById('cnt-all').textContent         = total;
+  document.getElementById('cnt-present').textContent     = present;
+  document.getElementById('cnt-absent').textContent      = absent;
+  document.getElementById('cnt-att-pending').textContent = total - present - absent;
+  document.getElementById('cnt-shortlisted').textContent = shortlisted;
+  document.getElementById('cnt-offered').textContent     = offered;
+  document.getElementById('cnt-rejected').textContent    = rejected;
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.chip-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('chip-' + f)?.classList.add('active');
+  renderTable();
+}
+
+// ── Filter ─────────────────────────────────────────────
+function getFiltered() {
+  const q  = document.getElementById('searchInput').value.toLowerCase();
+  const br = document.getElementById('branchFilter').value;
+  return students.filter(s => {
+    const matchQ  = s.name.toLowerCase().includes(q)
+                 || s.roll_no.toLowerCase().includes(q)
+                 || (s.course||'').toLowerCase().includes(q);
+    const matchBr = !br || s.branch === br;
+    const att = localAtt[s.student_id];
+    const st  = localSt[s.enrollment_id];
+    let matchF = true;
+    if (activeFilter === 'present')     matchF = att === true;
+    if (activeFilter === 'absent')      matchF = att === false;
+    if (activeFilter === 'att-pending') matchF = att === null;
+    if (activeFilter === 'shortlisted') matchF = st === 'shortlisted';
+    if (activeFilter === 'offered')     matchF = st === 'offered';
+    if (activeFilter === 'rejected')    matchF = st === 'rejected';
+    return matchQ && matchBr && matchF;
+  });
+}
+
+// ── Render Table ──────────────────────────────────────
+function renderTable() {
+  const filtered = getFiltered();
+  const tbody    = document.getElementById('tableBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px">
+      <div class="empty-state"><i class="fas fa-users"></i><p>No students in this category</p></div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((s, idx) => {
+    const att       = localAtt[s.student_id];
+    const st        = localSt[s.enrollment_id];
+    const cgpa      = parseFloat(s.cgpa).toFixed(2);
+    const cgpaColor = s.cgpa >= 7 ? '#10B981' : s.cgpa >= 5 ? '#F59E0B' : '#EF4444';
+    const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+
+    // Photo or colour avatar
+    const avatarHtml = s.photo_url
+      ? `<img src="${s.photo_url}" class="stu-photo" alt="${s.name}" onerror="this.style.display='none'"/>`
+      : `<div class="stu-av" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`;
+
+    return `
+    <tr id="row-${s.student_id}">
+      <td style="color:var(--text-muted);font-size:12px">${idx + 1}</td>
+
+      <td>
+        <div class="name-cell">
+          ${avatarHtml}
+          <div>
+            <div class="stu-n">${s.name}</div>
+            <div class="stu-m"><code style="color:var(--primary-light)">${s.roll_no}</code> · ${s.branch} / Yr ${s.year}</div>
+          </div>
+        </div>
+      </td>
+
+      <td>
+        <div style="font-size:12px;font-weight:600">${s.course || '—'}</div>
+        <div style="margin-top:3px">
+          <span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span>
+        </div>
+      </td>
+
+      <td>
+        <strong style="color:${cgpaColor}">${cgpa}</strong>
+        ${s.backlogs > 0 ? `<span style="font-size:11px;color:#EF4444;margin-left:4px">(${s.backlogs} KT)</span>` : ''}
+      </td>
+
+      <td>
+        <div class="tog-group">
+          <button class="tog-btn att-p ${att === true  ? 'on' : ''}" onclick="setAtt(${s.student_id},${s.enrollment_id},true)"  title="Present"><i class="fas fa-check"></i> Present</button>
+          <button class="tog-btn att-a ${att === false ? 'on' : ''}" onclick="setAtt(${s.student_id},${s.enrollment_id},false)" title="Absent"><i class="fas fa-times"></i> Absent</button>
+        </div>
+      </td>
+
+      <td>
+        <div class="tog-group">
+          <button class="tog-btn st-sl ${st === 'shortlisted' ? 'on' : ''}" onclick="setSt(${s.student_id},${s.enrollment_id},'shortlisted')" title="Shortlist"><i class="fas fa-star"></i> Shortlist</button>
+          <button class="tog-btn st-of ${st === 'offered'     ? 'on' : ''}" onclick="setSt(${s.student_id},${s.enrollment_id},'offered')"     title="Offer"><i class="fas fa-trophy"></i> Offer</button>
+          <button class="tog-btn st-rj ${st === 'rejected'    ? 'on' : ''}" onclick="setSt(${s.student_id},${s.enrollment_id},'rejected')"    title="Reject"><i class="fas fa-times"></i> Reject</button>
+        </div>
+      </td>
+
+      <td style="text-align:center">
+        <span class="row-spinner" id="spinner-${s.student_id}"></span>
+        <button class="view-btn" onclick="viewProfile(${s.student_id})" title="Full profile"><i class="fas fa-eye"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Profile Modal ─────────────────────────────────────
+function viewProfile(studentId) {
+  const s = students.find(x => x.student_id === studentId);
+  if (!s) return;
+
+  const cgpaColor = s.cgpa >= 7 ? '#10B981' : s.cgpa >= 5 ? '#F59E0B' : '#EF4444';
+  const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+
+  document.getElementById('modalTitle').textContent = s.name;
+  document.getElementById('modalBody').innerHTML = `
+
+    <!-- Header: photo + name -->
+    <div class="profile-head">
+      ${s.photo_url
+        ? `<img src="${s.photo_url}" class="profile-photo-lg" alt="${s.name}" onerror="this.style.display='none'"/>`
+        : `<div class="profile-av-lg" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`}
+      <div>
+        <div style="font-size:18px;font-weight:800">${s.name}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:monospace;margin-top:2px">${s.roll_no}</div>
+        <div style="margin-top:6px">
+          <span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic details -->
+    <div class="info-grid">
+      <div class="info-item"><div class="il">Course</div><div class="iv">${s.course || '—'}</div></div>
+      <div class="info-item"><div class="il">Branch</div><div class="iv">${s.branch || '—'}</div></div>
+      <div class="info-item"><div class="il">Specialization</div><div class="iv">${s.specialization || '—'}</div></div>
+      <div class="info-item"><div class="il">Current Year</div><div class="iv">Year ${s.year}</div></div>
+      <div class="info-item"><div class="il">Passout Year</div><div class="iv">${s.passout_year || '—'}</div></div>
+      <div class="info-item"><div class="il">CGPA</div><div class="iv" style="color:${cgpaColor}">${parseFloat(s.cgpa).toFixed(2)}</div></div>
+      <div class="info-item"><div class="il">Backlogs / KT</div><div class="iv" style="color:${s.backlogs > 0 ? '#EF4444':'inherit'}">${s.backlogs}</div></div>
+      <div class="info-item"><div class="il">Email</div><div class="iv" style="font-size:12px">${s.email || '—'}</div></div>
+      <div class="info-item"><div class="il">Phone</div><div class="iv">${s.phone || '—'}</div></div>
+    </div>
+
+    <!-- Skills -->
+    ${s.skills ? `
+    <div style="padding:0 20px 14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px">Skills</div>
+      <div>${s.skills.split(',').filter(Boolean).map(sk => `<span class="chip">${sk.trim()}</span>`).join('')}</div>
+    </div>` : ''}
+
+    <!-- Documents -->
+    <div class="doc-row">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">Documents</span>
+      ${s.photo_url
+        ? `<a href="${s.photo_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-camera"></i> View Photo</a>`
+        : `<span style="font-size:12px;color:var(--text-muted)"><i class="fas fa-camera"></i> No photo</span>`}
+      ${s.resume_url
+        ? `<a href="${s.resume_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> View Resume</a>`
+        : `<span style="font-size:12px;color:var(--text-muted)"><i class="fas fa-file-pdf"></i> No resume</span>`}
+    </div>`;
+
+  document.getElementById('profileModal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('profileModal').classList.add('hidden');
+}
+
+// close on backdrop click
+document.getElementById('profileModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── Auto-save: Attendance ─────────────────────────────
+async function setAtt(studentId, enrollmentId, value) {
+  const prev = localAtt[studentId];
+  localAtt[studentId] = prev === value ? null : value;
+  updateChips(); renderTable();
+  if (localAtt[studentId] === null) return;
+
+  showSpinner(studentId, true);
+  try {
+    await api.post('/recruiter/attendance', { student_id: studentId, present: localAtt[studentId] });
+    flashRow(studentId);
+  } catch (e) {
+    showToast('Failed to save attendance', 'error');
+    localAtt[studentId] = prev; updateChips(); renderTable();
+  }
+  showSpinner(studentId, false);
+}
+
+// ── Auto-save: Status ─────────────────────────────────
+async function setSt(studentId, enrollmentId, status) {
+  const prev = localSt[enrollmentId];
+  localSt[enrollmentId] = prev === status ? 'applied' : status;
+  updateChips(); renderTable();
+
+  showSpinner(studentId, true);
+  try {
+    await api.put(`/recruiter/status/${enrollmentId}`, { status: localSt[enrollmentId] });
+    flashRow(studentId);
+  } catch (e) {
+    showToast('Failed to save result', 'error');
+    localSt[enrollmentId] = prev; updateChips(); renderTable();
+  }
+  showSpinner(studentId, false);
+}
+
+// ── Bulk Actions ──────────────────────────────────────
+async function bulkMarkPresent() {
+  const filtered = getFiltered();
+  if (!filtered.length) return showToast('No students in current view', 'error');
+  if (!confirm(`Mark all ${filtered.length} visible students as Present?`)) return;
+  const toMark = filtered.filter(s => localAtt[s.student_id] !== true);
+  if (!toMark.length) { showToast('All already marked present'); return; }
+  toMark.forEach(s => { localAtt[s.student_id] = true; });
+  updateChips(); renderTable();
+  const data = await api.post('/recruiter/bulk-attendance', { attendances: toMark.map(s => ({ student_id: s.student_id, present: true })) });
+  if (data.success) showToast(`${toMark.length} students marked present ✓`, 'success');
+  else showToast(data.message, 'error');
+}
+
+async function bulkShortlist() {
+  const filtered = getFiltered().filter(s => localAtt[s.student_id] === true);
+  if (!filtered.length) return showToast('No present students in current view', 'error');
+  if (!confirm(`Shortlist all ${filtered.length} present students?`)) return;
+  filtered.forEach(s => { localSt[s.enrollment_id] = 'shortlisted'; });
+  updateChips(); renderTable();
+  const data = await api.put('/recruiter/bulk-status', { updates: filtered.map(s => ({ enrollment_id: s.enrollment_id, status: 'shortlisted' })) });
+  if (data.success) showToast(`${filtered.length} students shortlisted ✓`, 'success');
+  else showToast(data.message, 'error');
+}
+
+// ── Helpers ───────────────────────────────────────────
+function showSpinner(studentId, show) {
+  const el = document.getElementById(`spinner-${studentId}`);
+  if (el) el.classList.toggle('show', show);
+}
+function flashRow(studentId) {
+  const row = document.getElementById(`row-${studentId}`);
+  if (row) { row.classList.remove('saved-flash'); void row.offsetWidth; row.classList.add('saved-flash'); }
+}
+
+// ── Export CSV ────────────────────────────────────────
+function exportCSV() {
+  const filtered = getFiltered();
+  if (!filtered.length) { showToast('No students to export', 'error'); return; }
+
+  const headers = ['#','Name','PRN','Institution','Course','Branch','Specialization','Year','Passout Year','CGPA','Backlogs','Email','Phone','Attendance','Result','Photo','Resume'];
+  let csv = headers.join(',') + '\n';
+  filtered.forEach((s, i) => {
+    const att       = localAtt[s.student_id];
+    const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '';
+    csv += [
+      i+1, s.name, s.roll_no, instLabel,
+      s.course||'', s.branch, s.specialization||'',
+      s.year, s.passout_year||'',
+      parseFloat(s.cgpa).toFixed(2), s.backlogs,
+      s.email||'', s.phone||'',
+      att === true ? 'Present' : att === false ? 'Absent' : 'Pending',
+      localSt[s.enrollment_id] || 'applied',
+      s.photo_url  || '',
+      s.resume_url || ''
+    ].map(v => `"${v}"`).join(',') + '\n';
+  });
+
+  const fname = ((user.company_name||'drive').replace(/[^a-zA-Z0-9]/g,'_')) + '_students.csv';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+  a.download = fname;
+  a.click();
+  showToast('CSV exported!', 'success');
+}
+</script>
+</body></html>

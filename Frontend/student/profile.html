@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Profile – Student</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .profile-top {
+      display: flex; align-items: center; gap: 20px;
+      padding: 16px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 20px;
+    }
+    .profile-photo {
+      width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--primary); flex-shrink: 0;
+    }
+    .profile-photo-placeholder {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg,var(--primary),var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .inst-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: rgba(37,99,235,0.08); color: var(--primary); border: 1px solid rgba(37,99,235,0.2);
+    }
+    .readonly-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px;
+    }
+    .readonly-card .rc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+    .readonly-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .readonly-item { display: flex; flex-direction: column; gap: 2px; }
+    .readonly-item .label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+    .readonly-item .value { font-size: 13px; font-weight: 600; }
+
+    /* URL input with icon */
+    .url-input-wrap { position: relative; }
+    .url-input-wrap .url-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+    .url-input-wrap .form-control { padding-left: 36px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Student Portal</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li class="nav-item active"><a href="profile.html"><i class="fas fa-user"></i> My Profile</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Eligible Drives</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Mark Attendance</a></li>
+      <li class="nav-item"><a href="journey.html"><i class="fas fa-road"></i> My Journey</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">S</div><div class="user-info"><div class="user-name" id="sidebarUserName">Student</div><div class="user-role" id="sidebarUserRole">Roll No</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>My Profile</h1><p>Keep your profile updated — recruiters see these details</p></div>
+    </div>
+    <div class="page-body">
+      <div id="alertBox"></div>
+
+      <div class="card" style="max-width:700px">
+
+        <!-- Photo preview -->
+        <div class="profile-top">
+          <div id="photoAvatar" class="profile-photo-placeholder">?</div>
+          <div>
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px" id="profileName">Loading...</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px" id="profileInst">—</div>
+          </div>
+        </div>
+
+        <!-- Read-only card -->
+        <div class="readonly-card">
+          <div class="rc-title"><i class="fas fa-lock"></i> Registration Info (read-only)</div>
+          <div class="readonly-row">
+            <div class="readonly-item"><span class="label">PRN</span><span class="value"><code id="r_prn" style="color:var(--primary)">—</code></span></div>
+            <div class="readonly-item"><span class="label">Course</span><span class="value" id="r_course">—</span></div>
+            <div class="readonly-item"><span class="label">Branch</span><span class="value" id="r_branch">—</span></div>
+            <div class="readonly-item"><span class="label">Year</span><span class="value" id="r_year">—</span></div>
+            <div class="readonly-item"><span class="label">Institution</span><span class="value" id="r_inst">—</span></div>
+          </div>
+        </div>
+
+        <!-- Editable form -->
+        <form id="profileForm" onsubmit="saveProfile(event)">
+          <div class="form-grid">
+
+            <div class="form-group form-group-sm">
+              <label>Full Name</label>
+              <input class="form-control" id="p_name" required/>
+            </div>
+            <div class="form-group form-group-sm">
+              <label>Phone Number</label>
+              <input class="form-control" id="p_phone" placeholder="9876543210" maxlength="10"/>
+            </div>
+            <div class="form-group form-group-sm">
+              <label>Specialization <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <input class="form-control" id="p_specialization" placeholder="e.g. Data Science, VLSI"/>
+            </div>
+            <div class="form-group form-group-sm">
+              <label>Expected Passout Year</label>
+              <select class="form-control" id="p_passout_year"><option value="">Select Year</option></select>
+            </div>
+            <div class="form-group form-group-sm">
+              <label>Current CGPA <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(out of 10)</span></label>
+              <input class="form-control" type="number" step="0.01" min="0" max="10" id="p_cgpa"/>
+            </div>
+            <div class="form-group form-group-sm">
+              <label>Active Backlogs / KTs</label>
+              <input class="form-control" type="number" min="0" id="p_backlogs"/>
+            </div>
+            <div class="form-group form-group-sm" style="grid-column:1/-1">
+              <label>Skills <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(comma-separated)</span></label>
+              <input class="form-control" id="p_skills" placeholder="Java, Python, SQL, React"/>
+            </div>
+            <div class="form-group form-group-sm" style="grid-column:1/-1">
+              <label>Projects <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(brief description)</span></label>
+              <textarea class="form-control" id="p_projects" rows="3" placeholder="Final year project: Smart attendance using face recognition..."></textarea>
+            </div>
+
+            <!-- Photo URL -->
+            <div class="form-group form-group-sm" style="grid-column:1/-1">
+              <label>
+                <i class="fas fa-camera" style="color:var(--primary)"></i>
+                Passport Photo — Google Drive Link
+                <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px">(share link → anyone with link can view)</span>
+              </label>
+              <div class="url-input-wrap">
+                <i class="fas fa-image url-ico"></i>
+                <input class="form-control" type="url" id="p_photo" placeholder="https://drive.google.com/file/d/..."/>
+              </div>
+            </div>
+
+            <!-- Resume URL -->
+            <div class="form-group form-group-sm" style="grid-column:1/-1">
+              <label>
+                <i class="fas fa-file-pdf" style="color:#DC2626"></i>
+                Resume / CV — Google Drive Link
+                <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px">(PDF, share link → anyone with link can view)</span>
+              </label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="url-input-wrap" style="flex:1">
+                  <i class="fas fa-link url-ico"></i>
+                  <input class="form-control" type="url" id="p_resume" placeholder="https://drive.google.com/file/d/..."/>
+                </div>
+                <a id="resumeViewBtn" href="#" target="_blank" class="btn-secondary btn-sm"
+                   style="display:none;white-space:nowrap;flex-shrink:0">
+                  <i class="fas fa-eye"></i> View
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn-primary" style="margin-top:20px">
+            <span id="saveText"><i class="fas fa-save"></i> Save Profile</span>
+            <span id="saveSpinner" class="hidden"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  requireAuth('student'); initSidebar('student');
+
+  // Populate passout year
+  (function() {
+    const sel = document.getElementById('p_passout_year');
+    const now = new Date().getFullYear();
+    for (let y = now; y <= now + 6; y++) {
+      const o = document.createElement('option'); o.value = y; o.textContent = y; sel.appendChild(o);
+    }
+  })();
+
+  async function loadProfile() {
+    const data = await api.get('/student/profile');
+    const p = data.profile || {};
+
+    // Photo preview — show image from Drive link if available
+    const photoWrap = document.getElementById('photoAvatar');
+    if (p.photo_url) {
+      const img = document.createElement('img');
+      img.src       = p.photo_url;
+      img.className = 'profile-photo';
+      img.alt       = p.name || 'Photo';
+      img.onerror   = () => { img.style.display='none'; };  // hide if link broken
+      photoWrap.parentNode.replaceChild(img, photoWrap);
+    } else {
+      photoWrap.textContent = (p.name || 'S')[0].toUpperCase();
+    }
+
+    document.getElementById('profileName').textContent = p.name || '—';
+
+    const instLabel = { university:'Sandip University', foundation:'Sandip Foundation', other: p.institution_name || 'External' }[p.institution_type] || p.institution_name || '—';
+    document.getElementById('profileInst').innerHTML = `<span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span>`;
+
+    // Read-only
+    document.getElementById('r_prn').textContent    = p.roll_no    || '—';
+    document.getElementById('r_course').textContent = p.course     || '—';
+    document.getElementById('r_branch').textContent = p.branch     || '—';
+    document.getElementById('r_year').textContent   = p.year ? `Year ${p.year}` : '—';
+    document.getElementById('r_inst').textContent   = instLabel;
+
+    // Editable
+    document.getElementById('p_name').value          = p.name           || '';
+    document.getElementById('p_phone').value         = p.phone          || '';
+    document.getElementById('p_specialization').value= p.specialization || '';
+    document.getElementById('p_cgpa').value          = p.cgpa           || '';
+    document.getElementById('p_backlogs').value      = p.backlogs       ?? 0;
+    document.getElementById('p_skills').value        = p.skills         || '';
+    document.getElementById('p_projects').value      = p.projects       || '';
+    document.getElementById('p_photo').value         = p.photo_url      || '';
+    document.getElementById('p_resume').value        = p.resume_url     || '';
+    if (p.passout_year) document.getElementById('p_passout_year').value = p.passout_year;
+
+    // Show View button for resume if exists
+    if (p.resume_url) {
+      const btn = document.getElementById('resumeViewBtn');
+      btn.href  = p.resume_url;
+      btn.style.display = '';
+    }
+  }
+
+  // Show resume view button when URL is typed
+  document.getElementById('p_resume').addEventListener('input', function() {
+    const btn = document.getElementById('resumeViewBtn');
+    if (this.value.trim()) {
+      btn.href = this.value.trim();
+      btn.style.display = '';
+    } else {
+      btn.style.display = 'none';
+    }
+  });
+
+  async function saveProfile(e) {
+    e.preventDefault();
+    const ab = document.getElementById('alertBox'); ab.innerHTML = '';
+
+    const phone = document.getElementById('p_phone').value.trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      ab.innerHTML = '<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Phone number must be exactly 10 digits.</div>';
+      return;
+    }
+
+    document.getElementById('saveText').classList.add('hidden');
+    document.getElementById('saveSpinner').classList.remove('hidden');
+
+    try {
+      const data = await api.put('/student/profile', {
+        name:           document.getElementById('p_name').value.trim(),
+        phone:          phone || null,
+        cgpa:           parseFloat(document.getElementById('p_cgpa').value)   || 0,
+        backlogs:       parseInt(document.getElementById('p_backlogs').value) || 0,
+        skills:         document.getElementById('p_skills').value.trim(),
+        projects:       document.getElementById('p_projects').value.trim(),
+        specialization: document.getElementById('p_specialization').value.trim() || null,
+        passout_year:   document.getElementById('p_passout_year').value || null,
+        photo_url:      document.getElementById('p_photo').value.trim()  || null,
+        resume_url:     document.getElementById('p_resume').value.trim() || null
+      });
+
+      if (data.success) {
+        showToast('Profile saved successfully!', 'success');
+        // Update photo preview if URL changed
+        const newPhoto = document.getElementById('p_photo').value.trim();
+        if (newPhoto) {
+          const existing = document.querySelector('.profile-photo') || document.getElementById('photoAvatar');
+          if (existing) {
+            const img = document.createElement('img');
+            img.src = newPhoto; img.className = 'profile-photo'; img.alt = 'Photo';
+            img.onerror = () => { img.style.display='none'; };
+            existing.parentNode.replaceChild(img, existing);
+          }
+        }
+      } else {
+        ab.innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+      }
+    } catch (err) {
+      ab.innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${err.message}</div>`;
+    } finally {
+      document.getElementById('saveText').classList.remove('hidden');
+      document.getElementById('saveSpinner').classList.add('hidden');
+    }
+  }
+
+  loadProfile();
+</script>
+</body></html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Journey – Student</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Student Portal</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="profile.html"><i class="fas fa-user"></i> My Profile</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Eligible Drives</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Mark Attendance</a></li>
+      <li class="nav-item active"><a href="journey.html"><i class="fas fa-road"></i> My Journey</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">S</div><div class="user-info"><div class="user-name" id="sidebarUserName">Student</div><div class="user-role" id="sidebarUserRole">Roll No</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>My Placement Journey</h1><p>Your applications, attendance and results across all companies</p></div>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="timeline" id="journeyTimeline">
+          <div class="empty-state" style="padding:40px"><i class="fas fa-spinner fa-spin"></i><p>Loading your journey...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script>
+  requireAuth('student'); initSidebar('student');
+  loadJourney();
+
+  async function loadJourney() {
+    const data = await api.get('/student/journey');
+    const journey = data.journey || [];
+    const tl = document.getElementById('journeyTimeline');
+
+    if (!journey.length) {
+      tl.innerHTML = `<div class="empty-state" style="padding:40px">
+        <i class="fas fa-road"></i>
+        <p>You haven't applied to any companies yet.<br>
+        <a href="drives.html" class="btn-secondary" style="display:inline-block;margin-top:12px">Browse Drives</a></p>
+      </div>`;
+      return;
+    }
+
+    // API now returns: company_name, job_role, ctc, event_name, event_date, event_status,
+    //                  status (enrollment), present, checked_in_at
+    // drive_date, drive_status, drive_room, drive_slot no longer exist
+
+    tl.innerHTML = journey.map(j => {
+      const statusColors = {
+        applied:     'var(--primary)',
+        shortlisted: 'var(--secondary)',
+        rejected:    'var(--danger)',
+        offered:     'var(--warning)'
+      };
+
+      return `
+      <div class="timeline-item ${j.status}">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+            <div>
+              <h3 style="margin-bottom:4px;font-size:16px">${j.company_name}</h3>
+              <p class="text-sm text-muted">
+                ${j.job_role}${j.ctc ? ' &nbsp;·&nbsp; ₹' + j.ctc + ' LPA' : ''}
+              </p>
+            </div>
+            <div style="text-align:right">
+              <span class="badge badge-${j.status}">${(j.status || '').toUpperCase()}</span><br>
+              <span class="text-sm text-muted" style="margin-top:4px;display:block">
+                Applied: ${formatDate(j.applied_at)}
+              </span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+
+            <!-- Event info — event_date replaces old drive_date -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <i class="fas fa-calendar-alt" style="color:var(--text-muted)"></i>
+              <span class="text-sm text-muted">
+                ${j.event_name || 'Mega Drive'} &nbsp;·&nbsp; ${formatDate(j.event_date)}
+              </span>
+            </div>
+
+            <!-- Attendance -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <i class="fas fa-fingerprint" style="color:${j.present ? 'var(--secondary)' : 'var(--text-muted)'}"></i>
+              <span class="text-sm">
+                ${j.present
+                  ? '<strong style="color:var(--secondary)">Present ✓</strong>'
+                  : '<span class="text-muted">Not attended</span>'}
+              </span>
+            </div>
+
+            <!-- Check-in time if present -->
+            ${j.checked_in_at ? `
+            <div style="display:flex;align-items:center;gap:6px">
+              <i class="fas fa-clock" style="color:var(--text-muted)"></i>
+              <span class="text-sm text-muted">Checked in: ${formatDateTime(j.checked_in_at)}</span>
+            </div>` : ''}
+
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+</script>
+</body></html>

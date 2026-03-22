@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Recruiter Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .event-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .es-created       { background:#F3F4F620; color:#6B7280; border:1px solid #6B728030; }
+    .es-open          { background:#2563EB15; color:#2563EB; border:1px solid #2563EB30; }
+    .es-inprogress    { background:#10B98115; color:#10B981; border:1px solid #10B98130; }
+    .es-completed     { background:#7C3AED15; color:#7C3AED; border:1px solid #7C3AED30; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon" style="background:linear-gradient(135deg,#7C3AED,#A855F7)"><i class="fas fa-briefcase"></i></div>
+      <div class="sidebar-brand-text"><h2>Recruiter</h2><p id="sidebarCompany">Portal</p></div>
+    </div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item active"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students &amp; Results</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,#7C3AED,#A855F7)">R</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Recruiter</div>
+          <div class="user-role" id="sidebarUserRole">Company</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 id="welcomeMsg">Welcome!</h1>
+        <p id="driveSubtitle">Loading your assigned drive...</p>
+      </div>
+      <div class="header-actions">
+        <a href="students.html" class="btn-primary" style="background:linear-gradient(135deg,#7C3AED,#A855F7)">
+          <i class="fas fa-users"></i> Manage Students
+        </a>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Drive / Company Info Card -->
+      <div class="card mb-16" id="driveCard" style="border-left:4px solid #7C3AED">
+        <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="statEnrolled">—</div><div class="stat-label">Total Enrolled</div></div>
+        <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="statPresent">—</div><div class="stat-label">Present</div></div>
+        <div class="stat-card green"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="statShortlisted">—</div><div class="stat-label">Shortlisted</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-value" id="statOffered">—</div><div class="stat-label">Offered</div></div>
+      </div>
+
+      <!-- Quick student overview table -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-list-check"></i> Student Overview</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>PRN</th><th>Branch</th><th>Attendance</th><th>Result</th></tr>
+            </thead>
+            <tbody id="summaryTable">
+              <tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px">
+          <a href="students.html" class="btn-secondary">
+            <i class="fas fa-edit"></i> Mark Attendance &amp; Update Results
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  const user = requireAuth('recruiter');
+  if (user) {
+    document.getElementById('sidebarAvatar').textContent   = (user.name || 'R')[0].toUpperCase();
+    document.getElementById('sidebarUserName').textContent  = user.name || 'Recruiter';
+    document.getElementById('sidebarUserRole').textContent  = user.company_name || 'Company';
+    document.getElementById('sidebarCompany').textContent   = user.company_name || 'Portal';
+    document.getElementById('welcomeMsg').textContent       = `Welcome, ${(user.name||'').split(' ')[0]}! 👋`;
+    loadDashboard();
+  }
+
+  const EVENT_STATUS_LABELS = {
+    CREATED:           'Draft',
+    REGISTRATION_OPEN: 'Registration Open',
+    IN_PROGRESS:       'Drive In Progress',
+    COMPLETED:         'Completed'
+  };
+  const EVENT_STATUS_CLASS = {
+    CREATED:           'es-created',
+    REGISTRATION_OPEN: 'es-open',
+    IN_PROGRESS:       'es-inprogress',
+    COMPLETED:         'es-completed'
+  };
+
+  async function loadDashboard() {
+    const [dashData, stuData] = await Promise.all([
+      api.get('/recruiter/dashboard'),
+      api.get('/recruiter/students')
+    ]);
+
+    const drive = dashData.drive;   // has: company_name, job_role, ctc, event_name, event_date, event_status
+    const stats = dashData.stats || {};
+
+    // ── Drive Info Card ──────────────────────────────
+    const driveCard = document.getElementById('driveCard');
+    if (drive) {
+      document.getElementById('driveSubtitle').textContent =
+        `${drive.company_name} – ${drive.job_role}`;
+
+      const statusClass = EVENT_STATUS_CLASS[drive.event_status] || 'es-created';
+      const statusLabel = EVENT_STATUS_LABELS[drive.event_status] || drive.event_status;
+
+      driveCard.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7C3AED,#A855F7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0">
+                <i class="fas fa-building"></i>
+              </div>
+              <div>
+                <div style="font-size:18px;font-weight:800">${drive.company_name}</div>
+                <div style="font-size:13px;color:var(--text-secondary)">${drive.job_role}${drive.ctc ? ' &nbsp;·&nbsp; ₹' + drive.ctc + ' LPA' : ''}</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+              <i class="fas fa-calendar-alt"></i>&nbsp;
+              ${drive.event_name || 'Mega Drive'} &nbsp;·&nbsp; ${formatDate(drive.event_date)}
+            </div>
+          </div>
+          <div>
+            <span class="event-status ${statusClass}">
+              ${drive.event_status === 'IN_PROGRESS'
+                ? '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px;animation:pulse 1.4s infinite"></span>'
+                : ''}
+              ${statusLabel}
+            </span>
+          </div>
+        </div>
+
+        <!-- Eligibility info -->
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+          <span><i class="fas fa-star" style="color:var(--warning)"></i> Min CGPA: <strong>${drive.eligibility_min_cgpa}</strong></span>
+          <span><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i> Backlogs ≤ <strong>${drive.eligibility_backlogs_allowed}</strong></span>
+          <span><i class="fas fa-code-branch" style="color:var(--primary)"></i> ${drive.eligibility_branches || 'All Branches'}</span>
+        </div>`;
+    } else {
+      driveCard.innerHTML = `
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          No company drive assigned to you yet. Please contact the admin.
+        </div>`;
+      document.getElementById('driveSubtitle').textContent = 'No drive assigned';
+    }
+
+    // ── Stats ────────────────────────────────────────
+    document.getElementById('statEnrolled').textContent    = stats.enrolled    || 0;
+    document.getElementById('statPresent').textContent     = stats.present     || 0;
+    document.getElementById('statShortlisted').textContent = stats.shortlisted || 0;
+    document.getElementById('statOffered').textContent     = stats.offered     || 0;
+
+    // ── Quick Table ──────────────────────────────────
+    const tbody   = document.getElementById('summaryTable');
+    const students = (stuData.students || []).slice(0, 10);
+
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
+        <i class="fas fa-users"></i><p>No students enrolled yet</p>
+      </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td><code style="color:var(--primary-light)">${s.roll_no}</code></td>
+        <td>${s.branch}</td>
+        <td>${s.present === true
+          ? '<span class="badge badge-shortlisted">✓ Present</span>'
+          : s.present === false
+            ? '<span class="badge badge-rejected">✗ Absent</span>'
+            : '<span class="badge badge-applied">Pending</span>'}</td>
+        <td><span class="badge badge-${s.status}">${s.status}</span></td>
+      </tr>`).join('');
+  }
+</script>
+</body></html>

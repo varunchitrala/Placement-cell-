@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Dashboard – Student</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Student Portal</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item active"><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="profile.html"><i class="fas fa-user"></i> My Profile</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Eligible Drives</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Mark Attendance</a></li>
+      <li class="nav-item"><a href="journey.html"><i class="fas fa-road"></i> My Journey</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">S</div><div class="user-info"><div class="user-name" id="sidebarUserName">Student</div><div class="user-role" id="sidebarUserRole">Roll No</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1 id="welcomeMsg">Welcome back! 👋</h1><p>Here's your placement summary</p></div>
+      <div class="header-actions">
+        <a href="drives.html" class="btn-primary"><i class="fas fa-building"></i> Browse Drives</a>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="stats-grid">
+        <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div><div class="stat-value" id="statApplied">—</div><div class="stat-label">Applied</div></div>
+        <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="statShortlisted">—</div><div class="stat-label">Shortlisted</div></div>
+        <div class="stat-card green"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-value" id="statOffered">—</div><div class="stat-label">Offers</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-building"></i></div><div class="stat-value" id="statEligible">—</div><div class="stat-label">Eligible Drives</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-user"></i> My Profile</div>
+          <div id="profileCard"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+          <a href="profile.html" class="btn-secondary btn-sm mt-16" style="margin-top:12px;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-edit"></i> Update Profile</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-road"></i> Recent Activity</div>
+          <div id="recentJourney">
+            <div class="empty-state"><i class="fas fa-road"></i><p>No activity yet. <a href="drives.html">Browse drives</a></p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script>
+  const user = requireAuth('student');
+  if (user) {
+    initSidebar('student');
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}! 👋`;
+    loadDashboard();
+  }
+
+  async function loadDashboard() {
+    const [profileData, journeyData, drivesData] = await Promise.all([
+      api.get('/student/profile'),
+      api.get('/student/journey'),
+      api.get('/student/drives')
+    ]);
+
+    const journey = journeyData.journey || [];
+    const drives  = drivesData.drives   || [];
+
+    // Stats
+    document.getElementById('statApplied').textContent     = journey.length;
+    document.getElementById('statShortlisted').textContent = journey.filter(j => j.status === 'shortlisted').length;
+    document.getElementById('statOffered').textContent     = journey.filter(j => j.status === 'offered').length;
+    document.getElementById('statEligible').textContent    = drives.length;
+
+    // Profile card
+    const p = profileData.profile || {};
+    document.getElementById('profileCard').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="flex gap-8"><span class="text-muted" style="width:80px;font-size:12px">PRN</span><code style="color:var(--primary-light)">${p.roll_no || '—'}</code></div>
+        <div class="flex gap-8"><span class="text-muted" style="width:80px;font-size:12px">Branch</span><span>${p.branch || '—'} / Year ${p.year || '—'}</span></div>
+        <div class="flex gap-8"><span class="text-muted" style="width:80px;font-size:12px">CGPA</span><strong style="color:var(--secondary)">${p.cgpa || 0}</strong></div>
+        <div class="flex gap-8"><span class="text-muted" style="width:80px;font-size:12px">Backlogs</span><span>${p.backlogs || 0}</span></div>
+        <div class="flex gap-8"><span class="text-muted" style="width:80px;font-size:12px">Skills</span>
+          <div>${(p.skills || '').split(',').filter(Boolean).map(s => `<span class="chip">${s.trim()}</span>`).join('') || '<span class="text-muted">Not set</span>'}</div>
+        </div>
+      </div>`;
+
+    // Recent activity — event_date replaces old drive_date
+    const recent = journey.slice(0, 4);
+    if (!recent.length) return;
+    document.getElementById('recentJourney').innerHTML = recent.map(j => `
+      <div style="border-left:3px solid var(--primary);padding:10px 14px;margin-bottom:10px;border-radius:0 8px 8px 0;background:rgba(255,255,255,0.02)">
+        <div style="font-weight:600">${j.company_name}</div>
+        <div class="text-muted text-sm">${j.job_role} &nbsp;·&nbsp; ${formatDate(j.event_date)}</div>
+        <div style="margin-top:4px"><span class="badge badge-${j.status}">${j.status}</span></div>
+      </div>`).join('');
+  }
+</script>
+</body></html>

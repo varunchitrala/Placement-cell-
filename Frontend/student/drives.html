@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Eligible Drives – Student</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Student Portal</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="profile.html"><i class="fas fa-user"></i> My Profile</a></li>
+      <li class="nav-item active"><a href="drives.html"><i class="fas fa-building"></i> Eligible Drives</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Mark Attendance</a></li>
+      <li class="nav-item"><a href="journey.html"><i class="fas fa-road"></i> My Journey</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">S</div><div class="user-info"><div class="user-name" id="sidebarUserName">Student</div><div class="user-role" id="sidebarUserRole">Roll No</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+  <div class="main-content">
+    <div class="page-header">
+      <div><h1>Eligible Drives</h1><p>Companies open for applications — filtered by your CGPA, backlogs and branch</p></div>
+    </div>
+    <div class="page-body">
+      <div id="drivesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+        <div style="grid-column:1/-1" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading eligible drives...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script>
+  requireAuth('student'); initSidebar('student');
+  loadDrives();
+
+  async function loadDrives() {
+    const data = await api.get('/student/drives');
+    const drives = data.drives || [];
+    const grid = document.getElementById('drivesGrid');
+
+    if (!drives.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1" class="empty-state"><i class="fas fa-building"></i><p>No eligible drives open right now. Check back soon!</p></div>';
+      return;
+    }
+
+    grid.innerHTML = drives.map(d => `
+      <div class="card" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--secondary));opacity:0.08;border-radius:0 14px 0 80px"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <h3 style="font-size:16px;font-weight:700">${d.company_name}</h3>
+            <p style="color:var(--text-secondary);font-size:13px;margin-top:2px">${d.job_role}</p>
+          </div>
+          <span class="badge badge-shortlisted" style="white-space:nowrap">${d.ctc ? '₹' + d.ctc + ' LPA' : 'CTC N/A'}</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          <!-- event_date replaces old drive_date -->
+          <div class="flex gap-8 text-sm">
+            <i class="fas fa-calendar" style="color:var(--primary);width:16px"></i>
+            <span>${d.event_name || 'Mega Drive'} &nbsp;·&nbsp; ${formatDate(d.event_date)}</span>
+          </div>
+          <div class="flex gap-8 text-sm">
+            <i class="fas fa-star" style="color:var(--warning);width:16px"></i>
+            <span>Min CGPA: ${d.eligibility_min_cgpa} &nbsp;|&nbsp; Backlogs ≤ ${d.eligibility_backlogs_allowed}</span>
+          </div>
+          <div class="flex gap-8 text-sm">
+            <i class="fas fa-code-branch" style="color:var(--secondary);width:16px"></i>
+            <span>${d.eligibility_branches || 'All Branches'}</span>
+          </div>
+        </div>
+
+        ${d.enrollment_status
+          ? `<button class="btn-secondary btn-full" disabled style="opacity:0.6">
+               <i class="fas fa-check"></i> Applied (${d.enrollment_status})
+             </button>`
+          : `<button class="btn-primary btn-full" onclick="applyDrive(${d.id}, this)">
+               <i class="fas fa-paper-plane"></i> Apply Now
+             </button>`}
+      </div>`).join('');
+  }
+
+  async function applyDrive(driveId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+    const data = await api.post(`/student/apply/${driveId}`, {});
+    if (data.success) {
+      showToast('Application submitted!');
+      btn.innerHTML = '<i class="fas fa-check"></i> Applied';
+    } else {
+      showToast(data.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Apply Now';
+    }
+  }
+</script>
+</body></html>

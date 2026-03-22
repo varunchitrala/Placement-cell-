@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Live Pipeline – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .pipeline-wrap {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .pipe-stage {
+      flex: 1; padding: 20px 16px; text-align: center; position: relative;
+      border-right: 1px solid var(--border); transition: background 0.3s;
+    }
+    .pipe-stage:last-child { border-right: none; }
+    .pipe-arrow {
+      position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-left: 14px solid var(--border);
+      z-index: 2;
+    }
+    .pipe-arrow::after {
+      content: ''; position: absolute; top: -12px; left: -16px;
+      width: 0; height: 0;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-left: 12px solid var(--bg-card);
+    }
+    .pipe-stage:last-child .pipe-arrow { display: none; }
+    .pipe-icon { font-size: 22px; margin-bottom: 8px; }
+    .pipe-count { font-size: 36px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+    .pipe-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+    .pipe-pct { font-size: 12px; font-weight: 600; margin-top: 6px; padding: 2px 10px; border-radius: 20px; display: inline-block; }
+
+    .pipe-enrolled    { background: rgba(37,99,235,0.05);  }
+    .pipe-present     { background: rgba(16,185,129,0.05); }
+    .pipe-shortlisted { background: rgba(14,165,233,0.05); }
+    .pipe-offered     { background: rgba(16,185,129,0.08); }
+    .pipe-rejected    { background: rgba(239,68,68,0.04);  }
+
+    .live-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.12); color: #10B981; border: 1px solid rgba(16,185,129,0.3); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+    .prog-wrap { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+    .prog-bar  { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+    .br-table { width: 100%; border-collapse: collapse; }
+    .br-table th { padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--border); text-align: left; }
+    .br-table td { padding: 12px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .br-table tr:last-child td { border-bottom: none; }
+
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .rec-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .rec-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+    .rec-company { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .rec-stats { display: flex; gap: 12px; }
+    .rstat { text-align: center; }
+    .rstat .v { font-size: 18px; font-weight: 800; }
+    .rstat .l { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+
+    .last-updated { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    @media(max-width:768px) {
+      .pipeline-wrap { flex-direction: column; }
+      .pipe-arrow { display: none; }
+      .pipe-stage { border-right: none; border-bottom: 1px solid var(--border); }
+      .pipe-stage:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item active"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div>
+          <h1>Live Drive Pipeline</h1>
+          <p class="last-updated" id="lastUpdated">Select a drive to begin monitoring</p>
+        </div>
+        <span class="live-badge" id="liveBadge" style="display:none">
+          <span class="live-dot"></span> AUTO-REFRESH 10s
+        </span>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="card mb-16">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:13px;font-weight:600;color:var(--text-secondary);white-space:nowrap">
+            <i class="fas fa-building"></i> Select Drive:
+          </label>
+          <select class="form-control" style="flex:1;min-width:260px" id="driveSelect" onchange="onDriveChange()">
+            <option value="">— Select a Drive —</option>
+          </select>
+          <span class="badge" id="driveStatusBadge" style="font-size:13px;padding:6px 14px;display:none"></span>
+        </div>
+      </div>
+
+      <div id="pipelineContent" style="display:none">
+
+        <div class="pipeline-wrap" id="pipelineWrap">
+          <div class="pipe-stage pipe-enrolled">
+            <div class="pipe-arrow"></div>
+            <div class="pipe-icon" style="color:var(--primary)"><i class="fas fa-users"></i></div>
+            <div class="pipe-count" id="p-enrolled" style="color:var(--primary)">0</div>
+            <div class="pipe-label">Enrolled</div>
+            <div class="pipe-pct" style="background:rgba(37,99,235,0.1);color:var(--primary)" id="pct-enrolled">100%</div>
+          </div>
+          <div class="pipe-stage pipe-present">
+            <div class="pipe-arrow"></div>
+            <div class="pipe-icon" style="color:#10B981"><i class="fas fa-check-circle"></i></div>
+            <div class="pipe-count" id="p-present" style="color:#10B981">0</div>
+            <div class="pipe-label">Present</div>
+            <div class="pipe-pct" style="background:rgba(16,185,129,0.1);color:#10B981" id="pct-present">0%</div>
+          </div>
+          <div class="pipe-stage pipe-shortlisted">
+            <div class="pipe-arrow"></div>
+            <div class="pipe-icon" style="color:#0EA5E9"><i class="fas fa-star"></i></div>
+            <div class="pipe-count" id="p-shortlisted" style="color:#0EA5E9">0</div>
+            <div class="pipe-label">Shortlisted</div>
+            <div class="pipe-pct" style="background:rgba(14,165,233,0.1);color:#0EA5E9" id="pct-shortlisted">0%</div>
+          </div>
+          <div class="pipe-stage pipe-offered">
+            <div class="pipe-arrow"></div>
+            <div class="pipe-icon" style="color:#10B981"><i class="fas fa-trophy"></i></div>
+            <div class="pipe-count" id="p-offered" style="color:#10B981">0</div>
+            <div class="pipe-label">Offered</div>
+            <div class="pipe-pct" style="background:rgba(16,185,129,0.12);color:#10B981" id="pct-offered">0%</div>
+          </div>
+          <div class="pipe-stage pipe-rejected">
+            <div class="pipe-icon" style="color:#EF4444"><i class="fas fa-times-circle"></i></div>
+            <div class="pipe-count" id="p-rejected" style="color:#EF4444">0</div>
+            <div class="pipe-label">Rejected</div>
+            <div class="pipe-pct" style="background:rgba(239,68,68,0.1);color:#EF4444" id="pct-rejected">0%</div>
+          </div>
+        </div>
+
+        <div class="card mb-16">
+          <div class="card-title"><i class="fas fa-filter"></i> Conversion Rates</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px">
+                <span>Attendance Rate <span style="color:var(--text-muted)">(Present / Enrolled)</span></span>
+                <span id="conv-att" style="color:#10B981">0%</span>
+              </div>
+              <div class="prog-wrap"><div class="prog-bar" id="bar-att" style="width:0%;background:#10B981"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px">
+                <span>Shortlist Rate <span style="color:var(--text-muted)">(Shortlisted / Present)</span></span>
+                <span id="conv-sl" style="color:#0EA5E9">0%</span>
+              </div>
+              <div class="prog-wrap"><div class="prog-bar" id="bar-sl" style="width:0%;background:#0EA5E9"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px">
+                <span>Offer Rate <span style="color:var(--text-muted)">(Offered / Shortlisted)</span></span>
+                <span id="conv-of" style="color:#F59E0B">0%</span>
+              </div>
+              <div class="prog-wrap"><div class="prog-bar" id="bar-of" style="width:0%;background:#F59E0B"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px">
+                <span>Overall Placement Rate <span style="color:var(--text-muted)">(Offered / Enrolled)</span></span>
+                <span id="conv-overall" style="color:var(--primary)">0%</span>
+              </div>
+              <div class="prog-wrap"><div class="prog-bar" id="bar-overall" style="width:0%;background:linear-gradient(90deg,#2563EB,#10B981)"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2 mb-16" style="gap:16px">
+
+          <div class="card">
+            <div class="card-title"><i class="fas fa-code-branch"></i> Branch Breakdown</div>
+            <div class="table-wrap">
+              <table class="br-table">
+                <thead><tr><th>Branch</th><th>Enrolled</th><th>Present</th><th>Shortlisted</th><th>Offered</th><th>Progress</th></tr></thead>
+                <tbody id="branchTable"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i class="fas fa-briefcase"></i> Recruiter Activity</div>
+            <div id="recruiterGrid" class="rec-grid">
+              <div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">No recruiter data available for this drive</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+requireAuth('admin'); initSidebar('admin');
+
+let currentDriveId = null;
+let pollTimer = null;
+
+async function init() {
+  const data = await api.get('/admin/drives');
+  const sel  = document.getElementById('driveSelect');
+
+  // BUG FIX: was using d.drive_date which was a dropped column. Now uses d.event_date from the JOIN.
+  (data.drives || []).forEach(d => {
+    const o = document.createElement('option');
+    o.value       = d.id;
+    o.textContent = `${d.company_name} – ${d.job_role}${d.event_date ? ' (' + formatDate(d.event_date) + ')' : ''}`;
+    sel.appendChild(o);
+  });
+
+  const driveId = new URL(window.location.href).searchParams.get('drive');
+  if (driveId) { sel.value = driveId; onDriveChange(); }
+}
+
+function onDriveChange() {
+  if (pollTimer) clearInterval(pollTimer);
+  currentDriveId = document.getElementById('driveSelect').value;
+  if (!currentDriveId) {
+    document.getElementById('pipelineContent').style.display = 'none';
+    document.getElementById('liveBadge').style.display = 'none';
+    return;
+  }
+  document.getElementById('pipelineContent').style.display = '';
+  document.getElementById('liveBadge').style.display = '';
+  refresh();
+  pollTimer = setInterval(refresh, 10000);
+}
+
+function pct(num, den) {
+  if (!den) return 0;
+  return Math.round((num / den) * 100);
+}
+
+async function refresh() {
+  if (!currentDriveId) return;
+  const data = await api.get(`/admin/pipeline/${currentDriveId}`);
+  if (!data.success) return;
+
+  const p = data.pipeline || {};
+  const drive = data.drive || {};
+
+  // Drive status badge — use event_status from pipeline response
+  const badgeEl = document.getElementById('driveStatusBadge');
+  badgeEl.style.display = '';
+  const displayStatus = drive.event_status || drive.status || '';
+  badgeEl.className = `badge badge-${displayStatus.toLowerCase().replace(/_/g, '-')}`;
+  badgeEl.textContent = displayStatus.replace(/_/g, ' ');
+
+  document.getElementById('p-enrolled').textContent    = p.enrolled    || 0;
+  document.getElementById('p-present').textContent     = p.present     || 0;
+  document.getElementById('p-shortlisted').textContent = p.shortlisted || 0;
+  document.getElementById('p-offered').textContent     = p.offered     || 0;
+  document.getElementById('p-rejected').textContent    = p.rejected    || 0;
+
+  document.getElementById('pct-enrolled').textContent    = '100%';
+  document.getElementById('pct-present').textContent     = pct(p.present,    p.enrolled) + '% of enrolled';
+  document.getElementById('pct-shortlisted').textContent = pct(p.shortlisted, p.enrolled) + '% of enrolled';
+  document.getElementById('pct-offered').textContent     = pct(p.offered,     p.enrolled) + '% of enrolled';
+  document.getElementById('pct-rejected').textContent    = pct(p.rejected,    p.enrolled) + '% of enrolled';
+
+  const attRate     = pct(p.present,     p.enrolled);
+  const slRate      = pct(p.shortlisted, p.present);
+  const ofRate      = pct(p.offered,     p.shortlisted);
+  const overallRate = pct(p.offered,     p.enrolled);
+
+  document.getElementById('conv-att').textContent     = attRate     + '%';
+  document.getElementById('conv-sl').textContent      = slRate      + '%';
+  document.getElementById('conv-of').textContent      = ofRate      + '%';
+  document.getElementById('conv-overall').textContent = overallRate + '%';
+
+  document.getElementById('bar-att').style.width     = attRate     + '%';
+  document.getElementById('bar-sl').style.width      = slRate      + '%';
+  document.getElementById('bar-of').style.width      = ofRate      + '%';
+  document.getElementById('bar-overall').style.width = overallRate + '%';
+
+  const branches = data.branches || [];
+  const bTbody = document.getElementById('branchTable');
+  if (!branches.length) {
+    bTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">No data yet</td></tr>';
+  } else {
+    bTbody.innerHTML = branches.map(b => {
+      const bPct = pct(parseInt(b.present), parseInt(b.enrolled));
+      return `<tr>
+        <td><strong>${b.branch}</strong></td>
+        <td>${b.enrolled}</td>
+        <td style="color:#10B981;font-weight:600">${b.present}</td>
+        <td style="color:#0EA5E9;font-weight:600">${b.shortlisted}</td>
+        <td style="color:#F59E0B;font-weight:600">${b.offered}</td>
+        <td style="min-width:80px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:${bPct}%;background:var(--primary)"></div></div>
+            <span style="font-size:11px;font-weight:700;color:var(--primary);width:32px">${bPct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // BUG FIX: recruiters data is not returned by getDrivePipeline — removed stale recruiter rendering
+  // that was causing empty grid with wrong expectations. Show placeholder.
+  document.getElementById('recruiterGrid').innerHTML =
+    '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Recruiter activity is managed via the Recruiters page.</div>';
+
+  document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString('en-IN');
+}
+
+init();
+</script>
+</body></html>
