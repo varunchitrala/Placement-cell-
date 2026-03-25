@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Export Reports – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- SheetJS — Excel generation in browser, no backend package needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .report-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .report-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+    }
+    .report-card.green::before  { background: linear-gradient(90deg,#10B981,#34D399); }
+    .report-card.blue::before   { background: linear-gradient(90deg,#2563EB,#60A5FA); }
+    .report-card.purple::before { background: linear-gradient(90deg,#7C3AED,#A78BFA); }
+    .report-card.orange::before { background: linear-gradient(90deg,#F59E0B,#FCD34D); }
+    .report-card.red::before    { background: linear-gradient(90deg,#EF4444,#F87171); }
+
+    .report-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+    .rc-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 16px;
+    }
+    .rc-icon.green  { background: rgba(16,185,129,0.12); color: #10B981; }
+    .rc-icon.blue   { background: rgba(37,99,235,0.12);  color: #2563EB; }
+    .rc-icon.purple { background: rgba(124,58,237,0.12); color: #7C3AED; }
+    .rc-icon.orange { background: rgba(245,158,11,0.12); color: #F59E0B; }
+    .rc-icon.red    { background: rgba(239,68,68,0.12);  color: #EF4444; }
+
+    .rc-title   { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .rc-desc    { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; }
+    .rc-sheets  { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .rc-sheet-badge {
+      font-size: 10px; font-weight: 600; padding: 2px 8px;
+      border-radius: 20px; background: var(--bg);
+      border: 1px solid var(--border); color: var(--text-muted);
+    }
+
+    .btn-export {
+      width: 100%; padding: 10px;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; color: #fff;
+    }
+    .btn-export.green  { background: #10B981; }
+    .btn-export.blue   { background: #2563EB; }
+    .btn-export.purple { background: #7C3AED; }
+    .btn-export.orange { background: #F59E0B; }
+    .btn-export.red    { background: #EF4444; }
+    .btn-export:hover  { opacity: 0.9; transform: translateY(-1px); }
+    .btn-export:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Master export big button */
+    .master-export-btn {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 20px;
+      background: linear-gradient(135deg, #1e3a5f, #2563EB);
+      border: none; border-radius: var(--radius);
+      font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 800;
+      color: #fff; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+    }
+    .master-export-btn:hover { opacity: 0.92; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,99,235,0.35); }
+    .master-export-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    .loading-box {
+      background: var(--bg-card); border-radius: var(--radius);
+      padding: 32px 48px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .loading-box .spin { font-size: 32px; color: var(--primary); margin-bottom: 12px; }
+    .loading-box p { font-size: 14px; font-weight: 600; }
+    .loading-box small { font-size: 12px; color: var(--text-muted); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Placement Cell</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-briefcase"></i> Recruiters</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+      <li class="nav-item active"><a href="export.html"><i class="fas fa-file-excel"></i> Export Reports</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Export Reports</h1>
+        <p>Download detailed Excel reports with full data and formatting</p>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Master Export -->
+      <div class="card" style="margin-bottom:28px;padding:24px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="font-size:22px">📊</div>
+          <div>
+            <div style="font-size:15px;font-weight:700">Complete Placement Report</div>
+            <div style="font-size:12px;color:var(--text-muted)">All data in one workbook — 5 sheets covering every aspect of the placement</div>
+          </div>
+        </div>
+        <button class="master-export-btn" id="masterBtn" onclick="exportMaster()">
+          <i class="fas fa-file-excel" style="font-size:22px"></i>
+          Download Full Placement Report (.xlsx)
+        </button>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:14px">
+        Or download individual reports:
+      </div>
+
+      <!-- Individual report cards -->
+      <div class="report-grid">
+
+        <!-- Students -->
+        <div class="report-card green">
+          <div class="rc-icon green"><i class="fas fa-users"></i></div>
+          <div class="rc-title">Student Directory</div>
+          <div class="rc-desc">Complete student profiles — personal details, academic info, institution, CGPA, backlogs, skills and placement stats.</div>
+          <div class="rc-sheets">
+            <span class="rc-sheet-badge">All Students</span>
+            <span class="rc-sheet-badge">Stats Summary</span>
+          </div>
+          <button class="btn-export green" onclick="exportStudents()">
+            <i class="fas fa-download"></i> Export Students
+          </button>
+        </div>
+
+        <!-- Placement Summary -->
+        <div class="report-card blue">
+          <div class="rc-icon blue"><i class="fas fa-chart-bar"></i></div>
+          <div class="rc-title">Placement Summary</div>
+          <div class="rc-desc">Per-student placement performance — how many companies applied, attended, shortlisted and offered.</div>
+          <div class="rc-sheets">
+            <span class="rc-sheet-badge">Student Results</span>
+            <span class="rc-sheet-badge">Branch Analysis</span>
+          </div>
+          <button class="btn-export blue" onclick="exportPlacementSummary()">
+            <i class="fas fa-download"></i> Export Summary
+          </button>
+        </div>
+
+        <!-- Companies -->
+        <div class="report-card purple">
+          <div class="rc-icon purple"><i class="fas fa-building"></i></div>
+          <div class="rc-title">Company-wise Report</div>
+          <div class="rc-desc">All companies with enrolled, present, shortlisted, offered and rejected counts per drive.</div>
+          <div class="rc-sheets">
+            <span class="rc-sheet-badge">All Companies</span>
+            <span class="rc-sheet-badge">Event-wise</span>
+          </div>
+          <button class="btn-export purple" onclick="exportCompanies()">
+            <i class="fas fa-download"></i> Export Companies
+          </button>
+        </div>
+
+        <!-- Enrollments -->
+        <div class="report-card orange">
+          <div class="rc-icon orange"><i class="fas fa-clipboard-list"></i></div>
+          <div class="rc-title">Enrollment Details</div>
+          <div class="rc-desc">Every application — student name, company, event, result status, attendance and timestamps.</div>
+          <div class="rc-sheets">
+            <span class="rc-sheet-badge">All Enrollments</span>
+            <span class="rc-sheet-badge">Offered Only</span>
+            <span class="rc-sheet-badge">Attendance</span>
+          </div>
+          <button class="btn-export orange" onclick="exportEnrollments()">
+            <i class="fas fa-download"></i> Export Enrollments
+          </button>
+        </div>
+
+        <!-- Events -->
+        <div class="report-card red">
+          <div class="rc-icon red"><i class="fas fa-calendar-alt"></i></div>
+          <div class="rc-title">Events Overview</div>
+          <div class="rc-desc">All mega drive events with company count, total participants, offers and attendance summary.</div>
+          <div class="rc-sheets">
+            <span class="rc-sheet-badge">Events</span>
+            <span class="rc-sheet-badge">Companies per Event</span>
+          </div>
+          <button class="btn-export red" onclick="exportEvents()">
+            <i class="fas fa-download"></i> Export Events
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="spin"><i class="fas fa-circle-notch fa-spin"></i></div>
+    <p id="loadingText">Preparing report...</p>
+    <small>Please wait</small>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+requireAuth('admin'); initSidebar('admin');
+
+// ── Cached data — fetch once, reuse for all exports ───────────────
+let cache = null;
+
+async function getData() {
+  if (cache) return cache;
+  showLoading('Fetching all data from database...');
+  const res = await api.get('/admin/export/full');
+  if (!res.success) { hideLoading(); showToast('Failed to load data', 'error'); return null; }
+  cache = res;
+  hideLoading();
+  return cache;
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || 'Preparing report...';
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  EXCEL STYLING HELPERS
+// ─────────────────────────────────────────────────────────────────
+
+// Column widths helper
+function setCols(ws, widths) {
+  ws['!cols'] = widths.map(w => ({ wch: w }));
+}
+
+// Style a header row — blue background, white bold text
+function styleHeaders(ws, headers, rowIdx) {
+  headers.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({ r: rowIdx, c: ci });
+    if (!ws[cell]) return;
+    ws[cell].s = {
+      font:    { bold: true, color: { rgb: 'FFFFFF' }, sz: 11, name: 'Calibri' },
+      fill:    { fgColor: { rgb: '1E3A5F' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top:    { style: 'thin', color: { rgb: 'FFFFFF' } },
+        bottom: { style: 'thin', color: { rgb: 'FFFFFF' } },
+        left:   { style: 'thin', color: { rgb: 'FFFFFF' } },
+        right:  { style: 'thin', color: { rgb: 'FFFFFF' } },
+      }
+    };
+  });
+}
+
+// Style a title row (row 0) — dark navy
+function styleTitle(ws, colCount, title, subtitle) {
+  // Merge cells for title
+  ws['!merges'] = ws['!merges'] || [];
+  ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } });
+  ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } });
+  ws['!merges'].push({ s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } });
+
+  // Title cell
+  ws['A1'] = {
+    v: 'SANDIP UNIVERSITY — PLACEMENT CELL',
+    t: 's',
+    s: {
+      font:  { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+      fill:  { fgColor: { rgb: '0F2D5E' } },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    }
+  };
+  ws['A2'] = {
+    v: title,
+    t: 's',
+    s: {
+      font:  { bold: true, sz: 12, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+      fill:  { fgColor: { rgb: '1E3A5F' } },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    }
+  };
+  ws['A3'] = {
+    v: subtitle || ('Generated: ' + new Date().toLocaleString('en-IN')),
+    t: 's',
+    s: {
+      font:  { sz: 9, color: { rgb: 'CCCCCC' }, italic: true, name: 'Calibri' },
+      fill:  { fgColor: { rgb: '2563EB' } },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    }
+  };
+}
+
+// Style a data row with alternating colours
+function styleDataRow(ws, rowIdx, colCount, isAlt) {
+  const bg = isAlt ? 'EBF3FD' : 'FFFFFF';
+  for (let ci = 0; ci < colCount; ci++) {
+    const cell = XLSX.utils.encode_cell({ r: rowIdx, c: ci });
+    if (!ws[cell]) ws[cell] = { v: '', t: 's' };
+    ws[cell].s = {
+      font:  { sz: 10, name: 'Calibri' },
+      fill:  { fgColor: { rgb: bg } },
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: false },
+      border: {
+        bottom: { style: 'hair', color: { rgb: 'D1D5DB' } },
+        right:  { style: 'hair', color: { rgb: 'D1D5DB' } },
+      }
+    };
+  }
+}
+
+// Style a coloured status badge cell
+function statusStyle(status) {
+  const map = {
+    offered:     { font: { bold: true, color: { rgb: '065F46' } }, fill: { fgColor: { rgb: 'D1FAE5' } } },
+    shortlisted: { font: { bold: true, color: { rgb: '1E40AF' } }, fill: { fgColor: { rgb: 'DBEAFE' } } },
+    rejected:    { font: { bold: true, color: { rgb: '991B1B' } }, fill: { fgColor: { rgb: 'FEE2E2' } } },
+    applied:     { font: { color: { rgb: '374151' } },             fill: { fgColor: { rgb: 'F3F4F6' } } },
+    COMPLETED:        { font: { bold: true, color: { rgb: '065F46' } }, fill: { fgColor: { rgb: 'D1FAE5' } } },
+    IN_PROGRESS:      { font: { bold: true, color: { rgb: '92400E' } }, fill: { fgColor: { rgb: 'FEF3C7' } } },
+    REGISTRATION_OPEN:{ font: { bold: true, color: { rgb: '1E40AF' } }, fill: { fgColor: { rgb: 'DBEAFE' } } },
+    CREATED:          { font: { color: { rgb: '374151' } },             fill: { fgColor: { rgb: 'F3F4F6' } } },
+  };
+  const s = map[status] || map['applied'];
+  return {
+    ...s,
+    font: { ...s.font, sz: 10, name: 'Calibri' },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: { bottom: { style: 'hair', color: { rgb: 'D1D5DB' } } }
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  BUILD WORKSHEET from rows + headers
+// ─────────────────────────────────────────────────────────────────
+function buildSheet(title, subtitle, headers, rows, colWidths, statusColIndices) {
+  // Insert 3 title rows before data
+  const titleRows = [
+    ['SANDIP UNIVERSITY — PLACEMENT CELL'],
+    [title],
+    [subtitle || ('Generated: ' + new Date().toLocaleString('en-IN'))],
+    [], // blank spacer
+    headers
+  ];
+  const allRows = [...titleRows, ...rows];
+
+  const ws = XLSX.utils.aoa_to_sheet(allRows);
+  setCols(ws, colWidths);
+
+  // Style title (rows 0-2)
+  styleTitle(ws, headers.length, title, subtitle);
+
+  // Style header row (row 4, index 4)
+  styleHeaders(ws, headers, 4);
+
+  // Set row heights
+  ws['!rows'] = ws['!rows'] || [];
+  ws['!rows'][0] = { hpx: 28 };
+  ws['!rows'][1] = { hpx: 22 };
+  ws['!rows'][2] = { hpx: 18 };
+  ws['!rows'][4] = { hpx: 22 };
+
+  // Style data rows
+  rows.forEach((row, ri) => {
+    const wsRowIdx = ri + 5; // offset by title + header rows
+    styleDataRow(ws, wsRowIdx, headers.length, ri % 2 === 1);
+
+    // Apply status colour to status columns
+    if (statusColIndices) {
+      statusColIndices.forEach(ci => {
+        const cell = XLSX.utils.encode_cell({ r: wsRowIdx, c: ci });
+        if (ws[cell] && ws[cell].v) {
+          ws[cell].s = statusStyle(ws[cell].v);
+        }
+      });
+    }
+  });
+
+  return ws;
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  DOWNLOAD helper
+// ─────────────────────────────────────────────────────────────────
+function downloadWorkbook(wb, filename) {
+  XLSX.writeFile(wb, filename, { bookType: 'xlsx', type: 'binary', cellStyles: true });
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  1. STUDENTS EXPORT
+// ─────────────────────────────────────────────────────────────────
+async function exportStudents() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building student report...');
+
+  const headers = [
+    '#','Full Name','PRN / Roll No','Email','Phone',
+    'Institution','Type','Course','Branch','Specialization',
+    'Year','Passout Year','CGPA','Backlogs','Skills',
+    'Applied','Attended','Shortlisted','Offered','Resume'
+  ];
+  const INST = { university:'Sandip University', foundation:'Sandip Foundation', other:'External' };
+
+  const rows = data.students.map((s, i) => [
+    i + 1, s.name, s.roll_no, s.email || '', s.phone || '',
+    INST[s.institution_type] || s.institution_name || '',
+    s.institution_type || '',
+    s.course || '', s.branch || '', s.specialization || '',
+    s.year, s.passout_year || '',
+    parseFloat(s.cgpa).toFixed(2), s.backlogs,
+    s.skills || '',
+    parseInt(s.applied_count)     || 0,
+    parseInt(s.attended_count)    || 0,
+    parseInt(s.shortlisted_count) || 0,
+    parseInt(s.offered_count)     || 0,
+    s.resume_url || ''
+  ]);
+
+  // Sheet 2: branch summary
+  const branchMap = {};
+  data.students.forEach(s => {
+    const b = s.branch || 'Unknown';
+    if (!branchMap[b]) branchMap[b] = { total:0, offered:0, cgpaSum:0 };
+    branchMap[b].total++;
+    branchMap[b].offered += parseInt(s.offered_count) || 0;
+    branchMap[b].cgpaSum += parseFloat(s.cgpa) || 0;
+  });
+  const branchHeaders = ['Branch','Total Students','Placed','Placement %','Avg CGPA'];
+  const branchRows = Object.entries(branchMap).map(([b, v]) => [
+    b, v.total, v.offered,
+    v.total ? ((v.offered / v.total) * 100).toFixed(1) + '%' : '0%',
+    (v.cgpaSum / v.total).toFixed(2)
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Student Directory', `Total Students: ${data.students.length}`, headers, rows,
+      [4,20,12,12,12,18,12,14,12,16,8,10,8,8,24,8,8,10,8,30], null),
+    'All Students'
+  );
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Branch-wise Summary', '', branchHeaders, branchRows, [20,16,10,14,10], null),
+    'Branch Summary'
+  );
+
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Students_${today()}.xlsx`);
+  showToast('Student report downloaded!', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  2. PLACEMENT SUMMARY
+// ─────────────────────────────────────────────────────────────────
+async function exportPlacementSummary() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building placement summary...');
+
+  const headers = [
+    '#','Name','PRN','Branch','Year','CGPA',
+    'Applied','Attended','Att %','Shortlisted','Offered','Status'
+  ];
+  const rows = data.students.map((s, i) => {
+    const app = parseInt(s.applied_count) || 0;
+    const att = parseInt(s.attended_count) || 0;
+    const off = parseInt(s.offered_count) || 0;
+    return [
+      i + 1, s.name, s.roll_no, s.branch, s.year,
+      parseFloat(s.cgpa).toFixed(2),
+      app, att,
+      app ? Math.round((att / app) * 100) + '%' : '0%',
+      parseInt(s.shortlisted_count) || 0,
+      off,
+      off > 0 ? 'offered' : parseInt(s.shortlisted_count) > 0 ? 'shortlisted' : att > 0 ? 'applied' : 'applied'
+    ];
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Placement Performance Summary',
+      `Total: ${data.students.length} | Placed: ${data.students.filter(s => parseInt(s.offered_count) > 0).length}`,
+      headers, rows,
+      [4,22,14,12,6,8,8,8,8,10,8,12], [11]),
+    'Placement Summary'
+  );
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Placement_Summary_${today()}.xlsx`);
+  showToast('Placement summary downloaded!', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  3. COMPANIES EXPORT
+// ─────────────────────────────────────────────────────────────────
+async function exportCompanies() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building company report...');
+
+  const headers = [
+    '#','Company Name','Job Role','CTC (LPA)',
+    'Event','Event Date','Status',
+    'Min CGPA','Max Backlogs','Eligible Branches',
+    'Enrolled','Present','Shortlisted','Offered','Rejected',
+    'Offer %'
+  ];
+  const rows = data.companies.map((c, i) => {
+    const enr = parseInt(c.enrolled) || 0;
+    const off = parseInt(c.offered)  || 0;
+    return [
+      i + 1, c.company_name, c.job_role || '—', c.ctc ? '₹' + c.ctc : '—',
+      c.event_name, formatDate(c.event_date), c.event_status,
+      c.eligibility_min_cgpa, c.eligibility_backlogs_allowed,
+      c.eligibility_branches || 'All',
+      enr, parseInt(c.present) || 0,
+      parseInt(c.shortlisted) || 0, off, parseInt(c.rejected) || 0,
+      enr ? ((off / enr) * 100).toFixed(1) + '%' : '0%'
+    ];
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Company-wise Drive Report',
+      `Total Companies: ${data.companies.length}`,
+      headers, rows,
+      [4,22,18,10,20,12,16,10,12,18,10,10,12,10,10,10], [6]),
+    'All Companies'
+  );
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Companies_${today()}.xlsx`);
+  showToast('Company report downloaded!', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  4. ENROLLMENTS EXPORT
+// ─────────────────────────────────────────────────────────────────
+async function exportEnrollments() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building enrollment report...');
+
+  const headers = [
+    '#','Student Name','PRN','Email','Phone',
+    'Institution','Course','Branch','Year','CGPA','Backlogs',
+    'Company','Job Role','CTC','Event','Event Date',
+    'Result','Applied On','Attendance','Check-in Time'
+  ];
+  const rows = data.enrollments.map((e, i) => [
+    i + 1, e.name, e.roll_no, e.email || '', e.phone || '',
+    e.institution_name || '', e.course || '', e.branch, e.year,
+    parseFloat(e.cgpa).toFixed(2), e.backlogs,
+    e.company_name, e.job_role || '—', e.ctc ? '₹' + e.ctc : '—',
+    e.event_name, formatDate(e.event_date),
+    e.result,
+    formatDate(e.applied_at),
+    e.present === true ? 'Present' : e.present === false ? 'Absent' : 'Not Marked',
+    e.checked_in_at ? formatDateTime(e.checked_in_at) : '—'
+  ]);
+
+  // Sheet 2: offered students only
+  const offeredRows = data.enrollments
+    .filter(e => e.result === 'offered')
+    .map((e, i) => [
+      i + 1, e.name, e.roll_no, e.email || '', e.phone || '',
+      e.branch, parseFloat(e.cgpa).toFixed(2),
+      e.company_name, e.job_role || '—', e.ctc ? '₹' + e.ctc : '—',
+      e.event_name, formatDate(e.event_date)
+    ]);
+  const offeredHeaders = ['#','Name','PRN','Email','Phone','Branch','CGPA','Company','Role','CTC','Event','Date'];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Enrollment Details',
+      `Total Enrollments: ${data.enrollments.length}`,
+      headers, rows,
+      [4,22,14,24,12,18,14,12,6,8,8,20,18,10,20,12,12,14,12,16], [16]),
+    'All Enrollments'
+  );
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Placed / Offered Students',
+      `Total Offered: ${offeredRows.length}`,
+      offeredHeaders, offeredRows,
+      [4,22,14,24,12,12,8,20,18,10,20,12], null),
+    'Placed Students'
+  );
+
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Enrollments_${today()}.xlsx`);
+  showToast('Enrollment report downloaded!', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  5. EVENTS EXPORT
+// ─────────────────────────────────────────────────────────────────
+async function exportEvents() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building events report...');
+
+  const headers = ['#','Event Name','Date','Status','Companies','Enrolled','Present','Offered','Description'];
+  const rows = data.events.map((e, i) => [
+    i + 1, e.name, formatDate(e.event_date), e.status,
+    parseInt(e.company_count) || 0,
+    parseInt(e.total_enrolled) || 0,
+    parseInt(e.total_present)  || 0,
+    parseInt(e.total_offered)  || 0,
+    e.description || ''
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Mega Drive Events Report',
+      `Total Events: ${data.events.length}`,
+      headers, rows,
+      [4,28,14,18,12,10,10,10,30], [3]),
+    'Events'
+  );
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Events_${today()}.xlsx`);
+  showToast('Events report downloaded!', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  MASTER — all 5 sheets in one workbook
+// ─────────────────────────────────────────────────────────────────
+async function exportMaster() {
+  const data = await getData(); if (!data) return;
+  showLoading('Building complete placement report... This may take a moment.');
+
+  const INST = { university:'Sandip University', foundation:'Sandip Foundation', other:'External' };
+  const wb   = XLSX.utils.book_new();
+
+  // ── Sheet 1: Summary Dashboard ──
+  const totalStudents  = data.students.length;
+  const totalPlaced    = data.students.filter(s => parseInt(s.offered_count)  > 0).length;
+  const totalAttended  = data.students.filter(s => parseInt(s.attended_count) > 0).length;
+  const totalCompanies = data.companies.length;
+  const totalEvents    = data.events.length;
+  const totalEnroll    = data.enrollments.length;
+  const placementPct   = totalStudents ? ((totalPlaced / totalStudents) * 100).toFixed(1) : '0';
+
+  const summaryHeaders = ['Metric', 'Value'];
+  const summaryRows = [
+    ['Total Registered Students', totalStudents],
+    ['Total Participating Students (any enrollment)', totalAttended],
+    ['Total Placed (Offered)', totalPlaced],
+    ['Overall Placement %', placementPct + '%'],
+    ['Total Mega Drive Events', totalEvents],
+    ['Total Companies / Drives', totalCompanies],
+    ['Total Applications', totalEnroll],
+    ['Report Generated On', new Date().toLocaleString('en-IN')],
+  ];
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Placement Cell — Summary Dashboard',
+      'Sandip University | Academic Year Report',
+      summaryHeaders, summaryRows, [36, 28], null),
+    '📊 Summary'
+  );
+
+  // ── Sheet 2: Students ──
+  const sHeaders = ['#','Name','PRN','Email','Phone','Institution','Course','Branch','Year','CGPA','Backlogs','Applied','Offered','Skills'];
+  const sRows = data.students.map((s, i) => [
+    i+1, s.name, s.roll_no, s.email||'', s.phone||'',
+    INST[s.institution_type]||s.institution_name||'',
+    s.course||'', s.branch, s.year,
+    parseFloat(s.cgpa).toFixed(2), s.backlogs,
+    parseInt(s.applied_count)||0, parseInt(s.offered_count)||0,
+    s.skills||''
+  ]);
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Student Directory', `${totalStudents} students`, sHeaders, sRows,
+      [4,22,14,24,12,18,14,12,6,8,8,8,8,30], null),
+    '👥 Students'
+  );
+
+  // ── Sheet 3: Placement Results ──
+  const prHeaders = ['#','Name','PRN','Branch','CGPA','Company','Role','CTC','Result','Attended'];
+  const prRows = data.enrollments.map((e, i) => [
+    i+1, e.name, e.roll_no, e.branch, parseFloat(e.cgpa).toFixed(2),
+    e.company_name, e.job_role||'—', e.ctc ? '₹'+e.ctc : '—',
+    e.result,
+    e.present === true ? 'Yes' : e.present === false ? 'No' : 'Pending'
+  ]);
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Placement Results', `${totalEnroll} enrollments`, prHeaders, prRows,
+      [4,22,14,12,8,20,18,10,12,10], [8]),
+    '🎯 Results'
+  );
+
+  // ── Sheet 4: Companies ──
+  const cHeaders = ['#','Company','Role','CTC','Event','Date','Enrolled','Present','Shortlisted','Offered','Rejected'];
+  const cRows = data.companies.map((c, i) => [
+    i+1, c.company_name, c.job_role||'—', c.ctc?'₹'+c.ctc:'—',
+    c.event_name, formatDate(c.event_date),
+    parseInt(c.enrolled)||0, parseInt(c.present)||0,
+    parseInt(c.shortlisted)||0, parseInt(c.offered)||0, parseInt(c.rejected)||0
+  ]);
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Company-wise Report', `${totalCompanies} companies`, cHeaders, cRows,
+      [4,22,18,10,20,12,10,10,12,10,10], null),
+    '🏢 Companies'
+  );
+
+  // ── Sheet 5: Events ──
+  const evHeaders = ['#','Event Name','Date','Status','Companies','Enrolled','Offered'];
+  const evRows = data.events.map((e, i) => [
+    i+1, e.name, formatDate(e.event_date), e.status,
+    parseInt(e.company_count)||0, parseInt(e.total_enrolled)||0, parseInt(e.total_offered)||0
+  ]);
+  XLSX.utils.book_append_sheet(wb,
+    buildSheet('Events Overview', `${totalEvents} events`, evHeaders, evRows,
+      [4,28,14,18,12,10,10], [3]),
+    '📅 Events'
+  );
+
+  hideLoading();
+  downloadWorkbook(wb, `Sandip_Full_Placement_Report_${today()}.xlsx`);
+  showToast('Full report downloaded!', 'success');
+}
+
+// ── Date helpers ─────────────────────────────────────────────────
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+</script>
+</body>
+</html>
