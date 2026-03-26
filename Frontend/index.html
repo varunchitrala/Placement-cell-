@@ -535,10 +535,10 @@
       <!-- Student form -->
       <form id="studentForm">
         <div class="field">
-          <label>PRN / Student ID</label>
+          <label>Phone Number</label>
           <div class="field-wrap">
-            <input type="text" id="s_prn" class="f-input" required placeholder="e.g. SU2021001234" autocomplete="off"/>
-            <i class="fas fa-id-card f-ico"></i>
+            <input type="tel" id="s_phone" class="f-input" required placeholder="e.g. 9876543210" autocomplete="off" maxlength="10" pattern="[0-9]{10}"/>
+            <i class="fas fa-phone f-ico"></i>
           </div>
         </div>
         <div class="field">
@@ -658,7 +658,7 @@
     setLoad('sTxt','sSpin','sBtn',true);
     try{
       var d=await api.post('/auth/student-login',{
-        roll_no:document.getElementById('s_prn').value.trim().toUpperCase(),
+        phone:document.getElementById('s_phone').value.trim(),
         date_of_birth:document.getElementById('s_dob').value
       });
       if(d&&d.success){
@@ -666,7 +666,7 @@
         localStorage.setItem('user',JSON.stringify(d.user));
         location.href='student/dashboard.html';
       } else {
-        showErr('sErr',(d&&d.message)||'Invalid PRN or date of birth.');
+        showErr('sErr',(d&&d.message)||'Invalid phone number or date of birth.');
         setLoad('sTxt','sSpin','sBtn',false);
       }
     }catch(ex){

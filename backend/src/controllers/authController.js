@@ -158,21 +158,21 @@ exports.registerStudent = async (req, res) => {
   }
 };
 
-// ── POST /api/auth/student-login  (PRN + DOB) ────────────────────
+// ── POST /api/auth/student-login  (Phone + DOB) ──────────────────
 exports.studentLogin = async (req, res) => {
   try {
-    const { roll_no, date_of_birth } = req.body;
-    if (!roll_no || !date_of_birth)
-      return res.status(400).json({ success: false, message: 'PRN and Date of Birth are required.' });
+    const { phone, date_of_birth } = req.body;
+    if (!phone || !date_of_birth)
+      return res.status(400).json({ success: false, message: 'Phone number and Date of Birth are required.' });
 
     const { rows } = await db.query(
-      `SELECT id, name, roll_no, email, branch, year, role, unique_code
-       FROM students WHERE roll_no=$1 AND date_of_birth=$2`,
-      [roll_no.trim().toUpperCase(), date_of_birth]
+      `SELECT id, name, roll_no, email, phone, branch, year, role, unique_code
+       FROM students WHERE phone=$1 AND date_of_birth=$2`,
+      [phone.trim(), date_of_birth]
     );
 
     if (!rows[0])
-      return res.status(401).json({ success: false, message: 'Invalid PRN or Date of Birth.' });
+      return res.status(401).json({ success: false, message: 'Invalid phone number or Date of Birth.' });
 
     const token = signToken(rows[0].id, 'student');
     res.json({ success: true, token, user: { ...rows[0], role: 'student' } });
