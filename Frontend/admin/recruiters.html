@@ -238,6 +238,12 @@
     const picker = document.getElementById('drivePicker');
     const input = document.getElementById('f_drive_search');
     const clearBtn = document.getElementById('drivePickerClear');
+    const dropdown = document.getElementById('drivePickerDropdown');
+
+    // Prevent clicks inside dropdown from stealing focus / triggering blur
+    dropdown.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
 
     input.addEventListener('focus', () => {
       picker.classList.add('open');
@@ -255,22 +261,21 @@
     });
 
     input.addEventListener('blur', () => {
-      // Delay so click on option registers
-      setTimeout(() => {
-        closeDrivePicker();
-        // Restore display if user didn't pick a new option
-        if (selectedDriveId && !input.value.trim()) {
-          const d = drives.find(dr => String(dr.id) === String(selectedDriveId));
-          if (d) input.value = `${d.company_name} — ${d.job_role || 'Role pending'}`;
-        }
-      }, 180);
+      closeDrivePicker();
+      // Restore display if user didn't pick a new option
+      if (selectedDriveId && !input.value.trim()) {
+        const d = drives.find(dr => String(dr.id) === String(selectedDriveId));
+        if (d) input.value = `${d.company_name} — ${d.job_role || 'Role pending'}`;
+      }
     });
 
-    clearBtn.addEventListener('click', (e) => {
+    clearBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       selectDrive('', '');
       input.value = '';
       renderDriveOptions('');
+      input.focus();
     });
 
     // Close picker when clicking outside
