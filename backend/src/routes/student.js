@@ -6,9 +6,8 @@ router.use(protect, studentOnly);
 
 router.get('/profile',        c.getProfile);
 router.put('/profile',        c.updateProfile);
-router.get('/drives',         c.getEligibleDrives);
-router.post('/apply/:driveId',c.applyToDrive);
-router.post('/attendance',    c.markAttendance);
+router.get('/my-code',        c.getMyCode);
+router.get('/companies',      c.getCompanies);
 router.get('/journey',        c.getJourney);
 
 module.exports = router;

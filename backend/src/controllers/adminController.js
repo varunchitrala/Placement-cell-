@@ -43,7 +43,7 @@ exports.getStudents = async (req, res) => {
     }
     const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const { rows } = await db.query(
-      `SELECT id, name, roll_no, email, phone,
+      `SELECT id, name, roll_no, email, phone, unique_code,
               institution_name, institution_type,
               course, branch, specialization,
               year, passout_year, cgpa, backlogs,
@@ -253,6 +253,16 @@ exports.createRecruiter = async (req, res) => {
     const { name, email, password, company_name, drive_id } = req.body;
     if (!name || !email || !password || !company_name)
       return res.status(400).json({ success: false, message: 'Name, email, password and company name required.' });
+
+    // Max 2 coordinators per drive
+    if (drive_id) {
+      const { rows: existing } = await db.query(
+        'SELECT COUNT(*) FROM recruiters WHERE drive_id=$1', [drive_id]
+      );
+      if (parseInt(existing[0].count) >= 2)
+        return res.status(400).json({ success: false, message: 'Maximum 2 coordinators allowed per company. Please remove an existing coordinator first.' });
+    }
+
     const exist = await db.query('SELECT id FROM recruiters WHERE email=$1', [email.trim().toLowerCase()]);
     if (exist.rows.length) return res.status(400).json({ success: false, message: 'Email already registered.' });
     const hash = await bcrypt.hash(password, 10);
@@ -261,7 +271,7 @@ exports.createRecruiter = async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,name,email,company_name,drive_id,created_at`,
       [name.trim(), email.trim().toLowerCase(), hash, company_name.trim(), drive_id || null, req.user.id]
     );
-    res.status(201).json({ success: true, recruiter: rows[0] });
+    res.status(201).json({ success: true, coordinator: rows[0] });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 

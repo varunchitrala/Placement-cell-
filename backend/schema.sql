@@ -33,6 +33,7 @@ CREATE TABLE students (
   date_of_birth     DATE NOT NULL,
   email             TEXT UNIQUE,
   phone             TEXT,
+  unique_code       CHAR(4) UNIQUE,         -- 4-digit check-in code (auto-generated)
   -- Institution
   institution_name  TEXT DEFAULT 'Sandip University',
   institution_type  TEXT DEFAULT 'university',
@@ -94,7 +95,7 @@ CREATE TABLE recruiters (
   company_name  TEXT NOT NULL,
   drive_id      INTEGER REFERENCES drives(id) ON DELETE SET NULL,
   created_by    INTEGER REFERENCES admins(id) ON DELETE SET NULL,
-  role          TEXT DEFAULT 'recruiter',
+  role          TEXT DEFAULT 'coordinator',
   created_at    TIMESTAMP DEFAULT now()
 );
 

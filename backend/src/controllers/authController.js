@@ -108,21 +108,33 @@ exports.registerStudent = async (req, res) => {
         return res.status(409).json({ success: false, message: 'This email is already registered.' });
     }
 
+    // Generate a unique 4-digit code (1000–9999)
+    let uniqueCode;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      uniqueCode = String(Math.floor(Math.random() * 9000) + 1000);
+      const codeCheck = await db.query('SELECT id FROM students WHERE unique_code=$1', [uniqueCode]);
+      if (!codeCheck.rows.length) break;
+      if (attempt === 49) {
+        return res.status(500).json({ success: false, message: 'Could not generate unique code. Please try again.' });
+      }
+    }
+
     const { rows } = await db.query(
       `INSERT INTO students
-         (name, roll_no, date_of_birth, email, phone,
+         (name, roll_no, date_of_birth, email, phone, unique_code,
           institution_name, institution_type,
           course, branch, specialization,
           year, passout_year, cgpa, backlogs,
           photo_url, resume_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-       RETURNING id, name, roll_no, email, branch, year, role`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       RETURNING id, name, roll_no, email, branch, year, role, unique_code`,
       [
         name.trim(),
         roll_no.trim().toUpperCase(),
         date_of_birth,
         email  ? email.trim().toLowerCase() : null,
         phone  ? phone.trim()               : null,
+        uniqueCode,
         institution_name || 'Sandip University',
         institution_type || 'university',
         course.trim(),
@@ -154,7 +166,7 @@ exports.studentLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'PRN and Date of Birth are required.' });
 
     const { rows } = await db.query(
-      `SELECT id, name, roll_no, email, branch, year, role
+      `SELECT id, name, roll_no, email, branch, year, role, unique_code
        FROM students WHERE roll_no=$1 AND date_of_birth=$2`,
       [roll_no.trim().toUpperCase(), date_of_birth]
     );
@@ -274,7 +286,7 @@ exports.recruiterLogin = async (req, res) => {
     if (!rows[0] || !match)
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
 
-    const token = signToken(rows[0].id, 'recruiter');
+    const token = signToken(rows[0].id, 'coordinator');
     res.json({
       success: true, token,
       user: {
@@ -288,7 +300,7 @@ exports.recruiterLogin = async (req, res) => {
         event_name:    rows[0].event_name,
         event_date:    rows[0].event_date,
         event_status:  rows[0].event_status,
-        role:          'recruiter'
+        role:          'coordinator'
       }
     });
 

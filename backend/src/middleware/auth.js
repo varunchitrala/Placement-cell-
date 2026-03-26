@@ -15,7 +15,7 @@ const protect = async (req, res, next) => {
       algorithms: ['HS256'],
     });
 
-    if (!['admin', 'recruiter', 'student'].includes(decoded.role)) {
+    if (!['admin', 'recruiter', 'coordinator', 'student'].includes(decoded.role)) {
       return res.status(401).json({ success: false, message: 'Invalid token.' });
     }
 
@@ -27,7 +27,7 @@ const protect = async (req, res, next) => {
       if (!rows[0]) return res.status(401).json({ success: false, message: 'Account not found.' });
       req.user = { ...rows[0], role: 'admin' };
 
-    } else if (decoded.role === 'recruiter') {
+    } else if (decoded.role === 'recruiter' || decoded.role === 'coordinator') {
       const { rows } = await db.query(
         'SELECT id, name, email, company_name, drive_id, role FROM recruiters WHERE id=$1',
         [decoded.id]
@@ -69,8 +69,9 @@ const studentOnly = (req, res, next) => {
 };
 
 const recruiterOnly = (req, res, next) => {
-  if (req.user?.role === 'recruiter') return next();
-  res.status(403).json({ success: false, message: 'Recruiter access required.' });
+  if (req.user?.role === 'recruiter' || req.user?.role === 'coordinator') return next();
+  res.status(403).json({ success: false, message: 'Coordinator access required.' });
 };
+const coordinatorOnly = recruiterOnly;
 
-module.exports = { protect, adminOnly, studentOnly, recruiterOnly };
+module.exports = { protect, adminOnly, studentOnly, recruiterOnly, coordinatorOnly };

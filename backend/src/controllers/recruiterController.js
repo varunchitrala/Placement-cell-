@@ -35,7 +35,6 @@ exports.getDashboard = async (req, res) => {
 };
 
 // PUT /api/recruiter/drive-details
-// Recruiter fills in job role, CTC and description for their assigned drive
 exports.updateDriveDetails = async (req, res) => {
   try {
     const driveId = req.user.drive_id;
@@ -74,7 +73,7 @@ exports.getStudents = async (req, res) => {
       `SELECT
          e.id   AS enrollment_id, e.status, e.applied_at, e.updated_at, e.updated_by,
          s.id   AS student_id,
-         s.name, s.roll_no, s.email, s.phone,
+         s.name, s.roll_no, s.email, s.phone, s.unique_code,
          s.institution_name, s.institution_type,
          s.course, s.branch, s.specialization,
          s.year, s.passout_year, s.cgpa, s.backlogs,
@@ -108,9 +107,9 @@ exports.markAttendance = async (req, res) => {
 
     await db.query(
       `INSERT INTO attendance (student_id, drive_id, present, marked_by, checked_in_at)
-       VALUES ($1,$2,$3,'recruiter', CASE WHEN $3 THEN now() ELSE NULL END)
+       VALUES ($1,$2,$3,'coordinator', CASE WHEN $3 THEN now() ELSE NULL END)
        ON CONFLICT (student_id, drive_id)
-       DO UPDATE SET present=$3, marked_by='recruiter', checked_in_at=CASE WHEN $3 THEN now() ELSE NULL END`,
+       DO UPDATE SET present=$3, marked_by='coordinator', checked_in_at=CASE WHEN $3 THEN now() ELSE NULL END`,
       [student_id, driveId, present]
     );
     res.json({ success: true, message: `Attendance ${present ? 'marked present' : 'marked absent'}.` });
@@ -129,13 +128,78 @@ exports.markBulkAttendance = async (req, res) => {
     await Promise.all(attendances.map(a =>
       db.query(
         `INSERT INTO attendance (student_id, drive_id, present, marked_by, checked_in_at)
-         VALUES ($1,$2,$3,'recruiter', CASE WHEN $3 THEN now() ELSE NULL END)
+         VALUES ($1,$2,$3,'coordinator', CASE WHEN $3 THEN now() ELSE NULL END)
          ON CONFLICT (student_id, drive_id)
-         DO UPDATE SET present=$3, marked_by='recruiter', checked_in_at=CASE WHEN $3 THEN now() ELSE NULL END`,
+         DO UPDATE SET present=$3, marked_by='coordinator', checked_in_at=CASE WHEN $3 THEN now() ELSE NULL END`,
         [a.student_id, driveId, a.present]
       )
     ));
     res.json({ success: true, message: `Attendance updated for ${attendances.length} students.` });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
+// POST /api/recruiter/attendance-by-code  (coordinator check-in via 4-digit code)
+exports.markAttendanceByCode = async (req, res) => {
+  try {
+    const { unique_code } = req.body;
+    const driveId = req.user.drive_id;
+    if (!driveId) return res.status(400).json({ success: false, message: 'No drive assigned to you.' });
+    if (!unique_code || unique_code.length !== 4)
+      return res.status(400).json({ success: false, message: 'Please enter a valid 4-digit student code.' });
+
+    // Find student by unique code
+    const { rows: stuRows } = await db.query(
+      'SELECT id, name, roll_no, branch, year FROM students WHERE unique_code=$1',
+      [unique_code]
+    );
+    if (!stuRows.length)
+      return res.status(404).json({ success: false, message: 'No student found with this code.' });
+
+    const student = stuRows[0];
+
+    // Auto-enroll if not enrolled yet — and capture enrollment_id + current status
+    const { rows: enrollCheck } = await db.query(
+      'SELECT id, status FROM enrollments WHERE student_id=$1 AND drive_id=$2',
+      [student.id, driveId]
+    );
+
+    let enrollmentId;
+    let currentStatus;
+
+    if (!enrollCheck.length) {
+      const { rows: newEnroll } = await db.query(
+        'INSERT INTO enrollments (student_id, drive_id, status) VALUES ($1, $2, $3) RETURNING id, status',
+        [student.id, driveId, 'applied']
+      );
+      enrollmentId  = newEnroll[0].id;
+      currentStatus = newEnroll[0].status;
+    } else {
+      enrollmentId  = enrollCheck[0].id;
+      currentStatus = enrollCheck[0].status;
+    }
+
+    // Mark attendance
+    await db.query(
+      `INSERT INTO attendance (student_id, drive_id, present, marked_by, checked_in_at)
+       VALUES ($1,$2,true,'coordinator',now())
+       ON CONFLICT (student_id, drive_id)
+       DO UPDATE SET present=true, marked_by='coordinator', checked_in_at=now()`,
+      [student.id, driveId]
+    );
+
+    res.json({
+      success: true,
+      message: `✓ ${student.name} checked in successfully!`,
+      student: {
+        id:            student.id,
+        name:          student.name,
+        roll_no:       student.roll_no,
+        branch:        student.branch,
+        year:          student.year,
+        enrollment_id: enrollmentId,   // FIX: now returned so result buttons work
+        status:        currentStatus   // FIX: current result status for highlighting buttons
+      }
+    });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
@@ -153,7 +217,7 @@ exports.updateStatus = async (req, res) => {
     if (!check.length)
       return res.status(403).json({ success: false, message: 'Enrollment does not belong to your drive.' });
     const { rows } = await db.query(
-      `UPDATE enrollments SET status=$1, updated_at=now(), updated_by='recruiter' WHERE id=$2 RETURNING *`,
+      `UPDATE enrollments SET status=$1, updated_at=now(), updated_by='coordinator' WHERE id=$2 RETURNING *`,
       [status, req.params.enrollmentId]
     );
     res.json({ success: true, enrollment: rows[0] });
@@ -174,7 +238,7 @@ exports.bulkUpdateStatus = async (req, res) => {
         .filter(u => valid.includes(u.status))
         .map(u =>
           db.query(
-            `UPDATE enrollments SET status=$1, updated_at=now(), updated_by='recruiter' WHERE id=$2 AND drive_id=$3`,
+            `UPDATE enrollments SET status=$1, updated_at=now(), updated_by='coordinator' WHERE id=$2 AND drive_id=$3`,
             [u.status, u.enrollment_id, driveId]
           )
         )

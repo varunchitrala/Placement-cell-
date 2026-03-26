@@ -50,6 +50,12 @@ const migrations = [
   // not by admin when adding the company — so it can be NULL initially.
   `ALTER TABLE drives ALTER COLUMN job_role DROP NOT NULL`,
 
+  // ── 008: Student Coordinator redesign — add unique_code ───────
+  `ALTER TABLE students ADD COLUMN IF NOT EXISTS unique_code CHAR(4) UNIQUE`,
+
+  // ── 009: Update recruiter role to coordinator ─────────────────
+  `UPDATE recruiters SET role = 'coordinator' WHERE role = 'recruiter'`,
+
 ];
 
 async function runMigrations() {
@@ -73,6 +79,29 @@ async function runMigrations() {
   }
 
   console.log(`✅ Migrations complete (${applied}/${migrations.length} statements ran)`);
+
+  // ── Auto-populate unique_code for existing students without one ──
+  try {
+    const { rows } = await db.query('SELECT id FROM students WHERE unique_code IS NULL');
+    if (rows.length) {
+      console.log(`🔑 Generating unique codes for ${rows.length} existing students...`);
+      for (const row of rows) {
+        for (let attempt = 0; attempt < 50; attempt++) {
+          const code = String(Math.floor(Math.random() * 9000) + 1000);
+          try {
+            await db.query('UPDATE students SET unique_code=$1 WHERE id=$2', [code, row.id]);
+            break;
+          } catch (e) {
+            if (!e.message.includes('unique') && !e.message.includes('duplicate')) throw e;
+            // retry on duplicate
+          }
+        }
+      }
+      console.log(`✅ Unique codes generated for ${rows.length} students`);
+    }
+  } catch (err) {
+    console.error('⚠️  Unique code generation warning:', err.message);
+  }
 }
 
 module.exports = runMigrations;

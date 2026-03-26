@@ -29,7 +29,7 @@ process.on('SIGTERM', () => {
 runMigrations()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Placement Cell Server → http://localhost:${PORT}`);
+      console.log(`🚀 Vidya Sethu Server → http://localhost:${PORT}`);
       console.log(`📦 Database: PostgreSQL / Neon`);
       console.log(`🔒 Security: Helmet · CORS · Rate Limiting · Input Sanitisation`);
     });

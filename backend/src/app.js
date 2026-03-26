@@ -74,6 +74,7 @@ app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/student',   require('./routes/student'));
 app.use('/api/admin',     require('./routes/admin'));
 app.use('/api/recruiter', require('./routes/recruiter'));
+app.use('/api/coordinator', require('./routes/recruiter'));
 app.use('/api/notice',    require('./routes/notice'));
 
 // 404 for unknown API routes
