@@ -1,5 +1,10 @@
-const { neon, Pool } = require('@neondatabase/serverless');
+const { neon, neonConfig, Pool } = require('@neondatabase/serverless');
+const ws = require('ws');
 require('dotenv').config();
+
+// Required for Node.js runtimes (Railway, Render, etc.)
+// The Neon serverless driver uses WebSockets, which aren't built into Node.js
+neonConfig.webSocketConstructor = ws;
 
 // Tagged-template sql helper (for simple one-off queries)
 const sql = neon(process.env.DATABASE_URL);
