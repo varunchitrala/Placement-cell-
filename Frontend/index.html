@@ -443,46 +443,45 @@
       .panel-left { padding: 40px; }
       .panel-right { width: 50%; min-width: unset; padding: 40px; }
       .logo-img { height: 80px; }
-      .logo-area img[style] { height: 75px !important; }
     }
 
     @media (max-width: 850px) {
-      .page { flex-direction: column; }
-      .panel-left { padding: 40px 24px; border-right: none; border-bottom: 1px solid var(--border); overflow: visible; min-height: unset; }
-      .panel-right { width: 100%; padding: 40px 24px; height: auto; }
-      .form-container { max-width: 440px; margin: 0 auto; }
+      .page { flex-direction: column; min-height: 100vh; height: auto; }
+      .panel-left { flex: none; width: 100%; padding: 40px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+      .panel-right { flex: none; width: 100%; padding: 40px 24px; min-width: unset; overflow-y: visible; }
+      .form-container { max-width: 400px; margin: 0 auto; width: 100%; }
       .panel-left-inner h1 { font-size: 26px; }
       .panel-left-inner p { margin-bottom: 28px; font-size: 14px; }
       .logo-img { height: 70px; }
-      .logo-area img[style] { height: 65px !important; }
-      .stat-row { flex-wrap: wrap; gap: 12px; }
-      .stat-box { flex: 1; min-width: 100px; padding: 10px 14px; }
     }
 
     @media (max-width: 480px) {
-      .panel-left { padding: 32px 16px; }
-      .panel-right { padding: 32px 16px; }
-      .logo-area > div { flex-direction: column !important; gap: 14px !important; }
-      .logo-area > div > div { width: 80px !important; height: 1px !important; }
-      .logo-img { height: 65px; }
-      .logo-area img[style] { height: 60px !important; }
+      .panel-left { padding: 30px 20px; }
+      .panel-right { padding: 30px 20px; }
+      .form-container { max-width: 100%; }
+      .logo-area > div { gap: 15px !important; }
+      .logo-img { height: 55px; }
+      .logo-area img[style] { height: 50px !important; }
       .panel-left-inner h1 { font-size: 22px; }
-      .panel-left-inner p { font-size: 13px; line-height: 1.5; margin-bottom: 24px; }
+      .panel-left-inner p { font-size: 13px; line-height: 1.5; margin-bottom: 20px; padding: 0 10px; }
       
-      .stat-row { flex-direction: column; gap: 10px; }
-      .stat-box { min-width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; text-align: left; }
-      .stat-box .sb-num { margin-bottom: 0; font-size: 18px; }
+      .stat-row { flex-wrap: wrap; gap: 8px; }
+      .stat-box { flex: 1 1 calc(50% - 8px); min-width: auto; padding: 10px; }
+      .stat-box .sb-num { font-size: 16px; }
+      .stat-box .sb-lbl { font-size: 10px; }
       
-      .trust-line { flex-direction: column; gap: 10px; margin-top: 24px; align-items: flex-start; display: inline-flex; }
+      .trust-line { margin-top: 15px; font-size: 11px; gap: 10px; flex-wrap: wrap; }
 
-      .form-mark { flex-direction: column; text-align: center; gap: 12px; padding-bottom: 20px; margin-bottom: 24px; }
+      .form-mark { margin-bottom: 20px; padding-bottom: 16px; }
       .form-heading h2 { font-size: 20px; }
       .form-heading p { font-size: 13px; }
       
-      .role-tabs { flex-direction: column; padding: 4px; gap: 4px; border-radius: 12px; }
-      .role-tab { padding: 12px 8px; font-size: 13px; border-radius: 8px; }
-      .f-input { padding: 12px 14px 12px 38px; font-size: 14px; }
-      .btn-submit { padding: 14px 20px; font-size: 15px; border-radius: 10px; }
+      .role-tabs { flex-direction: row; flex-wrap: wrap; padding: 4px; border-radius: 10px; gap: 2px;}
+      .role-tab { padding: 8px 4px; font-size: 11px; flex: 1; border-radius: 6px; white-space: normal; text-align: center; }
+      .role-tab i { display: block; margin-bottom: 4px; font-size: 14px; }
+      
+      .f-input { padding: 12px 14px 12px 36px; font-size: 14px; }
+      .btn-submit { padding: 12px 20px; font-size: 14px; }
     }
   </style>
 </head>
