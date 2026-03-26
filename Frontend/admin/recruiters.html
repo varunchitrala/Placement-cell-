@@ -5,6 +5,60 @@
   <link rel="stylesheet" href="../css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Searchable drive picker ─────────────────────── */
+    .drive-picker { position: relative; }
+    .drive-picker-input {
+      width: 100%; padding: 9px 36px 9px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-family: 'Inter', sans-serif;
+      font-size: 13px; background: var(--bg); color: var(--text);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: text;
+    }
+    .drive-picker-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .drive-picker-input::placeholder { color: var(--text-muted); opacity: 0.65; }
+    .drive-picker-icon {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: var(--text-muted); pointer-events: none; transition: transform 0.2s;
+    }
+    .drive-picker.open .drive-picker-icon { transform: translateY(-50%) rotate(180deg); }
+    .drive-picker-clear {
+      position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: var(--text-muted); cursor: pointer;
+      background: none; border: none; padding: 4px; display: none; transition: color 0.15s;
+    }
+    .drive-picker-clear:hover { color: #EF4444; }
+    .drive-picker.has-value .drive-picker-clear { display: block; }
+
+    /* Dropdown list */
+    .drive-picker-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      max-height: 260px; overflow-y: auto; z-index: 100;
+    }
+    .drive-picker.open .drive-picker-dropdown { display: block; }
+
+    .dp-group-label {
+      padding: 8px 12px 4px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted);
+      background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    }
+    .dp-option {
+      padding: 9px 12px; font-size: 13px; cursor: pointer; display: flex;
+      align-items: center; gap: 8px; transition: background 0.1s;
+    }
+    .dp-option:hover, .dp-option.active { background: rgba(37,99,235,0.06); }
+    .dp-option .dp-company { font-weight: 600; }
+    .dp-option .dp-role { font-size: 11px; color: var(--text-muted); }
+    .dp-option .dp-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; background: linear-gradient(135deg, #6366F1, #8B5CF6); }
+    .dp-no-match { padding: 16px; text-align: center; font-size: 12px; color: var(--text-muted); }
+    .dp-unassign {
+      padding: 9px 12px; font-size: 12px; cursor: pointer; color: var(--text-muted);
+      border-bottom: 1px solid var(--border); transition: background 0.1s; font-style: italic;
+    }
+    .dp-unassign:hover { background: rgba(0,0,0,0.02); }
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -67,9 +121,13 @@
         <div class="form-group form-group-sm"><label>Company Name *</label><input class="form-control" id="f_company" placeholder="e.g. Google, TCS, Infosys" required/></div>
         <div class="form-group form-group-sm" style="grid-column:1/-1">
           <label>Assign to Company Drive <span class="text-muted text-sm">(optional — can assign later)</span></label>
-          <select class="form-control" id="f_drive">
-            <option value="">— No drive assigned yet —</option>
-          </select>
+          <div class="drive-picker" id="drivePicker">
+            <input type="text" class="drive-picker-input" id="f_drive_search" placeholder="Type to search companies..." autocomplete="off" />
+            <button type="button" class="drive-picker-clear" id="drivePickerClear" title="Clear selection">&times;</button>
+            <i class="fas fa-chevron-down drive-picker-icon"></i>
+            <input type="hidden" id="f_drive" />
+            <div class="drive-picker-dropdown" id="drivePickerDropdown"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -84,6 +142,7 @@
 <script>
   requireAuth('admin'); initSidebar('admin');
   let drives = [];
+  let selectedDriveId = '';
 
   async function init() {
     const [rData, dData] = await Promise.all([
@@ -92,29 +151,133 @@
     ]);
 
     drives = dData.drives || [];
-
-    // Populate drive dropdown grouped by event
-    const sel = document.getElementById('f_drive');
-    const eventGroups = {};
-    drives.forEach(d => {
-      const key = d.event_name || 'Unknown Event';
-      if (!eventGroups[key]) eventGroups[key] = [];
-      eventGroups[key].push(d);
-    });
-    Object.entries(eventGroups).forEach(([eventName, companies]) => {
-      const group = document.createElement('optgroup');
-      group.label = `📅 ${eventName}`;
-      companies.forEach(d => {
-        const o = document.createElement('option');
-        o.value = d.id;
-        o.textContent = `${d.company_name} – ${d.job_role}`;
-        group.appendChild(o);
-      });
-      sel.appendChild(group);
-    });
-
+    buildDrivePickerOptions();
     renderTable(rData.recruiters || []);
   }
+
+  /* ── Searchable Drive Picker ─────────────────────── */
+  function buildDrivePickerOptions() {
+    const dropdown = document.getElementById('drivePickerDropdown');
+    const groups = {};
+    drives.forEach(d => {
+      const key = d.event_name || 'Unknown Event';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(d);
+    });
+    // Store grouped data for filtering
+    window._driveGroups = groups;
+    renderDriveOptions('');
+  }
+
+  function renderDriveOptions(query) {
+    const dropdown = document.getElementById('drivePickerDropdown');
+    const q = query.toLowerCase().trim();
+    let html = `<div class="dp-unassign" onclick="selectDrive('','')">
+      <i class="fas fa-minus-circle" style="margin-right:6px;opacity:0.5"></i> No drive assigned
+    </div>`;
+    let totalVisible = 0;
+    const groups = window._driveGroups || {};
+
+    Object.entries(groups).forEach(([eventName, companies]) => {
+      const matched = companies.filter(d => {
+        const text = `${d.company_name} ${d.job_role || ''} ${eventName}`.toLowerCase();
+        return !q || text.includes(q);
+      });
+      if (!matched.length) return;
+      totalVisible += matched.length;
+      html += `<div class="dp-group-label">📅 ${eventName}</div>`;
+      matched.forEach(d => {
+        const initial = d.company_name.charAt(0).toUpperCase();
+        const role = d.job_role || 'Role pending';
+        html += `<div class="dp-option" onclick="selectDrive('${d.id}', '${d.company_name.replace(/'/g, "\\'")}')"
+                     data-id="${d.id}">
+          <div class="dp-icon">${initial}</div>
+          <div>
+            <div class="dp-company">${highlight(d.company_name, q)}</div>
+            <div class="dp-role">${highlight(role, q)}</div>
+          </div>
+        </div>`;
+      });
+    });
+
+    if (totalVisible === 0 && q) {
+      html += `<div class="dp-no-match"><i class="fas fa-search" style="margin-right:6px;opacity:0.4"></i>No companies match "${q}"</div>`;
+    }
+    dropdown.innerHTML = html;
+  }
+
+  function highlight(text, q) {
+    if (!q) return text;
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx === -1) return text;
+    return text.slice(0, idx) + '<mark style="background:rgba(37,99,235,0.15);padding:0 1px;border-radius:2px">' + text.slice(idx, idx + q.length) + '</mark>' + text.slice(idx + q.length);
+  }
+
+  function selectDrive(id, name) {
+    selectedDriveId = id;
+    document.getElementById('f_drive').value = id;
+    const input = document.getElementById('f_drive_search');
+    const picker = document.getElementById('drivePicker');
+    if (id) {
+      const d = drives.find(dr => String(dr.id) === String(id));
+      input.value = d ? `${d.company_name} — ${d.job_role || 'Role pending'}` : name;
+      picker.classList.add('has-value');
+    } else {
+      input.value = '';
+      picker.classList.remove('has-value');
+    }
+    closeDrivePicker();
+  }
+
+  function closeDrivePicker() {
+    document.getElementById('drivePicker').classList.remove('open');
+  }
+
+  // Event listeners for the drive picker
+  document.addEventListener('DOMContentLoaded', () => {
+    const picker = document.getElementById('drivePicker');
+    const input = document.getElementById('f_drive_search');
+    const clearBtn = document.getElementById('drivePickerClear');
+
+    input.addEventListener('focus', () => {
+      picker.classList.add('open');
+      // If a value is selected, clear the display so user can search
+      if (selectedDriveId) {
+        input.dataset.prev = input.value;
+        input.value = '';
+        renderDriveOptions('');
+      }
+    });
+
+    input.addEventListener('input', () => {
+      picker.classList.add('open');
+      renderDriveOptions(input.value);
+    });
+
+    input.addEventListener('blur', () => {
+      // Delay so click on option registers
+      setTimeout(() => {
+        closeDrivePicker();
+        // Restore display if user didn't pick a new option
+        if (selectedDriveId && !input.value.trim()) {
+          const d = drives.find(dr => String(dr.id) === String(selectedDriveId));
+          if (d) input.value = `${d.company_name} — ${d.job_role || 'Role pending'}`;
+        }
+      }, 180);
+    });
+
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectDrive('', '');
+      input.value = '';
+      renderDriveOptions('');
+    });
+
+    // Close picker when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!picker.contains(e.target)) closeDrivePicker();
+    });
+  });
 
   function renderTable(recruiters) {
     const tbody = document.getElementById('recruitersTable');
@@ -150,7 +313,9 @@
   function openModal() {
     document.getElementById('modalAlert').innerHTML = '';
     ['f_name','f_email','f_password','f_company'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('f_drive').value = '';
+    selectDrive('', '');
+    document.getElementById('f_drive_search').value = '';
+    renderDriveOptions('');
     document.getElementById('recruiterModal').classList.remove('hidden');
   }
 
