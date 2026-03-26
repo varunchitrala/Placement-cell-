@@ -330,13 +330,35 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 /* RESPONSIVE */
 @media(max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
   .sidebar.open { transform: translateX(0); }
-  .main-content { margin-left: 0; }
-  .page-header { padding: 16px; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .page-body { padding: 16px; }
+  
+  .main-content { margin-left: 0; width: 100%; transition: margin-left 0.3s; }
+  .page-header { padding: 20px 16px; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .page-header .header-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .page-header .header-actions .btn-primary, .page-header .header-actions .btn-secondary { width: 100%; justify-content: center; }
+  
+  .page-body { padding: 16px; width: 100%; overflow-x: hidden; }
+  
   .form-grid { grid-template-columns: 1fr; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 24px; }
+  .stat-label { font-size: 11px; }
+
+  /* Allow hamburger menu explicitly */
+  .mobile-menu-btn { display: block !important; }
+}
+
+@media(max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+  .checkin-station { padding: 20px 16px; }
+  .otp-box { width: 50px; height: 60px; font-size: 24px; }
+  
+  .ci-result-btns { grid-template-columns: 1fr; gap: 8px; }
+  .ci-res-btn { padding: 12px; }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -468,7 +490,7 @@ spline-viewer { width: 100%; height: 100%; }
 
 .gradient-text {
   font-size: 32px; font-weight: 800; margin: 0; background: linear-gradient(to right, #ffffff, #a5b4fc);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; margin-bottom: 5px;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; margin-bottom: 5px;
 }
 .subtitle { font-size: 14px; color: #94a3b8; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
 

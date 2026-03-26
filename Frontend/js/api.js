@@ -159,3 +159,37 @@ function formatDateTime(dateStr) {
   if (!dateStr) return '—';
   return new Date(dateStr).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
+
+// ─────────────────────────────────────────────────────
+//  Mobile Sidebar Nav Toggle
+// ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var header = document.querySelector('.page-header');
+  var sidebar = document.querySelector('.sidebar');
+  if (header && sidebar) {
+    var titleArea = header.firstElementChild;
+    if (titleArea) {
+      var toggleBtn = document.createElement('button');
+      toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+      toggleBtn.className = 'mobile-menu-btn';
+      toggleBtn.style.cssText = 'display:none; background:none; border:none; font-size:24px; color:var(--text-primary); cursor:pointer; margin-right:16px; padding:4px;';
+      
+      titleArea.style.display = 'flex';
+      titleArea.style.alignItems = 'center';
+      titleArea.insertBefore(toggleBtn, titleArea.firstChild);
+      
+      toggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
+      });
+      
+      document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+          if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+          }
+        }
+      });
+    }
+  }
+});
