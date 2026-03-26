@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Students – Vidya Sethu Coordinator</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --ci-bg: #F7F8FC;
+      --ci-card: #FFFFFF;
+      --ci-border: #E8EAF0;
+      --ci-border-active: #CBD0E0;
+      --ci-text: #0F1117;
+      --ci-muted: #6B7280;
+      --ci-accent: #4F6EF7;
+      --ci-accent-soft: rgba(79,110,247,0.08);
+      --ci-green: #0BB07B;
+      --ci-green-soft: rgba(11,176,123,0.08);
+      --ci-red: #EF4444;
+      --ci-red-soft: rgba(239,68,68,0.08);
+      --ci-sky: #0EA5E9;
+      --ci-sky-soft: rgba(14,165,233,0.08);
+      --ci-amber: #F59E0B;
+      --ci-amber-soft: rgba(245,158,11,0.08);
+      --ci-radius: 14px;
+      --ci-radius-sm: 9px;
+      --ci-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      --ci-shadow-hover: 0 4px 20px rgba(0,0,0,0.10);
+    }
+
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--ci-bg); }
+
+    /* ── TABS ── */
+    .page-tabs {
+      display: flex; gap: 4px;
+      background: var(--ci-card);
+      border: 1px solid var(--ci-border);
+      border-radius: var(--ci-radius);
+      padding: 5px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+    .ptab {
+      padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ci-muted); display: flex; align-items: center; gap: 7px; transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .ptab:hover { background: var(--ci-bg); color: var(--ci-text); }
+    .ptab.active { background: var(--ci-accent); color: #fff; box-shadow: 0 2px 8px rgba(79,110,247,0.35); }
+    .ptab .tab-badge { background: rgba(255,255,255,0.25); border-radius: 20px; padding: 1px 7px; font-size: 11px; font-weight: 800; }
+    .ptab:not(.active) .tab-badge { background: var(--ci-border); color: var(--ci-text); }
+
+    /* ── CHECK-IN TAB ── */
+    #tabCheckin { display: block; }
+    #tabStudents { display: none; }
+
+    /* ── CHECKIN HERO ── */
+    .checkin-hero {
+      background: linear-gradient(135deg, #4F6EF7 0%, #2B4CE8 50%, #1a35c4 100%);
+      border-radius: var(--ci-radius);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .checkin-hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .checkin-hero::after {
+      content: '';
+      position: absolute; bottom: -40px; left: 40%;
+      width: 140px; height: 140px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .checkin-hero-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 6px; }
+    .checkin-hero-label { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .checkin-hero-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+
+    .checkin-input-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1;
+    }
+    .checkin-code-wrap { position: relative; }
+    .checkin-code-wrap .code-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.55); font-size: 15px; pointer-events: none;
+    }
+    #quickCode {
+      width: 200px; padding: 13px 16px 13px 42px;
+      font-size: 22px; font-weight: 900; letter-spacing: 10px; text-align: center;
+      border: 2px solid rgba(255,255,255,0.2); border-radius: 12px;
+      background: rgba(255,255,255,0.12); color: #fff;
+      font-family: 'DM Mono', monospace; outline: none; transition: all 0.2s;
+      caret-color: #fff;
+    }
+    #quickCode::placeholder { color: rgba(255,255,255,0.35); letter-spacing: 6px; font-size: 16px; font-weight: 500; }
+    #quickCode:focus { border-color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.18); }
+
+    .btn-checkin {
+      padding: 13px 24px; background: #fff; color: var(--ci-accent);
+      border: none; border-radius: 12px; font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: all 0.18s;
+    }
+    .btn-checkin:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+    .btn-checkin:active { transform: translateY(0); }
+
+    #quickResult {
+      font-size: 13px; font-weight: 700; padding: 8px 14px;
+      border-radius: 8px; background: rgba(255,255,255,0.12);
+      color: #fff; display: none;
+    }
+    #quickResult.show { display: inline-flex; align-items: center; gap: 6px; }
+    #quickResult.ok  { background: rgba(11,176,123,0.25); }
+    #quickResult.err { background: rgba(239,68,68,0.25); }
+
+    /* ── CHECKIN STATUS TABS ── */
+    .status-filter-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .sft {
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: 50px; cursor: pointer;
+      border: 1.5px solid var(--ci-border); background: var(--ci-card);
+      font-size: 12px; font-weight: 700; color: var(--ci-muted);
+      transition: all 0.15s; user-select: none; font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .sft:hover { border-color: var(--ci-border-active); color: var(--ci-text); }
+    .sft .sft-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .sft .sft-n { font-size: 11px; font-weight: 800; background: var(--ci-border); color: var(--ci-text); padding: 1px 7px; border-radius: 20px; }
+    .sft.active-all        { border-color: var(--ci-accent); background: var(--ci-accent-soft); color: var(--ci-accent); }
+    .sft.active-present    { border-color: var(--ci-green);  background: var(--ci-green-soft);  color: var(--ci-green); }
+    .sft.active-absent     { border-color: var(--ci-red);    background: var(--ci-red-soft);    color: var(--ci-red); }
+    .sft.active-unmarked   { border-color: var(--ci-amber);  background: var(--ci-amber-soft);  color: var(--ci-amber); }
+    .sft.active-shortlisted{ border-color: var(--ci-sky);    background: var(--ci-sky-soft);    color: var(--ci-sky); }
+    .sft.active-rejected   { border-color: var(--ci-red);    background: var(--ci-red-soft);    color: var(--ci-red); }
+    .sft.active-offered    { border-color: var(--ci-green);  background: var(--ci-green-soft);  color: var(--ci-green); }
+
+    /* ── CHECKIN CARDS GRID ── */
+    .checkin-search-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .ci-search-wrap { position: relative; flex: 1; min-width: 220px; }
+    .ci-search-wrap i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ci-muted); font-size: 13px; }
+    .ci-search-wrap input {
+      width: 100%; padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--ci-border); border-radius: 10px;
+      background: var(--ci-card); font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px; color: var(--ci-text); outline: none; transition: border-color 0.15s;
+    }
+    .ci-search-wrap input:focus { border-color: var(--ci-accent); }
+
+    .checkin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── STUDENT CARD ── */
+    .stu-card {
+      background: var(--ci-card);
+      border: 1.5px solid var(--ci-border);
+      border-radius: var(--ci-radius);
+      padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: var(--ci-shadow);
+      transition: all 0.18s;
+      position: relative; overflow: hidden;
+    }
+    .stu-card:hover { box-shadow: var(--ci-shadow-hover); border-color: var(--ci-border-active); }
+    .stu-card.is-present { border-left: 3px solid var(--ci-green); }
+    .stu-card.is-absent  { border-left: 3px solid var(--ci-red); }
+    .stu-card.is-offered { border-left: 3px solid var(--ci-green); }
+    .stu-card.is-shortlisted { border-left: 3px solid var(--ci-sky); }
+    .stu-card.is-rejected    { border-left: 3px solid var(--ci-red); }
+    .stu-card.flash-success { animation: cardFlash 0.7s ease; }
+    @keyframes cardFlash { 0%,100%{background:var(--ci-card)} 30%{background:rgba(11,176,123,0.07)} }
+
+    .stu-card-top { display: flex; align-items: center; gap: 12px; }
+    .sc-av {
+      width: 46px; height: 46px; border-radius: 13px;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -0.5px;
+    }
+    .sc-av img { width: 100%; height: 100%; border-radius: 13px; object-fit: cover; }
+    .sc-info { flex: 1; min-width: 0; }
+    .sc-name { font-size: 14px; font-weight: 800; color: var(--ci-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sc-meta { font-size: 11px; color: var(--ci-muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .sc-code {
+      font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500;
+      background: var(--ci-accent-soft); color: var(--ci-accent);
+      padding: 3px 10px; border-radius: 7px; letter-spacing: 4px; flex-shrink: 0;
+    }
+
+    .sc-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sc-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+      border: 1px solid; display: inline-flex; align-items: center; gap: 3px;
+    }
+    .sc-badge.branch { border-color: rgba(79,110,247,0.2); background: rgba(79,110,247,0.06); color: var(--ci-accent); }
+    .sc-badge.cgpa-good { border-color: rgba(11,176,123,0.2); background: rgba(11,176,123,0.06); color: var(--ci-green); }
+    .sc-badge.cgpa-avg  { border-color: rgba(245,158,11,0.2); background: rgba(245,158,11,0.06); color: var(--ci-amber); }
+    .sc-badge.cgpa-low  { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: var(--ci-red); }
+
+    /* ── ATTENDANCE TOGGLE ── */
+    .att-row { display: flex; gap: 6px; }
+    .att-btn {
+      flex: 1; padding: 9px 10px; border-radius: 9px; border: 1.5px solid var(--ci-border);
+      background: var(--ci-bg); font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      color: var(--ci-muted); transition: all 0.15s;
+    }
+    .att-btn:hover { border-color: var(--ci-border-active); color: var(--ci-text); background: var(--ci-card); }
+    .att-btn.att-p.on { background: var(--ci-green); border-color: var(--ci-green); color: #fff; box-shadow: 0 2px 8px rgba(11,176,123,0.3); }
+    .att-btn.att-a.on { background: var(--ci-red);   border-color: var(--ci-red);   color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,0.3); }
+
+    /* ── STATUS PILLS ── */
+    .result-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .res-pill {
+      flex: 1; min-width: 80px; padding: 8px 6px; border-radius: 9px;
+      border: 1.5px solid var(--ci-border); background: var(--ci-bg);
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 4px; color: var(--ci-muted); transition: all 0.15s; text-align: center;
+    }
+    .res-pill:hover { border-color: var(--ci-border-active); color: var(--ci-text); background: var(--ci-card); }
+    .res-pill.rp-shortlisted.on { background: var(--ci-sky);   border-color: var(--ci-sky);   color: #fff; box-shadow: 0 2px 8px rgba(14,165,233,0.3); }
+    .res-pill.rp-rejected.on    { background: var(--ci-red);   border-color: var(--ci-red);   color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,0.3); }
+    .res-pill.rp-offered.on     { background: var(--ci-green); border-color: var(--ci-green); color: #fff; box-shadow: 0 2px 8px rgba(11,176,123,0.3); }
+    .res-pill.rp-applied.on     { background: var(--ci-border); border-color: var(--ci-border-active); color: var(--ci-text); }
+
+    /* ── SCOPE BANNER ── */
+    .scope-banner {
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, rgba(79,110,247,0.07), rgba(43,76,232,0.03));
+      border: 1px solid rgba(79,110,247,0.18);
+      border-radius: var(--ci-radius); padding: 14px 18px; margin-bottom: 20px;
+    }
+    .scope-icon {
+      width: 42px; height: 42px; border-radius: 11px;
+      background: linear-gradient(135deg,#4F6EF7,#2B4CE8);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 17px; flex-shrink: 0;
+    }
+    .scope-info .scope-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ci-accent); }
+    .scope-info .scope-company { font-size: 16px; font-weight: 900; color: var(--ci-text); margin: 2px 0; }
+    .scope-info .scope-meta { font-size: 12px; color: var(--ci-muted); }
+    .scope-lock { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--ci-accent); background: rgba(79,110,247,0.08); border: 1px solid rgba(79,110,247,0.18); border-radius: 20px; padding: 4px 12px; flex-shrink: 0; }
+
+    /* ── NO DRIVE ── */
+    .no-drive-screen {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 50vh; text-align: center;
+    }
+    .no-drive-screen .nd-icon { font-size: 56px; margin-bottom: 16px; }
+    .no-drive-screen h2 { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .no-drive-screen p { font-size: 14px; color: var(--ci-muted); max-width: 380px; line-height: 1.7; }
+
+    /* ── TABLE (Students tab) ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 14px 18px; background: var(--ci-card);
+      border: 1px solid var(--ci-border); border-radius: var(--ci-radius); margin-bottom: 16px;
+    }
+    .toolbar .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .toolbar .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ci-muted); font-size: 13px; }
+    .toolbar .search-wrap input { width: 100%; padding: 9px 12px 9px 36px; background: var(--ci-bg); border: 1.5px solid var(--ci-border); border-radius: 9px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: var(--ci-text); outline: none; }
+    .toolbar .search-wrap input:focus { border-color: var(--ci-accent); }
+
+    .stu-table { width: 100%; border-collapse: collapse; }
+    .stu-table thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ci-muted); border-bottom: 2px solid var(--ci-border); background: var(--ci-card); position: sticky; top: 0; z-index: 5; white-space: nowrap; }
+    .stu-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--ci-border); vertical-align: middle; font-size: 13px; }
+    .stu-table tbody tr:last-child td { border-bottom: none; }
+    .stu-table tbody tr:hover { background: rgba(79,110,247,0.02); }
+    .stu-table tbody tr.saved-flash { animation: savedFlash 0.6s ease; }
+    @keyframes savedFlash { 0%{background:rgba(11,176,123,0.1)} 100%{background:transparent} }
+
+    .stu-photo { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+    .stu-av { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #fff; }
+    .name-cell { display: flex; align-items: center; gap: 10px; }
+    .stu-n { font-weight: 700; font-size: 13px; }
+    .stu-m { font-size: 11px; color: var(--ci-muted); margin-top: 2px; }
+    .inst-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: var(--ci-accent-soft); color: var(--ci-accent); border: 1px solid rgba(79,110,247,0.2); }
+
+    .tog-group { display: inline-flex; border-radius: 9px; overflow: hidden; border: 1.5px solid var(--ci-border); }
+    .tog-btn { border: none; padding: 7px 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; background: var(--ci-bg); color: var(--ci-muted); transition: all 0.15s; display: flex; align-items: center; gap: 5px; border-right: 1px solid var(--ci-border); }
+    .tog-btn:last-child { border-right: none; }
+    .tog-btn.att-p.on { background: var(--ci-green); color: #fff; }
+    .tog-btn.att-a.on { background: var(--ci-red);   color: #fff; }
+
+    .result-select {
+      appearance: none; -webkit-appearance: none;
+      padding: 8px 28px 8px 11px;
+      border-radius: 9px; border: 1.5px solid var(--ci-border);
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; outline: none; min-width: 148px;
+      background-color: var(--ci-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      transition: all 0.15s; color: var(--ci-muted);
+    }
+    .result-select.rs-shortlisted { border-color: var(--ci-sky);   color: var(--ci-sky);   background-color: var(--ci-sky-soft); }
+    .result-select.rs-offered     { border-color: var(--ci-green); color: var(--ci-green); background-color: var(--ci-green-soft); }
+    .result-select.rs-rejected    { border-color: var(--ci-red);   color: var(--ci-red);   background-color: var(--ci-red-soft); }
+
+    .row-spinner { display: none; width: 14px; height: 14px; border: 2px solid var(--ci-border); border-top-color: var(--ci-accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .row-spinner.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .export-btn { padding: 9px 16px; background: var(--ci-card); border: 1.5px solid var(--ci-border); border-radius: 9px; color: var(--ci-text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .export-btn:hover { border-color: var(--ci-accent); color: var(--ci-accent); }
+
+    .bulk-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; background: var(--ci-accent-soft); border: 1px solid rgba(79,110,247,0.15); border-radius: 9px; margin-bottom: 12px; }
+    .bulk-bar span { font-size: 12px; color: var(--ci-muted); font-weight: 700; flex: 1; }
+    .bulk-btn { border: 1.5px solid transparent; padding: 7px 13px; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .bulk-btn.present  { background: var(--ci-green-soft); color: var(--ci-green); border-color: rgba(11,176,123,0.3); }
+    .bulk-btn.present:hover  { background: var(--ci-green); color: #fff; }
+    .bulk-btn.shortlist { background: var(--ci-sky-soft); color: var(--ci-sky); border-color: rgba(14,165,233,0.3); }
+    .bulk-btn.shortlist:hover { background: var(--ci-sky); color: #fff; }
+    .bulk-btn.offer { background: var(--ci-green-soft); color: var(--ci-green); border-color: rgba(11,176,123,0.3); }
+    .bulk-btn.offer:hover { background: var(--ci-green); color: #fff; }
+
+    .view-btn { background: none; border: 1.5px solid var(--ci-border); border-radius: 7px; padding: 5px 9px; font-size: 12px; cursor: pointer; color: var(--ci-muted); transition: all 0.15s; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .view-btn:hover { border-color: var(--ci-accent); color: var(--ci-accent); }
+
+    /* ── MODAL ── */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,17,23,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal { background: var(--ci-card); border-radius: var(--ci-radius); max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--ci-border); }
+    .modal-header h3 { font-size: 16px; font-weight: 800; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--ci-muted); padding: 4px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--ci-border); display: flex; justify-content: flex-end; }
+    .profile-head { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--ci-border); }
+    .profile-photo-lg { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 3px solid rgba(79,110,247,0.2); flex-shrink: 0; }
+    .profile-av-lg { width: 72px; height: 72px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; padding: 16px 20px; }
+    .info-item .il { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ci-muted); margin-bottom: 3px; }
+    .info-item .iv { font-size: 13px; font-weight: 700; }
+    .doc-row { padding: 12px 20px; border-top: 1px solid var(--ci-border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    /* ── SUMMARY STATS ── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: var(--ci-card); border: 1.5px solid var(--ci-border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      box-shadow: var(--ci-shadow);
+    }
+    .stat-box .sb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ci-muted); }
+    .stat-box .sb-val { font-size: 24px; font-weight: 900; line-height: 1; }
+    .stat-box .sb-sub { font-size: 10px; color: var(--ci-muted); margin-top: 2px; }
+    .stat-box.s-present    .sb-val { color: var(--ci-green); }
+    .stat-box.s-absent     .sb-val { color: var(--ci-red); }
+    .stat-box.s-shortlist  .sb-val { color: var(--ci-sky); }
+    .stat-box.s-offered    .sb-val { color: var(--ci-green); }
+    .stat-box.s-rejected   .sb-val { color: var(--ci-red); }
+
+    .hidden { display: none !important; }
+    @media(max-width:700px) {
+      .checkin-grid { grid-template-columns: 1fr; }
+      .scope-lock { display: none; }
+    }
+    @media(max-width:900px){
+      .stu-table thead { display: none; }
+      .stu-table tbody td { display: block; padding: 6px 12px; border: none; }
+      .stu-table tbody tr { display: block; border: 1px solid var(--ci-border); border-radius: var(--ci-radius); margin-bottom: 10px; padding: 8px 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon" style="background:linear-gradient(135deg,#4F6EF7,#2B4CE8)"><i class="fas fa-clipboard-check"></i></div>
+      <div class="sidebar-brand-text"><h2>Vidya Sethu</h2><p id="sidebarCompany">Coordinator</p></div>
+    </div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item active"><a href="students.html"><i class="fas fa-users"></i> Students &amp; Results</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,#4F6EF7,#2B4CE8)">C</div>
+        <div class="user-info"><div class="user-name" id="sidebarUserName">Coordinator</div><div class="user-role" id="sidebarUserRole">Company</div></div>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:900">Students &amp; Results</h1>
+        <p>Changes save <strong>automatically</strong> as you click — no save button needed</p>
+      </div>
+      <div class="header-actions">
+        <button class="export-btn" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Scope Banner -->
+      <div class="scope-banner hidden" id="scopeBanner">
+        <div class="scope-icon"><i class="fas fa-building"></i></div>
+        <div class="scope-info">
+          <div class="scope-label">Your Assigned Company</div>
+          <div class="scope-company" id="scopeCompany">—</div>
+          <div class="scope-meta" id="scopeMeta">—</div>
+        </div>
+        <div class="scope-lock"><i class="fas fa-lock"></i> Scoped View</div>
+      </div>
+
+      <!-- No drive assigned -->
+      <div class="no-drive-screen hidden" id="noDriveScreen">
+        <div class="nd-icon">🏢</div>
+        <h2>No drive assigned yet</h2>
+        <p>You have not been assigned to a company drive. Please contact the Vidya Sethu admin to get assigned.</p>
+      </div>
+
+      <!-- Main Content -->
+      <div id="mainContent" class="hidden">
+
+        <!-- PAGE TABS -->
+        <div class="page-tabs">
+          <button class="ptab active" id="tabBtnCheckin" onclick="switchTab('checkin')">
+            <i class="fas fa-qrcode"></i> Check-In
+            <span class="tab-badge" id="tabBadgeCheckin">0</span>
+          </button>
+          <button class="ptab" id="tabBtnStudents" onclick="switchTab('students')">
+            <i class="fas fa-table"></i> Full Table
+            <span class="tab-badge" id="tabBadgeStudents">0</span>
+          </button>
+        </div>
+
+        <!-- ════════════════ CHECK-IN TAB ════════════════ -->
+        <div id="tabCheckin">
+
+          <!-- Hero / Quick Code Input -->
+          <div class="checkin-hero">
+            <div class="checkin-hero-title"><i class="fas fa-qrcode"></i> &nbsp;Quick Check-In</div>
+            <div class="checkin-hero-label">Enter Student Code</div>
+            <div class="checkin-hero-sub">Type the 4-digit code to instantly mark attendance</div>
+            <div class="checkin-input-row">
+              <div class="checkin-code-wrap">
+                <i class="fas fa-hashtag code-icon"></i>
+                <input type="text" id="quickCode" maxlength="4" placeholder="0000"
+                       oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4) quickCheckin();"
+                       onkeydown="if(event.key==='Enter') quickCheckin();"
+                       autocomplete="off"/>
+              </div>
+              <button class="btn-checkin" onclick="quickCheckin()">
+                <i class="fas fa-check"></i> Check In
+              </button>
+              <span id="quickResult"></span>
+            </div>
+          </div>
+
+          <!-- Stats Strip -->
+          <div class="stats-strip">
+            <div class="stat-box">
+              <div class="sb-label">Total</div>
+              <div class="sb-val" id="st-total">0</div>
+              <div class="sb-sub">Students</div>
+            </div>
+            <div class="stat-box s-present">
+              <div class="sb-label">Present</div>
+              <div class="sb-val" id="st-present">0</div>
+              <div class="sb-sub">Checked in</div>
+            </div>
+            <div class="stat-box s-absent">
+              <div class="sb-label">Absent</div>
+              <div class="sb-val" id="st-absent">0</div>
+              <div class="sb-sub">Not arrived</div>
+            </div>
+            <div class="stat-box s-shortlist">
+              <div class="sb-label">Shortlisted</div>
+              <div class="sb-val" id="st-shortlist">0</div>
+              <div class="sb-sub">In round 2</div>
+            </div>
+            <div class="stat-box s-offered">
+              <div class="sb-label">Offered</div>
+              <div class="sb-val" id="st-offered">0</div>
+              <div class="sb-sub">Selected</div>
+            </div>
+            <div class="stat-box s-rejected">
+              <div class="sb-label">Rejected</div>
+              <div class="sb-val" id="st-rejected">0</div>
+              <div class="sb-sub">Not selected</div>
+            </div>
+          </div>
+
+          <!-- Status Filter Tabs -->
+          <div class="status-filter-row">
+            <div class="sft active-all" id="sft-all" onclick="setCiFilter('all')">
+              <i class="fas fa-users" style="font-size:11px"></i> All
+              <span class="sft-n" id="sft-cnt-all">0</span>
+            </div>
+            <div class="sft" id="sft-present" onclick="setCiFilter('present')">
+              <div class="sft-dot" style="background:var(--ci-green)"></div> Present
+              <span class="sft-n" id="sft-cnt-present">0</span>
+            </div>
+            <div class="sft" id="sft-absent" onclick="setCiFilter('absent')">
+              <div class="sft-dot" style="background:var(--ci-red)"></div> Absent
+              <span class="sft-n" id="sft-cnt-absent">0</span>
+            </div>
+            <div class="sft" id="sft-unmarked" onclick="setCiFilter('unmarked')">
+              <div class="sft-dot" style="background:var(--ci-amber)"></div> Unmarked
+              <span class="sft-n" id="sft-cnt-unmarked">0</span>
+            </div>
+            <div class="sft" id="sft-shortlisted" onclick="setCiFilter('shortlisted')">
+              <div class="sft-dot" style="background:var(--ci-sky)"></div> Shortlisted
+              <span class="sft-n" id="sft-cnt-shortlisted">0</span>
+            </div>
+            <div class="sft" id="sft-offered" onclick="setCiFilter('offered')">
+              <div class="sft-dot" style="background:var(--ci-green)"></div> Offered
+              <span class="sft-n" id="sft-cnt-offered">0</span>
+            </div>
+            <div class="sft" id="sft-rejected" onclick="setCiFilter('rejected')">
+              <div class="sft-dot" style="background:var(--ci-red)"></div> Rejected
+              <span class="sft-n" id="sft-cnt-rejected">0</span>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="checkin-search-row">
+            <div class="ci-search-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="ciSearch" placeholder="Search by name, PRN or code…" oninput="renderCards()"/>
+            </div>
+            <select class="form-control" style="width:150px;border-radius:9px;border:1.5px solid var(--ci-border);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;padding:9px 12px" id="ciBranchFilter" onchange="renderCards()">
+              <option value="">All Branches</option>
+            </select>
+            <!-- Bulk Actions -->
+            <button class="bulk-btn present" onclick="bulkMarkPresent()" style="white-space:nowrap"><i class="fas fa-check-double"></i> Mark All Present</button>
+            <button class="bulk-btn shortlist" onclick="bulkShortlist()" style="white-space:nowrap"><i class="fas fa-star"></i> Shortlist Present</button>
+            <button class="bulk-btn offer" onclick="bulkOffer()" style="white-space:nowrap"><i class="fas fa-trophy"></i> Offer Shortlisted</button>
+          </div>
+
+          <!-- Cards Grid -->
+          <div class="checkin-grid" id="checkinGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--ci-muted)">
+              <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Loading students…
+            </div>
+          </div>
+        </div>
+        <!-- /tabCheckin -->
+
+        <!-- ════════════════ FULL TABLE TAB ════════════════ -->
+        <div id="tabStudents" class="hidden">
+
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search by name, PRN or course…" oninput="renderTable()"/>
+            </div>
+            <select class="form-control" style="width:150px" id="branchFilter" onchange="renderTable()">
+              <option value="">All Branches</option>
+            </select>
+            <select class="form-control" style="width:150px" id="attFilter" onchange="renderTable()">
+              <option value="">All Attendance</option>
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="pending">Unmarked</option>
+            </select>
+            <select class="form-control" style="width:160px" id="statusFilter" onchange="renderTable()">
+              <option value="">All Results</option>
+              <option value="applied">Not Decided</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="offered">Offered</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <!-- Bulk Bar -->
+          <div class="bulk-bar">
+            <span><i class="fas fa-bolt"></i> Bulk Actions</span>
+            <button class="bulk-btn present"   onclick="bulkMarkPresent()"><i class="fas fa-check-double"></i> Mark All Present</button>
+            <button class="bulk-btn shortlist" onclick="bulkShortlist()"><i class="fas fa-star"></i> Shortlist All Present</button>
+            <button class="bulk-btn offer"     onclick="bulkOffer()"><i class="fas fa-trophy"></i> Offer All Shortlisted</button>
+          </div>
+
+          <!-- Table -->
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="table-wrap" style="max-height:calc(100vh - 340px);overflow-y:auto">
+              <table class="stu-table">
+                <thead>
+                  <tr>
+                    <th style="width:36px">#</th>
+                    <th>Student</th>
+                    <th>Code</th>
+                    <th>Course / Institution</th>
+                    <th>CGPA</th>
+                    <th style="min-width:180px">Attendance</th>
+                    <th style="min-width:160px">Result</th>
+                    <th style="width:40px"></th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <tr><td colspan="8" style="text-align:center;padding:40px">
+                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- /tabStudents -->
+
+      </div><!-- /mainContent -->
+    </div>
+  </div>
+</div>
+
+<!-- Student Profile Modal -->
+<div id="profileModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Student Profile</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+const user = requireAuth('recruiter');
+if (user) {
+  document.getElementById('sidebarAvatar').textContent   = (user.name||'C')[0].toUpperCase();
+  document.getElementById('sidebarUserName').textContent = user.name    || 'Coordinator';
+  document.getElementById('sidebarUserRole').textContent = user.company_name || 'Company';
+  document.getElementById('sidebarCompany').textContent  = user.company_name || 'Portal';
+  load();
+}
+
+let students     = [];
+let localAtt     = {};
+let localSt      = {};
+let ciFilter     = 'all';
+let activeTab    = 'checkin';
+
+const AV_COLORS   = ['#7C3AED','#2563EB','#0EA5E9','#10B981','#F59E0B','#EF4444'];
+const avColor     = n => AV_COLORS[n.charCodeAt(0) % AV_COLORS.length];
+const INST_LABELS = { university:'Sandip University', foundation:'Sandip Foundation', other:'External' };
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabCheckin').style.display  = tab === 'checkin'  ? 'block' : 'none';
+  document.getElementById('tabStudents').classList.toggle('hidden', tab !== 'students');
+  document.getElementById('tabBtnCheckin').classList.toggle('active', tab === 'checkin');
+  document.getElementById('tabBtnStudents').classList.toggle('active', tab === 'students');
+}
+
+// ── Load ──────────────────────────────────────────────
+async function load() {
+  const [dashData, stuData] = await Promise.all([
+    api.get('/recruiter/dashboard'),
+    api.get('/recruiter/students')
+  ]);
+
+  const drive = dashData.drive;
+  if (!drive) { document.getElementById('noDriveScreen').classList.remove('hidden'); return; }
+
+  document.getElementById('scopeCompany').textContent =
+    drive.company_name + (drive.job_role ? ' — ' + drive.job_role : '');
+  document.getElementById('scopeMeta').textContent =
+    (drive.event_name || 'Mega Drive') + ' · ' + formatDate(drive.event_date)
+    + ' · ' + (drive.eligibility_branches || 'All Branches');
+  document.getElementById('scopeBanner').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('hidden');
+
+  students = stuData.students || [];
+  students.forEach(s => {
+    localAtt[s.student_id]   = s.present === true ? true : s.present === false ? false : null;
+    localSt[s.enrollment_id] = s.status || 'applied';
+  });
+
+  // Populate branch filters
+  const branches = [...new Set(students.map(s => s.branch).filter(Boolean))].sort();
+  ['branchFilter','ciBranchFilter'].forEach(id => {
+    const sel = document.getElementById(id);
+    branches.forEach(b => {
+      const o = document.createElement('option'); o.value = b; o.textContent = b; sel.appendChild(o);
+    });
+  });
+
+  // Update tab badges
+  document.getElementById('tabBadgeCheckin').textContent  = students.length;
+  document.getElementById('tabBadgeStudents').textContent = students.length;
+
+  updateStats();
+  renderCards();
+  renderTable();
+}
+
+// ── Stats & Counts ────────────────────────────────────
+function updateStats() {
+  const total = students.length;
+  const present     = students.filter(s => localAtt[s.student_id] === true).length;
+  const absent      = students.filter(s => localAtt[s.student_id] === false).length;
+  const shortlisted = students.filter(s => localSt[s.enrollment_id] === 'shortlisted').length;
+  const offered     = students.filter(s => localSt[s.enrollment_id] === 'offered').length;
+  const rejected    = students.filter(s => localSt[s.enrollment_id] === 'rejected').length;
+  const unmarked    = total - present - absent;
+
+  document.getElementById('st-total').textContent     = total;
+  document.getElementById('st-present').textContent   = present;
+  document.getElementById('st-absent').textContent    = absent;
+  document.getElementById('st-shortlist').textContent = shortlisted;
+  document.getElementById('st-offered').textContent   = offered;
+  document.getElementById('st-rejected').textContent  = rejected;
+
+  document.getElementById('sft-cnt-all').textContent        = total;
+  document.getElementById('sft-cnt-present').textContent    = present;
+  document.getElementById('sft-cnt-absent').textContent     = absent;
+  document.getElementById('sft-cnt-unmarked').textContent   = unmarked;
+  document.getElementById('sft-cnt-shortlisted').textContent= shortlisted;
+  document.getElementById('sft-cnt-offered').textContent    = offered;
+  document.getElementById('sft-cnt-rejected').textContent   = rejected;
+}
+
+function setCiFilter(f) {
+  ciFilter = f;
+  ['all','present','absent','unmarked','shortlisted','offered','rejected'].forEach(x => {
+    const el = document.getElementById('sft-' + x);
+    if (!el) return;
+    el.className = 'sft' + (x === f ? ' active-' + x : '');
+  });
+  renderCards();
+}
+
+// ── Cards Filter ──────────────────────────────────────
+function getCiFiltered() {
+  const q  = document.getElementById('ciSearch').value.toLowerCase();
+  const br = document.getElementById('ciBranchFilter').value;
+  return students.filter(s => {
+    const att = localAtt[s.student_id];
+    const st  = localSt[s.enrollment_id];
+    const matchQ  = s.name.toLowerCase().includes(q)
+                 || s.roll_no.toLowerCase().includes(q)
+                 || (s.unique_code||'').includes(q);
+    const matchBr = !br || s.branch === br;
+    let matchF = true;
+    if (ciFilter === 'present')     matchF = att === true;
+    if (ciFilter === 'absent')      matchF = att === false;
+    if (ciFilter === 'unmarked')    matchF = att === null;
+    if (ciFilter === 'shortlisted') matchF = st === 'shortlisted';
+    if (ciFilter === 'offered')     matchF = st === 'offered';
+    if (ciFilter === 'rejected')    matchF = st === 'rejected';
+    return matchQ && matchBr && matchF;
+  });
+}
+
+// ── Render Cards ──────────────────────────────────────
+function renderCards() {
+  const filtered = getCiFiltered();
+  const grid = document.getElementById('checkinGrid');
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--ci-muted)">
+      <i class="fas fa-users fa-2x" style="margin-bottom:12px;display:block"></i>
+      No students in this category
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(s => {
+    const att = localAtt[s.student_id];
+    const st  = localSt[s.enrollment_id];
+    const cgpa = parseFloat(s.cgpa).toFixed(2);
+    const cgpaClass = s.cgpa >= 7 ? 'cgpa-good' : s.cgpa >= 5 ? 'cgpa-avg' : 'cgpa-low';
+    const cardClass = att === true ? 'is-present' : att === false ? 'is-absent' :
+                      st === 'offered' ? 'is-offered' : st === 'shortlisted' ? 'is-shortlisted' :
+                      st === 'rejected' ? 'is-rejected' : '';
+
+    const avatarHtml = s.photo_url
+      ? `<div class="sc-av"><img src="${s.photo_url}" alt="${s.name}" onerror="this.parentElement.innerHTML='${s.name.charAt(0).toUpperCase()}'"/></div>`
+      : `<div class="sc-av" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`;
+
+    return `
+    <div class="stu-card ${cardClass}" id="card-${s.student_id}">
+      <div class="stu-card-top">
+        ${avatarHtml}
+        <div class="sc-info">
+          <div class="sc-name">${s.name}</div>
+          <div class="sc-meta">
+            <code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ci-muted)">${s.roll_no}</code>
+            · ${s.branch} / Yr ${s.year}
+          </div>
+        </div>
+        <div class="sc-code">${s.unique_code || '—'}</div>
+      </div>
+
+      <div class="sc-badges">
+        <span class="sc-badge branch"><i class="fas fa-code-branch"></i> ${s.branch}</span>
+        <span class="sc-badge ${cgpaClass}"><i class="fas fa-graduation-cap"></i> ${cgpa} CGPA</span>
+        ${s.backlogs > 0 ? `<span class="sc-badge cgpa-low"><i class="fas fa-exclamation"></i> ${s.backlogs} KT</span>` : ''}
+      </div>
+
+      <!-- Attendance -->
+      <div class="att-row">
+        <button class="att-btn att-p ${att === true ? 'on' : ''}"
+                onclick="setAtt(${s.student_id},${s.enrollment_id},true)">
+          <i class="fas fa-check"></i> Present
+        </button>
+        <button class="att-btn att-a ${att === false ? 'on' : ''}"
+                onclick="setAtt(${s.student_id},${s.enrollment_id},false)">
+          <i class="fas fa-times"></i> Absent
+        </button>
+      </div>
+
+      <!-- Result Pills -->
+      <div class="result-row">
+        <button class="res-pill rp-applied ${st === 'applied' ? 'on' : ''}"
+                onclick="setSt(${s.student_id},${s.enrollment_id},'applied')">
+          <i class="fas fa-minus"></i> Pending
+        </button>
+        <button class="res-pill rp-shortlisted ${st === 'shortlisted' ? 'on' : ''}"
+                onclick="setSt(${s.student_id},${s.enrollment_id},'shortlisted')">
+          <i class="fas fa-star"></i> Shortlist
+        </button>
+        <button class="res-pill rp-offered ${st === 'offered' ? 'on' : ''}"
+                onclick="setSt(${s.student_id},${s.enrollment_id},'offered')">
+          <i class="fas fa-trophy"></i> Offered
+        </button>
+        <button class="res-pill rp-rejected ${st === 'rejected' ? 'on' : ''}"
+                onclick="setSt(${s.student_id},${s.enrollment_id},'rejected')">
+          <i class="fas fa-times"></i> Reject
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Table Filter ──────────────────────────────────────
+function getTableFiltered() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const br  = document.getElementById('branchFilter').value;
+  const att = document.getElementById('attFilter').value;
+  const st  = document.getElementById('statusFilter').value;
+  return students.filter(s => {
+    const matchQ  = s.name.toLowerCase().includes(q)
+                 || s.roll_no.toLowerCase().includes(q)
+                 || (s.course||'').toLowerCase().includes(q);
+    const matchBr = !br || s.branch === br;
+    const a = localAtt[s.student_id];
+    const matchA  = !att ||
+      (att === 'present' && a === true) ||
+      (att === 'absent'  && a === false) ||
+      (att === 'pending' && a === null);
+    const matchS  = !st  || localSt[s.enrollment_id] === st;
+    return matchQ && matchBr && matchA && matchS;
+  });
+}
+
+// ── Render Table ──────────────────────────────────────
+function renderTable() {
+  const filtered = getTableFiltered();
+  const tbody    = document.getElementById('tableBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px">
+      <div class="empty-state"><i class="fas fa-users"></i><p>No students match</p></div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((s, idx) => {
+    const att       = localAtt[s.student_id];
+    const st        = localSt[s.enrollment_id];
+    const cgpa      = parseFloat(s.cgpa).toFixed(2);
+    const cgpaColor = s.cgpa >= 7 ? 'var(--ci-green)' : s.cgpa >= 5 ? 'var(--ci-amber)' : 'var(--ci-red)';
+    const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+
+    const avatarHtml = s.photo_url
+      ? `<img src="${s.photo_url}" class="stu-photo" alt="${s.name}" onerror="this.style.display='none'"/>`
+      : `<div class="stu-av" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`;
+
+    return `
+    <tr id="row-${s.student_id}">
+      <td style="color:var(--ci-muted);font-size:12px">${idx+1}</td>
+      <td>
+        <div class="name-cell">
+          ${avatarHtml}
+          <div>
+            <div class="stu-n">${s.name}</div>
+            <div class="stu-m"><code style="color:var(--ci-accent);font-family:'DM Mono',monospace">${s.roll_no}</code> &nbsp;·&nbsp; ${s.branch} / Yr ${s.year}</div>
+          </div>
+        </div>
+      </td>
+      <td><strong style="color:var(--ci-green);font-family:'DM Mono',monospace;font-size:15px;letter-spacing:3px">${s.unique_code||'—'}</strong></td>
+      <td>
+        <div style="font-size:12px;font-weight:700">${s.course||'—'}</div>
+        <div style="margin-top:3px"><span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span></div>
+      </td>
+      <td>
+        <strong style="color:${cgpaColor}">${cgpa}</strong>
+        ${s.backlogs>0?`<span style="font-size:11px;color:var(--ci-red);margin-left:4px">(${s.backlogs} KT)</span>`:''}
+      </td>
+      <td>
+        <div class="tog-group">
+          <button class="tog-btn att-p ${att===true?'on':''}" onclick="setAtt(${s.student_id},${s.enrollment_id},true)"><i class="fas fa-check"></i> Present</button>
+          <button class="tog-btn att-a ${att===false?'on':''}" onclick="setAtt(${s.student_id},${s.enrollment_id},false)"><i class="fas fa-times"></i> Absent</button>
+        </div>
+      </td>
+      <td>
+        <select class="result-select rs-${st}" onchange="setSt(${s.student_id},${s.enrollment_id},this.value)">
+          <option value="applied"     ${st==='applied'     ?'selected':''}> — Not Decided</option>
+          <option value="shortlisted" ${st==='shortlisted' ?'selected':''}>⭐ Shortlisted</option>
+          <option value="offered"     ${st==='offered'     ?'selected':''}>🏆 Offered</option>
+          <option value="rejected"    ${st==='rejected'    ?'selected':''}>✕  Rejected</option>
+        </select>
+      </td>
+      <td style="text-align:center">
+        <span class="row-spinner" id="spinner-${s.student_id}"></span>
+        <button class="view-btn" onclick="viewProfile(${s.student_id})" title="Full profile"><i class="fas fa-eye"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Profile Modal ─────────────────────────────────────
+function viewProfile(studentId) {
+  const s = students.find(x => x.student_id === studentId);
+  if (!s) return;
+  const cgpaColor = s.cgpa >= 7 ? 'var(--ci-green)' : s.cgpa >= 5 ? 'var(--ci-amber)' : 'var(--ci-red)';
+  const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '—';
+  document.getElementById('modalTitle').textContent = s.name;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="profile-head">
+      ${s.photo_url
+        ? `<img src="${s.photo_url}" class="profile-photo-lg" alt="${s.name}" onerror="this.style.display='none'"/>`
+        : `<div class="profile-av-lg" style="background:${avColor(s.name)}">${s.name.charAt(0).toUpperCase()}</div>`}
+      <div>
+        <div style="font-size:18px;font-weight:900">${s.name}</div>
+        <div style="font-size:12px;color:var(--ci-muted);font-family:'DM Mono',monospace;margin-top:2px">${s.roll_no}</div>
+        <div style="margin-top:6px"><span class="inst-badge"><i class="fas fa-university"></i> ${instLabel}</span></div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-item"><div class="il">Course</div><div class="iv">${s.course||'—'}</div></div>
+      <div class="info-item"><div class="il">Branch</div><div class="iv">${s.branch||'—'}</div></div>
+      <div class="info-item"><div class="il">Specialization</div><div class="iv">${s.specialization||'—'}</div></div>
+      <div class="info-item"><div class="il">Current Year</div><div class="iv">Year ${s.year}</div></div>
+      <div class="info-item"><div class="il">Passout Year</div><div class="iv">${s.passout_year||'—'}</div></div>
+      <div class="info-item"><div class="il">CGPA</div><div class="iv" style="color:${cgpaColor}">${parseFloat(s.cgpa).toFixed(2)}</div></div>
+      <div class="info-item"><div class="il">Backlogs / KT</div><div class="iv" style="color:${s.backlogs>0?'var(--ci-red)':'inherit'}">${s.backlogs}</div></div>
+      <div class="info-item"><div class="il">Email</div><div class="iv" style="font-size:12px">${s.email||'—'}</div></div>
+      <div class="info-item"><div class="il">Phone</div><div class="iv">${s.phone||'—'}</div></div>
+    </div>
+    ${s.skills?`<div style="padding:0 20px 14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ci-muted);margin-bottom:8px">Skills</div>
+      <div>${s.skills.split(',').filter(Boolean).map(sk=>`<span class="chip">${sk.trim()}</span>`).join('')}</div>
+    </div>`:''}
+    <div class="doc-row">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ci-muted)">Documents</span>
+      ${s.photo_url?`<a href="${s.photo_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-camera"></i> View Photo</a>`
+        :`<span style="font-size:12px;color:var(--ci-muted)"><i class="fas fa-camera"></i> No photo</span>`}
+      ${s.resume_url?`<a href="${s.resume_url}" target="_blank" class="btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> View Resume</a>`
+        :`<span style="font-size:12px;color:var(--ci-muted)"><i class="fas fa-file-pdf"></i> No resume</span>`}
+    </div>`;
+  document.getElementById('profileModal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('profileModal').classList.add('hidden'); }
+document.getElementById('profileModal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+// ── Auto-save: Attendance ─────────────────────────────
+async function setAtt(studentId, enrollmentId, value) {
+  const prev = localAtt[studentId];
+  localAtt[studentId] = prev === value ? null : value;
+  updateStats(); renderCards(); renderTable();
+  if (localAtt[studentId] === null) return;
+  showSpinner(studentId, true);
+  try {
+    await api.post('/recruiter/attendance', { student_id: studentId, present: localAtt[studentId] });
+    flashCard(studentId); flashRow(studentId);
+  } catch(e) {
+    showToast('Failed to save attendance', 'error');
+    localAtt[studentId] = prev; updateStats(); renderCards(); renderTable();
+  }
+  showSpinner(studentId, false);
+}
+
+// ── Auto-save: Status ─────────────────────────────────
+async function setSt(studentId, enrollmentId, status) {
+  const prev = localSt[enrollmentId];
+  localSt[enrollmentId] = status;
+  updateStats(); renderCards();
+  const sel = document.querySelector(`select[onchange*="setSt(${studentId},"]`);
+  if (sel) sel.className = 'result-select rs-' + status;
+  showSpinner(studentId, true);
+  try {
+    await api.put(`/recruiter/status/${enrollmentId}`, { status });
+    flashCard(studentId); flashRow(studentId);
+  } catch(e) {
+    showToast('Failed to save result', 'error');
+    localSt[enrollmentId] = prev; updateStats(); renderCards(); renderTable();
+  }
+  showSpinner(studentId, false);
+}
+
+// ── Bulk actions ──────────────────────────────────────
+async function bulkMarkPresent() {
+  const list = getCiFiltered().filter(s => localAtt[s.student_id] !== true);
+  if (!list.length) return showToast('All already marked present');
+  if (!confirm(`Mark ${list.length} students as Present?`)) return;
+  list.forEach(s => { localAtt[s.student_id] = true; });
+  updateStats(); renderCards(); renderTable();
+  const data = await api.post('/recruiter/bulk-attendance', { attendances: list.map(s => ({ student_id: s.student_id, present: true })) });
+  if (data.success) showToast(`${list.length} students marked present ✓`, 'success');
+  else showToast(data.message, 'error');
+}
+
+async function bulkShortlist() {
+  const list = students.filter(s => localAtt[s.student_id] === true && localSt[s.enrollment_id] !== 'shortlisted');
+  if (!list.length) return showToast('No present students to shortlist', 'error');
+  if (!confirm(`Shortlist all ${list.length} present students?`)) return;
+  list.forEach(s => { localSt[s.enrollment_id] = 'shortlisted'; });
+  updateStats(); renderCards(); renderTable();
+  const data = await api.put('/recruiter/bulk-status', { updates: list.map(s => ({ enrollment_id: s.enrollment_id, status: 'shortlisted' })) });
+  if (data.success) showToast(`${list.length} students shortlisted ✓`, 'success');
+  else showToast(data.message, 'error');
+}
+
+async function bulkOffer() {
+  const list = students.filter(s => localSt[s.enrollment_id] === 'shortlisted');
+  if (!list.length) return showToast('No shortlisted students to offer', 'error');
+  if (!confirm(`Offer all ${list.length} shortlisted students?`)) return;
+  list.forEach(s => { localSt[s.enrollment_id] = 'offered'; });
+  updateStats(); renderCards(); renderTable();
+  const data = await api.put('/recruiter/bulk-status', { updates: list.map(s => ({ enrollment_id: s.enrollment_id, status: 'offered' })) });
+  if (data.success) showToast(`${list.length} students offered ✓`, 'success');
+  else showToast(data.message, 'error');
+}
+
+// ── Helpers ───────────────────────────────────────────
+function showSpinner(sid, show) {
+  const el = document.getElementById(`spinner-${sid}`);
+  if (el) el.classList.toggle('show', show);
+}
+function flashCard(sid) {
+  const el = document.getElementById(`card-${sid}`);
+  if (el) { el.classList.remove('flash-success'); void el.offsetWidth; el.classList.add('flash-success'); }
+}
+function flashRow(sid) {
+  const el = document.getElementById(`row-${sid}`);
+  if (el) { el.classList.remove('saved-flash'); void el.offsetWidth; el.classList.add('saved-flash'); }
+}
+
+// ── Quick Check-In ────────────────────────────────────
+async function quickCheckin() {
+  const codeInput = document.getElementById('quickCode');
+  const code = codeInput.value.trim();
+  const resultEl = document.getElementById('quickResult');
+  if (code.length !== 4) {
+    resultEl.className = 'show err'; resultEl.textContent = '⚠ Enter a 4-digit code'; return;
+  }
+  resultEl.className = 'show'; resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
+  try {
+    const data = await api.post('/recruiter/attendance-by-code', { unique_code: code });
+    if (data.success) {
+      resultEl.className = 'show ok'; resultEl.innerHTML = '✓ ' + data.message;
+      showToast(data.message, 'success');
+      codeInput.value = ''; codeInput.focus();
+      load();
+    } else {
+      resultEl.className = 'show err'; resultEl.textContent = '✗ ' + data.message;
+    }
+  } catch(err) {
+    resultEl.className = 'show err'; resultEl.textContent = '✗ Check-in failed';
+  }
+}
+
+// ── Export CSV ────────────────────────────────────────
+function exportCSV() {
+  const filtered = students;
+  if (!filtered.length) { showToast('No students to export', 'error'); return; }
+  const company = document.getElementById('scopeCompany').textContent.replace(/[^a-zA-Z0-9]/g,'_');
+  const headers = ['#','Name','PRN','Institution','Course','Branch','Specialization','Year','Passout Year','CGPA','Backlogs','Email','Phone','Attendance','Result'];
+  let csv = headers.join(',') + '\n';
+  filtered.forEach((s,i) => {
+    const att = localAtt[s.student_id];
+    const instLabel = INST_LABELS[s.institution_type] || s.institution_name || '';
+    csv += [i+1,s.name,s.roll_no,instLabel,s.course||'',s.branch,s.specialization||'',s.year,s.passout_year||'',
+      parseFloat(s.cgpa).toFixed(2),s.backlogs,s.email||'',s.phone||'',
+      att===true?'Present':att===false?'Absent':'Pending',
+      localSt[s.enrollment_id]||'applied'
+    ].map(v=>`"${v}"`).join(',') + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+  a.download = company + '_students.csv'; a.click();
+  showToast('CSV exported!', 'success');
+}
+</script>
+</body>
+</html>

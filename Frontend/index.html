@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Sandip University – Placement Portal</title>
+  <title>Vidya Sethu – Placement Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
@@ -291,7 +291,7 @@
       font-weight: 700;
       box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 0 0 1px rgba(37,99,235,0.08);
     }
-    .role-tab.active.v-tab { color: var(--violet); box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 0 0 1px rgba(124,58,237,0.08); }
+    .role-tab.active.v-tab { color: #059669; box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 0 0 1px rgba(16,185,129,0.15); }
 
     /* ── Fields ── */
     .field { margin-bottom: 14px; }
@@ -354,13 +354,13 @@
       display: flex;
       align-items: flex-start;
       gap: 8px;
-      background: #F5F3FF;
-      border: 1px solid #DDD6FE;
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 12px;
       font-weight: 500;
-      color: #5B21B6;
+      color: #065F46;
       margin-bottom: 16px;
       line-height: 1.5;
     }
@@ -410,14 +410,14 @@
       box-shadow: 0 5px 16px rgba(37,99,235,0.40);
     }
     .btn-violet {
-      background: var(--violet);
+      background: #10B981;
       color: #fff;
-      box-shadow: 0 2px 8px rgba(124,58,237,0.35);
+      box-shadow: 0 2px 8px rgba(16,185,129,0.35);
     }
     .btn-violet:hover {
-      background: #6D28D9;
+      background: #059669;
       transform: translateY(-1px);
-      box-shadow: 0 5px 16px rgba(124,58,237,0.40);
+      box-shadow: 0 5px 16px rgba(16,185,129,0.40);
     }
     .btn-submit:active { transform: translateY(0); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
@@ -457,7 +457,11 @@
     <div class="panel-left-inner">
 
       <div class="logo-area">
-        <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="logo-img"/>
+        <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+          <img src="student/SANDIP_LOGO-removebg-preview (1).png" alt="Sandip University" class="logo-img"/>
+          <div style="width:2px;height:75px;background:rgba(37,99,235,0.18);border-radius:2px;flex-shrink:0;"></div>
+          <img src="WhatsApp Image 2026-02-25 at 3.37.21 PM.jpeg" alt="Placement Club Logo" class="logo-img" style="height:90px;border-radius:12px;box-shadow:0 6px 20px rgba(37,99,235,0.15);"/>
+        </div>
       </div>
 
       <div class="univ-label">
@@ -465,7 +469,7 @@
       </div>
 
       <h1>
-        Official <span class="highlight">Placement</span><br/>Management Portal
+        Official <span class="highlight">Vidya Sethu</span><br/>Placement Portal
       </h1>
 
       <p>
@@ -505,7 +509,7 @@
       <div class="form-mark">
         <div class="form-mark-icon"><i class="fas fa-graduation-cap"></i></div>
         <div class="form-mark-text">
-          <span class="fmt-top">Placement Cell</span>
+          <span class="fmt-top">Vidya Sethu</span>
           <span class="fmt-bot">Sandip University, Nashik</span>
         </div>
       </div>
@@ -521,7 +525,7 @@
           <i class="fas fa-user-graduate"></i> Student
         </button>
         <button type="button" class="role-tab" id="tab-recruiter" onclick="switchRole('recruiter')">
-          <i class="fas fa-briefcase"></i> Recruiter
+          <i class="fas fa-clipboard-check"></i> Coordinator
         </button>
         <button type="button" class="role-tab" id="tab-admin" onclick="switchRole('admin')">
           <i class="fas fa-shield-alt"></i> Admin
@@ -575,7 +579,7 @@
         </div>
         <div id="rErr" class="err-box hidden"></div>
         <button type="submit" class="btn-submit btn-violet" id="rBtn">
-          <span id="rTxt"><i class="fas fa-sign-in-alt"></i> Access Recruiter Panel</span>
+          <span id="rTxt"><i class="fas fa-sign-in-alt"></i> Access Coordinator Panel</span>
           <span id="rSpin" class="hidden"><i class="fas fa-circle-notch fa-spin"></i> Verifying...</span>
         </button>
       </form>
@@ -616,7 +620,7 @@
     try{u=JSON.parse(localStorage.getItem('user')||'null');}catch(e){localStorage.clear();}
     if(u&&u.role){
       if(u.role==='admin')         location.href='admin/dashboard.html';
-      else if(u.role==='recruiter') location.href='recruiter/dashboard.html';
+      else if(u.role==='recruiter') location.href='cordinator/dashboard.html';
       else                          location.href='student/dashboard.html';
     }
   })();
@@ -683,7 +687,7 @@
       if(d&&d.success){
         localStorage.setItem('token',d.token);
         localStorage.setItem('user',JSON.stringify(d.user));
-        location.href='recruiter/dashboard.html';
+        location.href='cordinator/dashboard.html';
       } else {
         showErr('rErr',(d&&d.message)||'Invalid email or password.');
         setLoad('rTxt','rSpin','rBtn',false);

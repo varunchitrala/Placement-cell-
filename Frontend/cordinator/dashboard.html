@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Coordinator – Vidya Sethu</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    .event-status { display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700; }
+    .es-created    { background:#F3F4F6;color:#6B7280;border:1px solid #D1D5DB; }
+    .es-open       { background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE; }
+    .es-inprogress { background:#ECFDF5;color:#059669;border:1px solid #A7F3D0; }
+    .es-completed  { background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)} }
+
+    /* ═══════════════════════════════════════
+       CHECK-IN STATION
+    ═══════════════════════════════════════ */
+    .checkin-station {
+      background: #FFFFFF;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 20px;
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 8px 32px rgba(79,110,247,0.06);
+    }
+    .checkin-station::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 55% 70% at 0% 50%, rgba(79,110,247,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 100% 10%, rgba(16,185,129,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 35% 40% at 60% 100%, rgba(14,165,233,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .ci-left { position: relative; z-index: 1; }
+    .ci-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #ECFDF5; border: 1px solid #A7F3D0;
+      color: #059669; border-radius: 20px; padding: 4px 12px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ci-label .ci-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #10B981; animation: pulse 1.4s infinite;
+    }
+    .ci-title { font-size: 22px; font-weight: 900; color: #0F1117; line-height: 1.2; margin-bottom: 6px; }
+    .ci-sub   { font-size: 13px; color: #6B7280; margin-bottom: 28px; font-weight: 500; }
+
+    .otp-row {
+      display: flex; gap: 10px; align-items: center; margin-bottom: 20px;
+    }
+    .otp-box {
+      width: 64px; height: 72px;
+      background: #F9FAFB;
+      border: 2px solid #E5E7EB;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 900; color: #9CA3AF;
+      font-family: 'DM Mono', monospace;
+      transition: all 0.15s; cursor: text;
+    }
+    .otp-box.filled { border-color: #4F6EF7; background: #EFF2FF; color: #4F6EF7; }
+    .otp-box.active {
+      border-color: #4F6EF7; background: #F0F4FF;
+      box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
+      color: #4F6EF7;
+    }
+    .otp-box.shake { animation: shake 0.35s ease; }
+
+    .otp-hidden-input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+
+    .ci-actions { display: flex; gap: 10px; align-items: center; }
+    .ci-btn-primary {
+      flex: 1; padding: 14px 20px;
+      background: linear-gradient(135deg, #4F6EF7, #2B4CE8);
+      border: none; border-radius: 12px;
+      color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; box-shadow: 0 4px 16px rgba(79,110,247,0.3);
+    }
+    .ci-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,110,247,0.4); }
+    .ci-btn-primary:active { transform: translateY(0); }
+    .ci-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .ci-btn-clear {
+      padding: 14px 16px;
+      background: #F3F4F6; border: 1.5px solid #E5E7EB;
+      border-radius: 12px; color: #9CA3AF;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ci-btn-clear:hover { background: #E5E7EB; color: #374151; }
+
+    .ci-error {
+      margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+      background: #FEF2F2; border: 1px solid #FECACA;
+      color: #DC2626; font-size: 13px; font-weight: 600;
+      display: none; align-items: center; gap: 8px;
+    }
+    .ci-error.show { display: flex; }
+
+    .ci-right { position: relative; z-index: 1; min-height: 200px; }
+    .ci-idle {
+      height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 10px; color: #D1D5DB;
+    }
+    .ci-idle i { font-size: 40px; }
+    .ci-idle p { font-size: 13px; font-weight: 500; max-width: 160px; line-height: 1.5; }
+
+    .ci-success-card {
+      background: #F9FAFB;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 16px; padding: 20px 22px;
+      animation: slideInRight 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      display: none;
+    }
+    .ci-success-card.show { display: block; }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px) scale(0.95); }
+      to   { opacity: 1; transform: translateX(0)   scale(1); }
+    }
+
+    .ci-success-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ECFDF5; border: 1px solid #A7F3D0;
+      color: #059669; border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; font-weight: 700; margin-bottom: 14px;
+    }
+    .ci-success-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .ci-check-ring {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg,#10B981,#059669);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #fff;
+      box-shadow: 0 0 0 6px rgba(16,185,129,0.12);
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+    }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    .ci-stu-name { font-size: 17px; font-weight: 900; color: #0F1117; }
+    .ci-stu-meta { font-size: 12px; color: #6B7280; margin-top: 3px; }
+
+    .ci-stu-details {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+    }
+    .ci-detail-chip {
+      background: #FFFFFF; border: 1.5px solid #E5E7EB;
+      border-radius: 10px; padding: 8px 10px;
+    }
+    .ci-detail-chip .dl { font-size: 10px; color: #9CA3AF; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    .ci-detail-chip .dv { font-size: 13px; color: #0F1117; font-weight: 700; margin-top: 2px; }
+
+    /* ── RESULT ACTION BUTTONS ── */
+    .ci-result-section {
+      border-top: 1.5px solid #E5E7EB;
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+    .ci-result-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #9CA3AF; margin-bottom: 10px;
+    }
+    .ci-result-btns {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 7px;
+    }
+    .ci-res-btn {
+      padding: 9px 6px; border-radius: 10px;
+      border: 1.5px solid #E5E7EB; background: #F9FAFB;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 5px; color: #6B7280; transition: all 0.15s; text-align: center;
+    }
+    .ci-res-btn:hover { border-color: #D1D5DB; background: #F3F4F6; color: #374151; }
+
+    .ci-res-btn.rb-shortlisted.on {
+      background: #EFF9FF; border-color: #0EA5E9; color: #0EA5E9;
+      box-shadow: 0 2px 8px rgba(14,165,233,0.2);
+    }
+    .ci-res-btn.rb-offered.on {
+      background: #ECFDF5; border-color: #10B981; color: #059669;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.2);
+    }
+    .ci-res-btn.rb-rejected.on {
+      background: #FEF2F2; border-color: #EF4444; color: #DC2626;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.2);
+    }
+    .ci-res-btn .rb-spin {
+      display: none; width: 12px; height: 12px;
+      border: 2px solid currentColor; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.5s linear infinite;
+    }
+    .ci-res-btn.saving .rb-spin { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── LIVE FEED ── */
+    .ci-feed-section {
+      position: relative; z-index: 1;
+      grid-column: 1 / -1;
+      border-top: 1.5px solid #F0F1F5;
+      padding-top: 20px;
+      display: none;
+    }
+    .ci-feed-section.show { display: block; }
+    .ci-feed-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.6px; color: #9CA3AF;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .ci-feed-title::after { content:''; flex:1; height:1px; background:#F0F1F5; }
+    .ci-feed-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ci-feed-item {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #F9FAFB; border: 1.5px solid #E5E7EB;
+      border-radius: 10px; padding: 7px 12px;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    @keyframes fadeSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    .ci-feed-av {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #fff;
+    }
+    .ci-feed-name { font-size: 12px; font-weight: 700; color: #0F1117; }
+    .ci-feed-time { font-size: 10px; color: #9CA3AF; }
+    .ci-feed-code { font-size: 11px; font-weight: 700; color: #4F6EF7; font-family: 'DM Mono', monospace; }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+    }
+    @media(max-width:768px) {
+      .checkin-station { grid-template-columns: 1fr; }
+      .ci-right { display: none; }
+      .ci-right.has-result { display: block; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon" style="background:linear-gradient(135deg,#4F6EF7,#2B4CE8)"><i class="fas fa-clipboard-check"></i></div>
+      <div class="sidebar-brand-text"><h2>Vidya Sethu</h2><p id="sidebarCompany">Coordinator</p></div>
+    </div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Menu</div><ul>
+      <li class="nav-item active"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students &amp; Results</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,#4F6EF7,#2B4CE8)">C</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Coordinator</div>
+          <div class="user-role" id="sidebarUserRole">Company</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 id="welcomeMsg" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:900">Welcome!</h1>
+        <p id="driveSubtitle">Loading your assigned company...</p>
+      </div>
+      <div class="header-actions">
+        <a href="students.html" class="btn-primary" style="background:linear-gradient(135deg,#4F6EF7,#2B4CE8)">
+          <i class="fas fa-users"></i> Manage Students
+        </a>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- CHECK-IN STATION -->
+      <div class="checkin-station" id="checkinCard">
+
+        <!-- LEFT: Input -->
+        <div class="ci-left">
+          <div class="ci-label"><span class="ci-dot"></span> Live Check-In</div>
+          <div class="ci-title">Student Check-In</div>
+          <div class="ci-sub">Enter the 4-digit code from student's portal</div>
+
+          <div class="otp-row" id="otpRow" onclick="document.getElementById('otpHidden').focus()">
+            <div class="otp-box" id="ob0">_</div>
+            <div class="otp-box" id="ob1">_</div>
+            <div class="otp-box" id="ob2">_</div>
+            <div class="otp-box" id="ob3">_</div>
+            <input id="otpHidden" class="otp-hidden-input" type="text"
+                   inputmode="numeric" maxlength="4" autocomplete="off"
+                   oninput="onOtpInput(this.value)"
+                   onkeydown="onOtpKey(event)"/>
+          </div>
+
+          <div class="ci-actions">
+            <button class="ci-btn-primary" id="checkinBtn" onclick="checkinStudent()">
+              <i class="fas fa-bolt"></i> Check In
+            </button>
+            <button class="ci-btn-clear" onclick="clearOtp()" title="Clear">
+              <i class="fas fa-backspace"></i>
+            </button>
+          </div>
+
+          <div class="ci-error" id="ciError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="ciErrorMsg">Invalid code</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Result panel -->
+        <div class="ci-right" id="ciRight">
+          <div class="ci-idle" id="ciIdle">
+            <i class="fas fa-id-badge"></i>
+            <p>Student info will appear here after check-in</p>
+          </div>
+
+          <div class="ci-success-card" id="ciSuccessCard">
+            <div class="ci-success-badge"><i class="fas fa-check-circle"></i> Checked In Successfully</div>
+
+            <div class="ci-success-top">
+              <div class="ci-check-ring"><i class="fas fa-user-check"></i></div>
+              <div>
+                <div class="ci-stu-name" id="ciStuName">—</div>
+                <div class="ci-stu-meta" id="ciStuMeta">—</div>
+              </div>
+            </div>
+
+            <div class="ci-stu-details">
+              <div class="ci-detail-chip"><div class="dl">Branch</div><div class="dv" id="ciStuBranch">—</div></div>
+              <div class="ci-detail-chip"><div class="dl">Year</div><div class="dv" id="ciStuYear">—</div></div>
+              <div class="ci-detail-chip"><div class="dl">PRN</div><div class="dv" id="ciStuPrn" style="font-size:11px;letter-spacing:1px;font-family:'DM Mono',monospace">—</div></div>
+              <div class="ci-detail-chip"><div class="dl">Code Used</div><div class="dv" id="ciStuCode" style="color:#4F6EF7;letter-spacing:3px;font-family:'DM Mono',monospace">—</div></div>
+            </div>
+
+            <!-- RESULT ACTIONS -->
+            <div class="ci-result-section">
+              <div class="ci-result-label"><i class="fas fa-clipboard-list"></i> &nbsp;Set Selection Result</div>
+              <div class="ci-result-btns">
+                <button class="ci-res-btn rb-shortlisted" id="rb-shortlisted" onclick="setResult('shortlisted')">
+                  <span class="rb-spin"></span>
+                  <i class="fas fa-star"></i> Shortlist
+                </button>
+                <button class="ci-res-btn rb-offered" id="rb-offered" onclick="setResult('offered')">
+                  <span class="rb-spin"></span>
+                  <i class="fas fa-trophy"></i> Offered
+                </button>
+                <button class="ci-res-btn rb-rejected" id="rb-rejected" onclick="setResult('rejected')">
+                  <span class="rb-spin"></span>
+                  <i class="fas fa-times-circle"></i> Rejected
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM: Live feed -->
+        <div class="ci-feed-section" id="ciFeed">
+          <div class="ci-feed-title">Recent Check-ins</div>
+          <div class="ci-feed-list" id="ciFeedList"></div>
+        </div>
+
+      </div>
+
+      <!-- Drive / Company Info Card -->
+      <div class="card mb-16" id="driveCard" style="border-left:4px solid #4F6EF7">
+        <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="statEnrolled">—</div><div class="stat-label">Total Students</div></div>
+        <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="statPresent">—</div><div class="stat-label">Present</div></div>
+        <div class="stat-card green"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="statShortlisted">—</div><div class="stat-label">Shortlisted</div></div>
+        <div class="stat-card red"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-value" id="statOffered">—</div><div class="stat-label">Offered</div></div>
+      </div>
+
+      <!-- Quick student overview table -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-list-check"></i> Student Overview</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>PRN</th><th>Code</th><th>Branch</th><th>Attendance</th><th>Result</th></tr></thead>
+            <tbody id="summaryTable">
+              <tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px">
+          <a href="students.html" class="btn-secondary"><i class="fas fa-edit"></i> Manage All Students</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  const user = requireAuth('recruiter');
+  const recentCheckinList = [];
+  const AV_COLORS = ['#7C3AED','#2563EB','#0EA5E9','#10B981','#F59E0B','#E11D48'];
+  const avColor = n => AV_COLORS[(n||'').charCodeAt(0) % AV_COLORS.length];
+
+  // Track the last checked-in student's enrollment_id for result buttons
+  let lastEnrollmentId = null;
+  let currentResult    = 'applied';
+
+  if (user) {
+    document.getElementById('sidebarAvatar').textContent   = (user.name||'C')[0].toUpperCase();
+    document.getElementById('sidebarUserName').textContent  = user.name || 'Coordinator';
+    document.getElementById('sidebarUserRole').textContent  = user.company_name || 'Company';
+    document.getElementById('sidebarCompany').textContent   = user.company_name || 'Portal';
+    document.getElementById('welcomeMsg').textContent       = `Welcome, ${(user.name||'').split(' ')[0]}! 👋`;
+    loadDashboard();
+    setTimeout(() => document.getElementById('otpHidden').focus(), 400);
+  }
+
+  const EVENT_STATUS_LABELS = { CREATED:'Draft', REGISTRATION_OPEN:'Registration Open', IN_PROGRESS:'Drive In Progress', COMPLETED:'Completed' };
+  const EVENT_STATUS_CLASS  = { CREATED:'es-created', REGISTRATION_OPEN:'es-open', IN_PROGRESS:'es-inprogress', COMPLETED:'es-completed' };
+
+  // ── OTP rendering ─────────────────────────────────
+  let otpValue = '';
+
+  function onOtpInput(val) {
+    otpValue = val.replace(/[^0-9]/g,'').slice(0,4);
+    document.getElementById('otpHidden').value = otpValue;
+    renderOtpBoxes(); hideError();
+    if (otpValue.length === 4) checkinStudent();
+  }
+
+  function onOtpKey(e) {
+    if (e.key === 'Enter') { checkinStudent(); return; }
+    if (e.key === 'Backspace') {
+      otpValue = otpValue.slice(0,-1);
+      document.getElementById('otpHidden').value = otpValue;
+      renderOtpBoxes(); hideError(); e.preventDefault();
+    }
+  }
+
+  function renderOtpBoxes(shake = false) {
+    for (let i = 0; i < 4; i++) {
+      const box = document.getElementById('ob' + i);
+      box.textContent = otpValue[i] || '_';
+      box.className = 'otp-box';
+      if (otpValue[i])              box.classList.add('filled');
+      else if (i === otpValue.length) box.classList.add('active');
+      if (shake)                    box.classList.add('shake');
+    }
+  }
+
+  function clearOtp() {
+    otpValue = '';
+    document.getElementById('otpHidden').value = '';
+    renderOtpBoxes(); hideError();
+    document.getElementById('otpHidden').focus();
+    document.getElementById('ciSuccessCard').classList.remove('show');
+    document.getElementById('ciIdle').style.display = 'flex';
+    document.getElementById('ciRight').classList.remove('has-result');
+    lastEnrollmentId = null;
+    currentResult    = 'applied';
+    updateResultBtns('applied');
+  }
+
+  function showError(msg) {
+    document.getElementById('ciErrorMsg').textContent = msg;
+    document.getElementById('ciError').classList.add('show');
+    renderOtpBoxes(true);
+    setTimeout(() => { for(let i=0;i<4;i++) document.getElementById('ob'+i).classList.remove('shake'); }, 400);
+    otpValue = '';
+    document.getElementById('otpHidden').value = '';
+    setTimeout(renderOtpBoxes, 420);
+    document.getElementById('otpHidden').focus();
+  }
+
+  function hideError() { document.getElementById('ciError').classList.remove('show'); }
+
+  // ── Check-in logic ────────────────────────────────
+  async function checkinStudent() {
+    const code = otpValue;
+    if (code.length !== 4) { showError('Please enter all 4 digits'); return; }
+
+    document.getElementById('checkinBtn').disabled = true;
+    hideError();
+
+    try {
+      const data = await api.post('/recruiter/attendance-by-code', { unique_code: code });
+      if (data.success) {
+        const stu = data.student || {};
+
+        // FIX: backend now returns enrollment_id and status correctly
+        lastEnrollmentId = stu.enrollment_id ?? null;
+        currentResult    = stu.status || 'applied';
+
+        // Populate card
+        document.getElementById('ciStuName').textContent   = stu.name    || 'Student';
+        document.getElementById('ciStuMeta').textContent   = stu.roll_no || '';
+        document.getElementById('ciStuBranch').textContent = stu.branch  || '—';
+        document.getElementById('ciStuYear').textContent   = stu.year ? `Year ${stu.year}` : '—';
+        document.getElementById('ciStuPrn').textContent    = stu.roll_no || '—';
+        document.getElementById('ciStuCode').textContent   = code;
+
+        // Highlight existing result status on buttons
+        updateResultBtns(currentResult);
+
+        document.getElementById('ciIdle').style.display = 'none';
+        const card = document.getElementById('ciSuccessCard');
+        card.classList.remove('show');
+        void card.offsetWidth;
+        card.classList.add('show');
+        document.getElementById('ciRight').classList.add('has-result');
+
+        recentCheckinList.unshift({ name: stu.name || 'Student', code, time: new Date() });
+        if (recentCheckinList.length > 12) recentCheckinList.pop();
+        renderFeed();
+
+        showToast(`✓ ${stu.name || 'Student'} checked in!`, 'success');
+
+        otpValue = '';
+        document.getElementById('otpHidden').value = '';
+        renderOtpBoxes();
+        document.getElementById('otpHidden').focus();
+        loadDashboard();
+      } else {
+        showError(data.message || 'Invalid code');
+      }
+    } catch(err) {
+      showError('Network error. Try again.');
+    }
+    document.getElementById('checkinBtn').disabled = false;
+  }
+
+  // ── Result buttons ────────────────────────────────
+  function updateResultBtns(status) {
+    ['shortlisted','offered','rejected'].forEach(k => {
+      const btn = document.getElementById('rb-' + k);
+      if (!btn) return;
+      btn.classList.toggle('on', status === k);
+    });
+    currentResult = status;
+  }
+
+  async function setResult(status) {
+    if (!lastEnrollmentId) {
+      showToast('No student checked in yet', 'error');
+      return;
+    }
+
+    // Toggle off if same button clicked again
+    const newStatus = (currentResult === status) ? 'applied' : status;
+    updateResultBtns(newStatus);
+
+    const btn = document.getElementById('rb-' + status);
+    if (btn) btn.classList.add('saving');
+
+    try {
+      const res = await api.put(`/recruiter/status/${lastEnrollmentId}`, { status: newStatus });
+      if (res && res.success) {
+        const label = newStatus === 'applied' ? 'Reset to pending' : newStatus;
+        showToast(`Result set: ${label} ✓`, 'success');
+        currentResult = newStatus;
+        loadDashboard();
+      } else {
+        showToast(res?.message || 'Failed to save result', 'error');
+        updateResultBtns(currentResult); // revert on failure
+      }
+    } catch(err) {
+      showToast('Failed to save result', 'error');
+      updateResultBtns(currentResult); // revert on network error
+    }
+
+    if (btn) btn.classList.remove('saving');
+  }
+
+  // ── Live feed ─────────────────────────────────────
+  function renderFeed() {
+    const section = document.getElementById('ciFeed');
+    const list    = document.getElementById('ciFeedList');
+    if (!recentCheckinList.length) { section.classList.remove('show'); return; }
+    section.classList.add('show');
+    list.innerHTML = recentCheckinList.map(r => {
+      const mins = Math.floor((new Date() - r.time) / 60000);
+      const timeStr = mins < 1 ? 'just now' : `${mins}m ago`;
+      return `
+        <div class="ci-feed-item">
+          <div class="ci-feed-av" style="background:${avColor(r.name)}">${(r.name||'?')[0].toUpperCase()}</div>
+          <div>
+            <div class="ci-feed-name">${r.name}</div>
+            <div class="ci-feed-time">${timeStr}</div>
+          </div>
+          <div class="ci-feed-code">${r.code}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Dashboard data ─────────────────────────────────
+  async function loadDashboard() {
+    const [dashData, stuData] = await Promise.all([
+      api.get('/recruiter/dashboard'),
+      api.get('/recruiter/students')
+    ]);
+
+    const drive = dashData.drive;
+    const stats = dashData.stats || {};
+    const driveCard = document.getElementById('driveCard');
+
+    if (drive) {
+      document.getElementById('driveSubtitle').textContent =
+        drive.job_role ? `${drive.company_name} — ${drive.job_role}` : drive.company_name;
+
+      const statusClass = EVENT_STATUS_CLASS[drive.event_status] || 'es-created';
+      const statusLabel = EVENT_STATUS_LABELS[drive.event_status] || drive.event_status;
+
+      driveCard.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4F6EF7,#2B4CE8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0">
+                <i class="fas fa-building"></i>
+              </div>
+              <div>
+                <div style="font-size:18px;font-weight:900">${drive.company_name}</div>
+                <div style="font-size:13px;color:var(--text-secondary)">
+                  ${drive.job_role ? `${drive.job_role}${drive.ctc ? ' &nbsp;·&nbsp; ₹' + drive.ctc + ' LPA' : ''}` : 'Job details pending'}
+                </div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+              <i class="fas fa-calendar-alt"></i>&nbsp;
+              ${drive.event_name || 'Mega Drive'} &nbsp;·&nbsp; ${formatDate(drive.event_date)}
+            </div>
+          </div>
+          <span class="event-status ${statusClass}">
+            ${drive.event_status === 'IN_PROGRESS' ? '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px;animation:pulse 1.4s infinite"></span>' : ''}
+            ${statusLabel}
+          </span>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+          <span><i class="fas fa-star" style="color:var(--warning)"></i> Min CGPA: <strong>${drive.eligibility_min_cgpa}</strong></span>
+          <span><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i> Backlogs ≤ <strong>${drive.eligibility_backlogs_allowed}</strong></span>
+          <span><i class="fas fa-code-branch" style="color:var(--primary)"></i> ${drive.eligibility_branches || 'All Branches'}</span>
+        </div>`;
+    } else {
+      driveCard.innerHTML = `
+        <div style="text-align:center;padding:20px;color:var(--text-muted)">
+          <i class="fas fa-info-circle" style="font-size:24px;margin-bottom:8px;display:block"></i>
+          No company drive assigned to you yet. Please contact the Vidya Sethu admin.
+        </div>`;
+      document.getElementById('driveSubtitle').textContent = 'No drive assigned';
+      document.getElementById('checkinCard').style.display = 'none';
+    }
+
+    document.getElementById('statEnrolled').textContent    = stats.enrolled    ?? 0;
+    document.getElementById('statPresent').textContent     = stats.present     ?? 0;
+    document.getElementById('statShortlisted').textContent = stats.shortlisted ?? 0;
+    document.getElementById('statOffered').textContent     = stats.offered     ?? 0;
+
+    const tbody    = document.getElementById('summaryTable');
+    const students = (stuData.students || []).slice(0, 10);
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users"></i><p>No students yet</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td><code style="color:var(--primary-light);font-family:'DM Mono',monospace">${s.roll_no}</code></td>
+        <td><strong style="color:#4F6EF7;font-size:14px;letter-spacing:2px;font-family:'DM Mono',monospace">${s.unique_code||'—'}</strong></td>
+        <td>${s.branch}</td>
+        <td>${s.present===true
+          ? '<span class="badge badge-shortlisted">✓ Present</span>'
+          : s.present===false
+            ? '<span class="badge badge-rejected">✗ Absent</span>'
+            : '<span class="badge badge-applied">Pending</span>'}</td>
+        <td><span class="badge badge-${s.status}">${s.status}</span></td>
+      </tr>`).join('');
+  }
+</script>
+</body></html>

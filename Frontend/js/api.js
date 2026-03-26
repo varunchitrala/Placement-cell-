@@ -59,9 +59,11 @@ function requireAuth(expectedRole) {
   const token = localStorage.getItem('token');
   const user  = JSON.parse(localStorage.getItem('user') || 'null');
   if (!token || !user) { window.location.href = '/index.html'; return null; }
-  if (expectedRole && user.role !== expectedRole) {
+  // Treat 'recruiter' and 'coordinator' as the same role for auth-guard purposes
+  const normaliseRole = r => (r === 'recruiter' || r === 'coordinator') ? 'coordinator' : r;
+  if (expectedRole && normaliseRole(user.role) !== normaliseRole(expectedRole)) {
     if      (user.role === 'admin')     window.location.href = '/admin/dashboard.html';
-    else if (user.role === 'recruiter') window.location.href = '/recruiter/dashboard.html';
+    else if (user.role === 'recruiter' || user.role === 'coordinator') window.location.href = '/cordinator/dashboard.html';
     else                                window.location.href = '/student/dashboard.html';
     return null;
   }
@@ -85,8 +87,8 @@ function initSidebar(role) {
   if (name)   name.textContent   = user.name || 'User';
   if (roleEl) roleEl.textContent = role === 'admin'
     ? 'Admin / TPO'
-    : role === 'recruiter'
-      ? (user.company_name || 'Recruiter')
+    : (role === 'recruiter' || role === 'coordinator')
+      ? (user.company_name || 'Coordinator')
       : (user.roll_no || 'Student');
   if (avatar) avatar.textContent = (user.name || 'U')[0].toUpperCase();
 
