@@ -28,6 +28,7 @@
       -webkit-font-smoothing: antialiased;
       background: var(--white);
       color: var(--text);
+      overflow-x: hidden;
     }
 
     /* ══════════════════════════
@@ -36,6 +37,7 @@
     .page {
       display: flex;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     /* ── LEFT BRAND PANEL ── */
@@ -439,49 +441,101 @@
     .hidden { display: none !important; }
 
     /* ══ RESPONSIVE ══ */
+
+    /* Tablet breakpoint */
     @media (max-width: 1024px) {
-      .panel-left { padding: 40px; }
-      .panel-right { width: 50%; min-width: unset; padding: 40px; }
-      .logo-img { height: 80px; }
+      .panel-left { padding: 40px 32px; }
+      .panel-right { width: 420px; min-width: 420px; padding: 40px 36px; }
     }
 
+    /* Stack layout */
     @media (max-width: 850px) {
+      html, body { height: auto; }
       .page { flex-direction: column; min-height: 100vh; height: auto; }
-      .panel-left { flex: none; width: 100%; padding: 40px 24px; border-right: none; border-bottom: 1px solid var(--border); }
-      .panel-right { flex: none; width: 100%; padding: 40px 24px; min-width: unset; overflow-y: visible; }
+
+      .panel-left {
+        flex: none; width: 100%; padding: 32px 24px;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .panel-left-inner { max-width: 100%; }
+      .panel-left-inner h1 { font-size: 24px; }
+      .panel-left-inner p { font-size: 14px; margin-bottom: 24px; }
+      .logo-img { height: 64px; }
+      .logo-area img[style] { height: 60px !important; }
+      .logo-area > div > div[style*="width:2px"] { height: 50px !important; }
+
+      .panel-right {
+        flex: none; width: 100%; min-width: unset;
+        padding: 32px 24px; overflow-y: visible;
+      }
       .form-container { max-width: 400px; margin: 0 auto; width: 100%; }
-      .panel-left-inner h1 { font-size: 26px; }
-      .panel-left-inner p { margin-bottom: 28px; font-size: 14px; }
-      .logo-img { height: 70px; }
     }
 
-    @media (max-width: 480px) {
-      .panel-left { padding: 30px 20px; }
-      .panel-right { padding: 30px 20px; }
-      .form-container { max-width: 100%; }
-      .logo-area > div { gap: 15px !important; }
-      .logo-img { height: 55px; }
-      .logo-area img[style] { height: 50px !important; }
-      .panel-left-inner h1 { font-size: 22px; }
-      .panel-left-inner p { font-size: 13px; line-height: 1.5; margin-bottom: 20px; padding: 0 10px; }
-      
-      .stat-row { flex-wrap: wrap; gap: 8px; }
-      .stat-box { flex: 1 1 calc(50% - 8px); min-width: auto; padding: 10px; }
-      .stat-box .sb-num { font-size: 16px; }
-      .stat-box .sb-lbl { font-size: 10px; }
-      
-      .trust-line { margin-top: 15px; font-size: 11px; gap: 10px; flex-wrap: wrap; }
+    /* Mobile phones */
+    @media (max-width: 600px) {
+      .panel-left { padding: 28px 20px; }
+      .panel-right { padding: 28px 20px; }
 
-      .form-mark { margin-bottom: 20px; padding-bottom: 16px; }
-      .form-heading h2 { font-size: 20px; }
-      .form-heading p { font-size: 13px; }
-      
-      .role-tabs { flex-direction: row; flex-wrap: wrap; padding: 4px; border-radius: 10px; gap: 2px;}
-      .role-tab { padding: 8px 4px; font-size: 11px; flex: 1; border-radius: 6px; white-space: normal; text-align: center; }
-      .role-tab i { display: block; margin-bottom: 4px; font-size: 14px; }
-      
-      .f-input { padding: 12px 14px 12px 36px; font-size: 14px; }
-      .btn-submit { padding: 12px 20px; font-size: 14px; }
+      /* Logos row — keep horizontal but smaller */
+      .logo-area { margin-bottom: 20px; }
+      .logo-area > div { gap: 12px !important; }
+      .logo-img { height: 50px; }
+      .logo-area img[style] { height: 45px !important; border-radius: 8px !important; }
+      .logo-area > div > div[style*="width:2px"] { height: 40px !important; }
+
+      .univ-label { font-size: 10px; padding: 4px 12px; margin-bottom: 14px; }
+
+      .panel-left-inner h1 { font-size: 20px; line-height: 1.3; margin-bottom: 10px; }
+      .panel-left-inner h1 br { display: none; }
+      .panel-left-inner p { font-size: 12px; line-height: 1.5; margin-bottom: 18px; }
+      .panel-left-inner p br { display: none; }
+
+      /* Stats — horizontal row, compact */
+      .stat-row { gap: 8px; }
+      .stat-box { padding: 10px 12px; min-width: 0; flex: 1; border-radius: 10px; }
+      .stat-box .sb-num { font-size: 16px; margin-bottom: 2px; }
+      .stat-box .sb-lbl { font-size: 9px; letter-spacing: 0.3px; }
+
+      /* Trust badges */
+      .trust-line { margin-top: 16px; gap: 12px; font-size: 10px; }
+
+      /* Form panel */
+      .form-container { max-width: 100%; }
+      .form-mark { margin-bottom: 20px; padding-bottom: 16px; gap: 10px; }
+      .form-mark-icon { width: 34px; height: 34px; font-size: 14px; }
+      .form-mark-text .fmt-top { font-size: 13px; }
+      .form-mark-text .fmt-bot { font-size: 11px; }
+
+      .form-heading { margin-bottom: 18px; }
+      .form-heading h2 { font-size: 20px; margin-bottom: 4px; }
+
+      /* Role tabs — stay horizontal, just tighter */
+      .role-tabs { padding: 3px; gap: 2px; border-radius: 10px; }
+      .role-tab { padding: 10px 6px; font-size: 11px; gap: 4px; border-radius: 7px; }
+      .role-tab i { font-size: 12px; }
+
+      /* Inputs */
+      .field { margin-bottom: 12px; }
+      .f-input { padding: 12px 14px 12px 36px; font-size: 14px; border-radius: 10px; }
+
+      /* Buttons */
+      .btn-submit { padding: 13px 20px; font-size: 14px; border-radius: 10px; }
+
+      .foot-link { margin-top: 14px; font-size: 12px; }
+
+      .rec-note { font-size: 11px; padding: 9px 10px; }
+    }
+
+    /* Very small phones (iPhone SE, etc) */
+    @media (max-width: 380px) {
+      .panel-left { padding: 24px 16px; }
+      .panel-right { padding: 24px 16px; }
+      .logo-img { height: 42px; }
+      .logo-area img[style] { height: 38px !important; }
+      .panel-left-inner h1 { font-size: 18px; }
+      .stat-box .sb-num { font-size: 14px; }
+      .stat-box .sb-lbl { font-size: 8px; }
+      .role-tab { font-size: 10px; padding: 9px 4px; }
     }
   </style>
 </head>
