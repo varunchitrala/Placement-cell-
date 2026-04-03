@@ -64,6 +64,130 @@ exports.deleteStudent = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
+// ─── ADD OFFLINE STUDENT (single) ───────────────────
+// Shared logic for one student insert
+async function insertOfflineStudent(s) {
+  // Generate unique 4-digit code
+  let uniqueCode;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    uniqueCode = String(Math.floor(Math.random() * 9000) + 1000);
+    const check = await db.query('SELECT id FROM students WHERE unique_code=$1', [uniqueCode]);
+    if (!check.rows.length) break;
+    if (attempt === 49) throw new Error('Could not generate unique code');
+  }
+
+  const { rows } = await db.query(
+    `INSERT INTO students
+       (name, roll_no, date_of_birth, email, phone, unique_code,
+        institution_name, institution_type,
+        course, branch, specialization,
+        year, passout_year, cgpa, backlogs,
+        skills, source)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'offline')
+     RETURNING id, name, roll_no, email, branch, year, unique_code`,
+    [
+      s.name.trim(),
+      s.roll_no.trim().toUpperCase(),
+      s.date_of_birth || null,
+      s.email  ? s.email.trim().toLowerCase() : null,
+      s.phone  ? s.phone.trim()               : null,
+      uniqueCode,
+      s.institution_name || 'Sandip University',
+      s.institution_type || 'university',
+      s.course  ? s.course.trim()  : null,
+      s.branch.trim(),
+      s.specialization ? s.specialization.trim() : null,
+      parseInt(s.year),
+      s.passout_year ? parseInt(s.passout_year) : null,
+      parseFloat(s.cgpa) || 0,
+      parseInt(s.backlogs) || 0,
+      s.skills || null,
+    ]
+  );
+  return rows[0];
+}
+
+exports.addOfflineStudent = async (req, res) => {
+  try {
+    const s = req.body;
+    if (!s.name || !s.roll_no || !s.branch || !s.year)
+      return res.status(400).json({ success: false, message: 'Name, PRN, branch and year are required.' });
+
+    // Check duplicate PRN
+    const dup = await db.query('SELECT id FROM students WHERE roll_no=$1', [s.roll_no.trim().toUpperCase()]);
+    if (dup.rows.length)
+      return res.status(409).json({ success: false, message: `PRN ${s.roll_no} is already registered.` });
+
+    const student = await insertOfflineStudent(s);
+
+    // Optionally enroll into a drive
+    if (s.drive_id) {
+      const enrollStatus = s.enrollment_status || 'applied';
+      await db.query(
+        `INSERT INTO enrollments (student_id, drive_id, status, updated_by)
+         VALUES ($1,$2,$3,'admin') ON CONFLICT DO NOTHING`,
+        [student.id, s.drive_id, enrollStatus]
+      );
+      // Mark attendance if result implies presence
+      if (['shortlisted','offered','rejected'].includes(enrollStatus)) {
+        await db.query(
+          `INSERT INTO attendance (student_id, drive_id, present, marked_by)
+           VALUES ($1,$2,true,'admin') ON CONFLICT DO NOTHING`,
+          [student.id, s.drive_id]
+        );
+      }
+    }
+
+    res.status(201).json({ success: true, student });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ success: false, message: 'Duplicate PRN or email.' });
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.addOfflineStudentsBulk = async (req, res) => {
+  const { students } = req.body;
+  if (!Array.isArray(students) || students.length === 0)
+    return res.status(400).json({ success: false, message: 'students array is required.' });
+
+  const results = { inserted: 0, skipped: [], errors: [] };
+
+  for (const s of students) {
+    if (!s.name || !s.roll_no || !s.branch || !s.year) {
+      results.skipped.push({ roll_no: s.roll_no || '?', reason: 'Missing required fields' });
+      continue;
+    }
+    try {
+      const dup = await db.query('SELECT id FROM students WHERE roll_no=$1', [s.roll_no.trim().toUpperCase()]);
+      if (dup.rows.length) {
+        results.skipped.push({ roll_no: s.roll_no, reason: 'PRN already exists' });
+        continue;
+      }
+      const student = await insertOfflineStudent(s);
+      if (s.drive_id) {
+        const enrollStatus = s.enrollment_status || 'applied';
+        await db.query(
+          `INSERT INTO enrollments (student_id, drive_id, status, updated_by)
+           VALUES ($1,$2,$3,'admin') ON CONFLICT DO NOTHING`,
+          [student.id, s.drive_id, enrollStatus]
+        );
+        if (['shortlisted','offered','rejected'].includes(enrollStatus)) {
+          await db.query(
+            `INSERT INTO attendance (student_id, drive_id, present, marked_by)
+             VALUES ($1,$2,true,'admin') ON CONFLICT DO NOTHING`,
+            [student.id, s.drive_id]
+          );
+        }
+      }
+      results.inserted++;
+    } catch (err) {
+      results.errors.push({ roll_no: s.roll_no, reason: err.message });
+    }
+  }
+
+  res.status(201).json({ success: true, ...results });
+};
+
 // ─── MEGA DRIVE EVENTS ──────────────────────────────
 exports.getEvents = async (req, res) => {
   try {
@@ -162,12 +286,15 @@ exports.createDrive = async (req, res) => {
     const {
       event_id, company_name,
       job_role, ctc, description,
-      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches
+      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches,
+      mode
     } = req.body;
 
     // job_role is now optional — recruiter fills it in later
     if (!event_id || !company_name)
       return res.status(400).json({ success: false, message: 'Event and company name are required.' });
+
+    const driveMode = ['online', 'offline'].includes(mode) ? mode : 'offline';
 
     const branches = Array.isArray(eligibility_branches)
       ? eligibility_branches.join(',')
@@ -176,8 +303,8 @@ exports.createDrive = async (req, res) => {
     const { rows } = await db.query(
       `INSERT INTO drives
          (event_id, company_name, job_role, ctc, description,
-          eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+          eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches, mode)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [
         event_id,
         company_name,
@@ -186,7 +313,8 @@ exports.createDrive = async (req, res) => {
         description || '',
         parseFloat(eligibility_min_cgpa)        || 0,
         parseInt(eligibility_backlogs_allowed)  || 0,
-        branches
+        branches,
+        driveMode
       ]
     );
     res.status(201).json({ success: true, drive: rows[0] });
@@ -197,8 +325,10 @@ exports.updateDrive = async (req, res) => {
   try {
     const {
       company_name, job_role, ctc, description,
-      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches
+      eligibility_min_cgpa, eligibility_backlogs_allowed, eligibility_branches,
+      mode
     } = req.body;
+    const driveMode = ['online', 'offline'].includes(mode) ? mode : 'offline';
     const branches = Array.isArray(eligibility_branches)
       ? eligibility_branches.join(',')
       : (eligibility_branches || '');
@@ -206,8 +336,8 @@ exports.updateDrive = async (req, res) => {
       `UPDATE drives
        SET company_name=$1, job_role=$2, ctc=$3, description=$4,
            eligibility_min_cgpa=$5, eligibility_backlogs_allowed=$6,
-           eligibility_branches=$7, updated_at=now()
-       WHERE id=$8 RETURNING *`,
+           eligibility_branches=$7, mode=$8, updated_at=now()
+       WHERE id=$9 RETURNING *`,
       [
         company_name,
         job_role  ? job_role.trim()  : null,
@@ -216,6 +346,7 @@ exports.updateDrive = async (req, res) => {
         parseFloat(eligibility_min_cgpa)       || 0,
         parseInt(eligibility_backlogs_allowed) || 0,
         branches,
+        driveMode,
         req.params.id
       ]
     );

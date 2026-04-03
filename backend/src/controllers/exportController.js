@@ -14,6 +14,7 @@ exports.getFullExportData = async (req, res) => {
         s.course, s.branch, s.specialization,
         s.year, s.passout_year, s.cgpa, s.backlogs,
         s.skills, s.resume_url,
+        COALESCE(s.source,'online') AS source,
         COUNT(DISTINCT e.drive_id)                                          AS applied_count,
         COUNT(DISTINCT a.drive_id) FILTER (WHERE a.present = true)          AS attended_count,
         COUNT(DISTINCT e.drive_id) FILTER (WHERE e.status = 'shortlisted')  AS shortlisted_count,
@@ -62,6 +63,7 @@ exports.getFullExportData = async (req, res) => {
       SELECT
         s.name, s.roll_no, s.email, s.phone,
         s.institution_name, s.course, s.branch, s.year, s.cgpa, s.backlogs,
+        COALESCE(s.source,'online') AS source,
         d.company_name, d.job_role, d.ctc,
         e.name AS event_name, e.event_date,
         en.status AS result, en.applied_at, en.updated_at,

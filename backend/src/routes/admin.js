@@ -9,8 +9,10 @@ router.use(protect, adminOnly);
 router.get('/dashboard', c.getDashboard);
 
 // Students
-router.get('/students',        c.getStudents);
-router.delete('/students/:id', c.deleteStudent);
+router.get('/students',              c.getStudents);
+router.delete('/students/:id',       c.deleteStudent);
+router.post('/students/offline',     c.addOfflineStudent);
+router.post('/students/offline-bulk',c.addOfflineStudentsBulk);
 
 // Mega Drive Events
 router.get('/events',                 c.getEvents);

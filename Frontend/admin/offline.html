@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Offline Applications – Admin</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .tab-bar { display:flex; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:4px; margin-bottom:24px; width:fit-content; }
+    .tab-btn { padding:8px 20px; border:none; background:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .tab-btn.active { background:var(--primary); color:#fff; }
+
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); }
+    .form-group input, .form-group select {
+      padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-sm);
+      background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:13px;
+      transition:border-color .15s;
+    }
+    .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--primary); }
+    .form-group.full { grid-column:1/-1; }
+
+    .result-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-inserted { background:rgba(16,185,129,.12); color:#059669; }
+    .badge-skipped  { background:rgba(245,158,11,.12); color:#D97706; }
+    .badge-error    { background:rgba(239,68,68,.12);  color:#DC2626; }
+
+    .csv-zone {
+      border:2px dashed var(--border); border-radius:var(--radius); padding:40px 20px;
+      text-align:center; cursor:pointer; transition:all .2s; background:var(--bg);
+    }
+    .csv-zone:hover, .csv-zone.drag { border-color:var(--primary); background:rgba(37,99,235,.04); }
+    .csv-zone i { font-size:36px; color:var(--text-muted); margin-bottom:12px; display:block; }
+
+    .preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .preview-table th { background:var(--bg-card); padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; font-size:11px; text-transform:uppercase; color:var(--text-muted); }
+    .preview-table td { padding:7px 10px; border-bottom:1px solid var(--border); }
+    .preview-table tr:last-child td { border:none; }
+    .preview-table .row-ok  td:first-child { border-left:3px solid #10B981; }
+    .preview-table .row-err td:first-child { border-left:3px solid #EF4444; }
+    .row-err td { color:#DC2626; }
+
+    .template-link { font-size:12px; color:var(--primary); cursor:pointer; text-decoration:underline; }
+
+    .bulk-result-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-top:16px; }
+    .bulk-stat { font-size:28px; font-weight:800; }
+
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div class="sidebar-brand-text"><h2>Vidya Sethu</h2><p>Admin Panel</p></div></div>
+    <nav class="sidebar-nav"><div class="nav-section-label">Main</div><ul>
+      <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li class="nav-item"><a href="drives.html"><i class="fas fa-building"></i> Drives</a></li>
+      <li class="nav-item"><a href="students.html"><i class="fas fa-users"></i> Students</a></li>
+      <li class="nav-item"><a href="recruiters.html"><i class="fas fa-clipboard-check"></i> Coordinators</a></li>
+      <li class="nav-item"><a href="enrollments.html"><i class="fas fa-clipboard-list"></i> Enrollments</a></li>
+      <li class="nav-item"><a href="attendance.html"><i class="fas fa-fingerprint"></i> Attendance</a></li>
+      <li class="nav-item"><a href="pipeline.html"><i class="fas fa-chart-line"></i> Live Pipeline</a></li>
+      <li class="nav-item active"><a href="offline.html"><i class="fas fa-pen-to-square"></i> Offline Entry</a></li>
+      <li class="nav-item"><a href="export.html"><i class="fas fa-file-excel"></i> Export Reports</a></li>
+    </ul></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-info"><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">TPO</div></div></div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Offline Application Entry</h1>
+        <p>Add students who applied via paper forms so they appear in all reports</p>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('single')"><i class="fas fa-user-plus"></i> Single Entry</button>
+        <button class="tab-btn" onclick="switchTab('bulk')"><i class="fas fa-file-csv"></i> Bulk CSV Upload</button>
+      </div>
+
+      <!-- ── SINGLE ENTRY FORM ── -->
+      <div id="tabSingle">
+        <div class="card" style="padding:24px">
+          <div style="font-size:14px;font-weight:700;margin-bottom:18px">Student details</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" id="s_name" placeholder="e.g. Rahul Sharma"/>
+            </div>
+            <div class="form-group">
+              <label>PRN / Roll No *</label>
+              <input type="text" id="s_roll" placeholder="e.g. SU2021CSE001"/>
+            </div>
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input type="date" id="s_dob"/>
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="s_phone" placeholder="10-digit number"/>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="s_email" placeholder="student@example.com"/>
+            </div>
+            <div class="form-group">
+              <label>Branch *</label>
+              <select id="s_branch">
+                <option value="">Select branch</option>
+                <option>CSE</option><option>IT</option><option>ECE</option>
+                <option>EEE</option><option>ME</option><option>CE</option>
+                <option>MBA</option><option>MCA</option><option>BCA</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Course</label>
+              <input type="text" id="s_course" placeholder="e.g. B.Tech, MBA"/>
+            </div>
+            <div class="form-group">
+              <label>Year *</label>
+              <select id="s_year">
+                <option value="">Select year</option>
+                <option value="1">1st Year</option><option value="2">2nd Year</option>
+                <option value="3">3rd Year</option><option value="4">4th Year</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Passout Year</label>
+              <input type="number" id="s_passout" placeholder="e.g. 2025" min="2020" max="2035"/>
+            </div>
+            <div class="form-group">
+              <label>CGPA</label>
+              <input type="number" id="s_cgpa" placeholder="e.g. 7.8" min="0" max="10" step="0.01"/>
+            </div>
+            <div class="form-group">
+              <label>Backlogs</label>
+              <input type="number" id="s_backlogs" placeholder="0" min="0" value="0"/>
+            </div>
+            <div class="form-group">
+              <label>Institution Type</label>
+              <select id="s_inst_type">
+                <option value="university">Sandip University</option>
+                <option value="foundation">Sandip Foundation</option>
+                <option value="other">External Institution</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="font-size:14px;font-weight:700;margin:22px 0 14px">Enrollment (optional)</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Company Drive</label>
+              <select id="s_drive"><option value="">Not enrolling in any drive</option></select>
+            </div>
+            <div class="form-group">
+              <label>Result / Status</label>
+              <select id="s_status">
+                <option value="applied">Applied</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="offered">Offered / Placed</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:22px;display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="submitSingle()"><i class="fas fa-save"></i> Save Student</button>
+            <button class="btn btn-secondary" onclick="clearSingle()">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BULK CSV ── -->
+      <div id="tabBulk" class="hidden">
+        <div class="card" style="padding:24px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:700">Upload CSV file</div>
+            <span class="template-link" onclick="downloadTemplate()"><i class="fas fa-download"></i> Download CSV template</span>
+          </div>
+
+          <div class="csv-zone" id="csvZone" onclick="document.getElementById('csvFile').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <i class="fas fa-file-csv"></i>
+            <div style="font-weight:700;margin-bottom:6px">Click to choose CSV or drag it here</div>
+            <div style="font-size:12px;color:var(--text-muted)">Columns: name, roll_no, branch, year, course, cgpa, backlogs, phone, email, dob, passout_year, drive_id, enrollment_status</div>
+          </div>
+          <input type="file" id="csvFile" accept=".csv" class="hidden" onchange="handleFile(this.files[0])"/>
+
+          <div id="previewSection" class="hidden" style="margin-top:20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-weight:700;font-size:14px">Preview <span id="previewCount"></span></div>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;margin:0">
+                  <label style="white-space:nowrap;margin:0">Assign drive:</label>
+                  <select id="bulk_drive" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;"></select>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="submitBulk()"><i class="fas fa-upload"></i> Import All</button>
+              </div>
+            </div>
+            <div style="overflow-x:auto;max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
+              <table class="preview-table" id="previewTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div id="bulkResult" class="hidden bulk-result-box">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Import complete</div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+            <div><div class="bulk-stat" style="color:#059669" id="resInserted">0</div><div style="font-size:12px;color:var(--text-muted)">Added</div></div>
+            <div><div class="bulk-stat" style="color:#D97706" id="resSkipped">0</div><div style="font-size:12px;color:var(--text-muted)">Skipped (duplicate)</div></div>
+            <div><div class="bulk-stat" style="color:#DC2626" id="resErrors">0</div><div style="font-size:12px;color:var(--text-muted)">Errors</div></div>
+          </div>
+          <div id="skipDetail" class="hidden" style="font-size:12px;color:var(--text-muted)"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+requireAuth('admin'); initSidebar('admin');
+
+let drives = [];
+let csvRows = [];
+
+// Load drives for dropdowns
+async function loadDrives() {
+  const res = await api.get('/admin/drives');
+  if (!res.success) return;
+  drives = res.drives;
+  const opts = drives.map(d =>
+    `<option value="${d.id}">${d.company_name} — ${d.job_role || 'TBD'} (${d.event_name})</option>`
+  ).join('');
+  document.getElementById('s_drive').innerHTML  = '<option value="">Not enrolling in any drive</option>' + opts;
+  document.getElementById('bulk_drive').innerHTML = '<option value="">No drive (add student only)</option>' + opts;
+}
+loadDrives();
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tabSingle').classList.toggle('hidden', tab !== 'single');
+  document.getElementById('tabBulk').classList.toggle('hidden', tab !== 'bulk');
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0) === (tab === 'single')));
+}
+
+// ── Single entry ──────────────────────────────────────
+async function submitSingle() {
+  const name    = document.getElementById('s_name').value.trim();
+  const roll_no = document.getElementById('s_roll').value.trim();
+  const branch  = document.getElementById('s_branch').value;
+  const year    = document.getElementById('s_year').value;
+  if (!name || !roll_no || !branch || !year) { showToast('Name, PRN, branch and year are required', 'error'); return; }
+
+  const payload = {
+    name, roll_no, branch, year: parseInt(year),
+    date_of_birth:    document.getElementById('s_dob').value      || null,
+    phone:            document.getElementById('s_phone').value     || null,
+    email:            document.getElementById('s_email').value     || null,
+    course:           document.getElementById('s_course').value    || null,
+    passout_year:     document.getElementById('s_passout').value   || null,
+    cgpa:             document.getElementById('s_cgpa').value      || 0,
+    backlogs:         document.getElementById('s_backlogs').value  || 0,
+    institution_type: document.getElementById('s_inst_type').value,
+    drive_id:         document.getElementById('s_drive').value     || null,
+    enrollment_status:document.getElementById('s_status').value,
+  };
+
+  const res = await api.post('/admin/students/offline', payload);
+  if (res.success) {
+    showToast(`✓ ${name} added successfully`, 'success');
+    clearSingle();
+  } else {
+    showToast(res.message || 'Failed to add student', 'error');
+  }
+}
+
+function clearSingle() {
+  ['s_name','s_roll','s_dob','s_phone','s_email','s_course','s_passout','s_cgpa'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('s_backlogs').value = '0';
+  document.getElementById('s_branch').value = '';
+  document.getElementById('s_year').value = '';
+  document.getElementById('s_drive').value = '';
+  document.getElementById('s_status').value = 'applied';
+}
+
+// ── CSV handling ──────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('csvZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseCSV(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('CSV is empty or has no data rows', 'error'); return; }
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_'));
+  csvRows = lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    obj._valid = !!(obj.name && obj.roll_no && obj.branch && obj.year);
+    return obj;
+  });
+
+  renderPreview();
+}
+
+function renderPreview() {
+  document.getElementById('previewSection').classList.remove('hidden');
+  document.getElementById('previewCount').textContent = `(${csvRows.length} rows — ${csvRows.filter(r=>r._valid).length} valid)`;
+
+  const cols = ['name','roll_no','branch','year','course','cgpa','backlogs','phone','email','enrollment_status'];
+  const thead = `<thead><tr><th>Status</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
+  const tbody = csvRows.map(row => {
+    const cls = row._valid ? 'row-ok' : 'row-err';
+    const status = row._valid ? '✓' : '✗ Missing required';
+    return `<tr class="${cls}"><td>${status}</td>${cols.map(c=>`<td>${row[c]||'—'}</td>`).join('')}</tr>`;
+  }).join('');
+  document.getElementById('previewTable').innerHTML = thead + `<tbody>${tbody}</tbody>`;
+}
+
+async function submitBulk() {
+  const valid = csvRows.filter(r => r._valid);
+  if (!valid.length) { showToast('No valid rows to import', 'error'); return; }
+
+  const driveId = document.getElementById('bulk_drive').value || null;
+
+  const students = valid.map(r => ({
+    name:              r.name,
+    roll_no:           r.roll_no,
+    branch:            r.branch,
+    year:              parseInt(r.year),
+    course:            r.course    || null,
+    cgpa:              parseFloat(r.cgpa)    || 0,
+    backlogs:          parseInt(r.backlogs)  || 0,
+    phone:             r.phone     || null,
+    email:             r.email     || null,
+    date_of_birth:     r.dob       || null,
+    passout_year:      r.passout_year ? parseInt(r.passout_year) : null,
+    drive_id:          r.drive_id  || driveId,
+    enrollment_status: r.enrollment_status || 'applied',
+  }));
+
+  const res = await api.post('/admin/students/offline-bulk', { students });
+  if (!res.success) { showToast(res.message || 'Import failed', 'error'); return; }
+
+  document.getElementById('bulkResult').classList.remove('hidden');
+  document.getElementById('resInserted').textContent = res.inserted;
+  document.getElementById('resSkipped').textContent  = res.skipped?.length || 0;
+  document.getElementById('resErrors').textContent   = res.errors?.length  || 0;
+
+  if (res.skipped?.length || res.errors?.length) {
+    const detail = document.getElementById('skipDetail');
+    detail.classList.remove('hidden');
+    detail.innerHTML = [...(res.skipped||[]), ...(res.errors||[])]
+      .map(s => `<div>• ${s.roll_no}: ${s.reason}</div>`).join('');
+  }
+
+  showToast(`Imported ${res.inserted} students`, 'success');
+  document.getElementById('previewSection').classList.add('hidden');
+  csvRows = [];
+}
+
+// ── CSV template download ────────────────────────────
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const headers = ['name','roll_no','branch','year','course','cgpa','backlogs','phone','email','dob','passout_year','drive_id','enrollment_status'];
+  const example = ['Rahul Sharma','SU2021CSE001','CSE','3','B.Tech','7.80','0','9876543210','rahul@example.com','2002-05-15','2025','','applied'];
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  ws['!cols'] = headers.map(() => ({ wch: 18 }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Offline Students');
+  XLSX.writeFile(wb, 'offline_students_template.xlsx', { bookType: 'xlsx' });
+}
+</script>
+</body>
+</html>
